@@ -16,7 +16,6 @@ const {
   DEFAULT_FLAGS,
   DEFAULT_PROJECT_PATTERN,
   CONTROLS_PATCH_MARKER,
-  INDICATOR_ID,
   IPC_CHANNEL,
   MAIN_PAGE_ASSET_PATTERN,
   MAIN_PAGE_PATCH_MARKER,
@@ -362,15 +361,13 @@ test("runtime filters pinned ChatGPT labels", () => {
   assert.equal(source.pinnedTargets.length, 2);
 });
 
-test("runtime installs an active Teaching view indicator", () => {
+test("runtime marks Teaching view active without rendering a disclosure badge", () => {
   const document = fakeDocument();
   runtimeContext(
     { active: true, projectPattern: "^teaching-", flags: "i" },
     document,
   );
-  const indicator = document.getElementById(INDICATOR_ID);
-  assert.equal(indicator.textContent, "Teaching view");
-  assert.equal(indicator.title, "Project filter: ^teaching-");
+  assert.equal(document.elements.size, 0);
   assert.equal(
     document.rootAttributes.get("data-codex-linux-teaching-view"),
     "active",

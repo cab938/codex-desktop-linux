@@ -28,7 +28,7 @@ The feature shall:
 - filter pinned Codex tasks by their owning project and pinned ChatGPT projects
   and conversations by their displayed labels;
 - hide projectless pinned Codex tasks;
-- show a persistent Teaching view indicator;
+- expose the active state without adding a persistent disclosure badge;
 - use 1920x1080 and the exact title `Codex (teaching mode)` while activated;
 - preserve the underlying project, task, order, and pin state; and
 - reject an update candidate when the enabled feature no longer patches the
@@ -126,12 +126,11 @@ order, task order, project membership, project metadata, or conversation data.
 Disabling Teaching view shall restore the complete sidebar after the renderer
 refreshes, without a data migration.
 
-### FR-6: Mode indication
+### FR-6: Mode state
 
-An active window shall display a persistent, non-interactive `Teaching view`
-badge and set `data-codex-linux-teaching-view="active"` on the document root.
-The badge shall expose the active pattern in its tooltip. The personal-controls
-menu shall also report the active state as **On**.
+An active renderer shall set `data-codex-linux-teaching-view="active"` on the
+document root, and the personal-controls menu shall report the state as **On**.
+The feature shall not add a persistent disclosure badge, overlay, or watermark.
 
 ### FR-7: Window identity and dimensions
 
@@ -206,7 +205,7 @@ Automated tests shall cover:
 - matching and nonmatching project groups;
 - pinned task membership and projectless pins;
 - pinned ChatGPT labels;
-- mode indicator installation;
+- nonvisual active-state marking without a disclosure badge;
 - persisted main-process state and shared-object publication;
 - the preload state setter and renderer personal-controls menu;
 - Teaching view title, dimensions, and maximized-state suppression;
@@ -229,7 +228,7 @@ The work is accepted when:
 4. only matching project groups and pins are shown while active;
 5. nested tasks within a matching project remain usable;
 6. projectless pinned tasks are absent while active;
-7. the Teaching view badge and menu On state are visible while active;
+7. the menu reports On while active and no disclosure badge is rendered;
 8. selecting **Teaching view** again restores the full sidebar and normal title;
 9. no feature configuration is committed as enabled; and
 10. all targeted automated, current-DMG patch, and runtime checks pass.
