@@ -1,7 +1,7 @@
 {
   "id": "teaching-sidebar-filter",
   "title": "Teaching View",
-  "description": "Adds an opt-in Teaching view with a recognizable window title and size plus filtered sidebar projects and pinned items.",
+  "description": "Adds a persisted personal-controls toggle for Teaching view with a recognizable window title and filtered sidebar projects and pins.",
   "defaultEnabled": false,
   "entrypoints": {
     "patchDescriptors": "./patch.js"

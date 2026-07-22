@@ -1,14 +1,13 @@
 # Teaching View Software Requirements Specification
 
-Status: implementation baseline
+Status: UI-controlled implementation baseline
 
 ## 1. Purpose
 
 Teaching view provides a presentation-oriented Codex Desktop mode that is easy
 to identify and reduces unrelated project and pinned-item clutter during
-demonstrations. When the mode is active, the primary window uses a teaching
-title and initial size, while sidebar project groups and pinned items are
-limited by a locally configured regular expression.
+demonstrations. The user controls it from a small personal-controls menu beside
+Help, and the selected state persists across ordinary launches.
 
 The feature is called **Teaching view** in the user interface. It is not a
 security or confidentiality boundary: filtered data remains available to the
@@ -17,26 +16,26 @@ notifications, already-open tasks, or future upstream UI surfaces.
 
 ## 2. Scope
 
-The first release shall:
+The feature shall:
 
 - ship as a disabled-by-default Linux feature;
 - accept a project-name regular expression and flags from the gitignored Linux
   feature configuration;
-- activate only when Electron starts with `--teaching-mode`;
+- add a circled `¿` personal-controls button beside the existing Help control;
+- toggle Teaching view from that menu without launch flags;
+- persist the active state locally and apply it on later launches;
 - filter current local and remote project rows before they are rendered;
 - filter pinned Codex tasks by their owning project and pinned ChatGPT projects
   and conversations by their displayed labels;
 - hide projectless pinned Codex tasks;
 - show a persistent Teaching view indicator;
-- open the primary window at 1920x1080 with the exact title `Codex (teaching
-  mode)`;
+- use 1920x1080 and the exact title `Codex (teaching mode)` while activated;
 - preserve the underlying project, task, order, and pin state; and
 - reject an update candidate when the enabled feature no longer patches the
   current upstream bundles cleanly.
 
-The first release shall not add an in-app settings toggle, File menu command,
-search filtering, route blocking, notification filtering, data isolation, or
-automatic profile/account separation.
+The feature shall not add search filtering, route blocking, notification
+filtering, data isolation, or automatic profile/account separation.
 
 ## 3. Definitions
 
@@ -80,6 +79,10 @@ User overrides live only in `linux-features/features.json`:
 emit a build warning and use the tracked safe default; they shall never produce
 an allow-all filter.
 
+The UI-selected state shall be stored as schema-versioned JSON in
+`teaching-view.json` beside the launcher's settings file. Missing, unreadable,
+or invalid state shall mean inactive.
+
 ## 5. Functional Requirements
 
 ### FR-1: Opt-in build
@@ -87,18 +90,13 @@ an allow-all filter.
 The feature shall remain disabled unless its id is listed in the local feature
 configuration. No committed configuration shall enable it.
 
-### FR-2: Startup activation
+### FR-2: UI activation
 
-An enabled build shall remain behaviorally unchanged unless the Electron
-process receives `--teaching-mode`. The reliable demonstration command is:
-
-```bash
-./codex-app/start.sh --new-instance --teaching-mode
-```
-
-`--new-instance` is required when another Codex window may already be running,
-because warm-start argument handoff does not change the startup mode of the
-existing Electron process.
+An enabled build shall add a compact `¿` button beside the desktop Help control.
+The button shall open a menu containing a **Teaching view** checkbox-style item
+whose On/Off label reflects the current state. Selecting the item shall persist
+the opposite state and apply it immediately. No command-line activation path is
+required or supported by this feature.
 
 ### FR-3: Project filtering
 
@@ -125,30 +123,43 @@ because hidden items exist.
 
 Filtering shall be presentation-only. It shall not mutate stored pins, project
 order, task order, project membership, project metadata, or conversation data.
-Disabling Teaching view and starting normally shall restore the complete
-sidebar without a data migration.
+Disabling Teaching view shall restore the complete sidebar after the renderer
+refreshes, without a data migration.
 
-### FR-6: Mode indicator
+### FR-6: Mode indication
 
 An active window shall display a persistent, non-interactive `Teaching view`
 badge and set `data-codex-linux-teaching-view="active"` on the document root.
-The badge shall expose the active pattern in its tooltip.
+The badge shall expose the active pattern in its tooltip. The personal-controls
+menu shall also report the active state as **On**.
 
-### FR-7: Teaching window identity and initial size
+### FR-7: Window identity and dimensions
 
-While Teaching view is active, the primary window shall be created at
-1920x1080 and its title shall be exactly `Codex (teaching mode)`. The Teaching
-view startup size shall override saved width, height, and maximized state. The
-user may resize the window after creation. Normal launches and non-primary
-windows shall retain upstream title and window-state behavior.
+When Teaching view is already active at startup, a primary window shall be
+created at 1920x1080 with the exact title `Codex (teaching mode)`, overriding a
+saved maximized state. When the user activates it in a running primary window,
+the window shall be unmaximized if needed, resized to 1920x1080, and retitled.
 
-### FR-8: Runtime failure behavior
+When the user disables it, the normal title shall be restored. Disabling shall
+not attempt to reconstruct the earlier window geometry; the user may resize the
+window normally. Inactive startup and non-primary windows shall retain upstream
+window-state behavior.
+
+### FR-8: Live update and persistence
+
+After a successful state change, the main process shall publish the new shared
+state and reload the requesting renderer so project and pin filtering changes
+immediately. A later normal launch shall read and apply the persisted selection.
+A failed state write shall leave the active state unchanged and return an error
+to the renderer.
+
+### FR-9: Runtime failure behavior
 
 If the shared configuration reports the mode active but its regular expression
 cannot be compiled, filter helpers shall return no matching items. The renderer
-shall not fall back to showing all projects or pins. Build-time bridge
-validation shall prevent promotion if the renderer can no longer read the
-shared state.
+shall not fall back to showing all projects or pins. Build-time preload patching
+shall prevent promotion if the state setter or snapshot getter can no longer be
+installed safely.
 
 ## 6. Architecture Requirements
 
@@ -156,21 +167,22 @@ shared state.
 
 All feature-specific behavior shall live under
 `linux-features/teaching-sidebar-filter/`. Core launcher and generated app files
-shall not be modified for the first release.
+shall not be modified.
 
-### AR-2: Main-process bridge
+### AR-2: Main-process state and IPC
 
-A main-bundle patch shall publish the startup mode and normalized pattern using
-the packaged application's existing shared-object repository and configure the
-primary Teaching view window at its current creation path. The feature shall
-reuse the existing preload snapshot getter and shall not add custom IPC.
-An extracted-app validation descriptor shall reject enabled-feature promotion
-if that preload getter is no longer present.
+A main-bundle patch shall read and write the schema-versioned local state,
+publish the active mode and normalized filter through the application's existing
+shared-object repository, handle one feature-scoped IPC channel, and update the
+requesting window. A preload patch shall add only the narrow Teaching view setter
+beside the existing snapshot getter.
 
-### AR-3: Renderer data filtering
+### AR-3: Renderer integration
 
-Renderer patches shall filter project and pin arrays before row rendering.
-CSS selectors and DOM observers shall not be the authoritative filter.
+Renderer patches shall add the personal-controls button by reusing the current
+Help button, popover, and menu component family. They shall filter project and
+pin arrays before row rendering. CSS selectors and DOM observers shall not be
+the authoritative filter.
 
 ### AR-4: Current-upstream policy
 
@@ -195,29 +207,29 @@ Automated tests shall cover:
 - pinned task membership and projectless pins;
 - pinned ChatGPT labels;
 - mode indicator installation;
-- main-process shared-object injection;
-- Teaching view title, initial dimensions, and saved-maximized suppression;
-- unchanged normal-mode title and saved dimensions;
+- persisted main-process state and shared-object publication;
+- the preload state setter and renderer personal-controls menu;
+- Teaching view title, dimensions, and maximized-state suppression;
+- live enable, disable, renderer reload, and normal-title restoration;
 - atomic behavior on upstream marker drift;
 - descriptor asset targeting; and
 - idempotent second application.
 
-The implementation shall also be exercised against the currently generated
-main bundle and webview assets before handoff.
+The implementation shall also be exercised against the current supported DMG
+and visually verified in the rebuilt development app.
 
 ## 8. Acceptance Criteria
 
 The work is accepted when:
 
-1. a normal enabled-feature launch shows the unfiltered sidebar;
-2. `--new-instance --teaching-mode` shows only matching project groups and pins;
-3. nested tasks within a matching project remain usable;
-4. a projectless pinned task is absent;
-5. the Teaching view badge is visible in the active window;
-6. the primary Teaching view window title is exactly `Codex (teaching mode)`
-   and initially opens at 1920x1080 rather than restoring a saved maximized
-   state;
-7. the next normal launch restores the complete sidebar and normal window
-   title/state behavior;
-8. no feature configuration is committed as enabled; and
-9. all targeted automated and current-bundle patch checks pass.
+1. a normal enabled-feature launch requires no teaching-specific flag;
+2. the circled `¿` control appears beside Help and opens its menu;
+3. selecting **Teaching view** writes the persisted state, changes the title to
+   `Codex (teaching mode)`, uses 1920x1080, and refreshes the renderer;
+4. only matching project groups and pins are shown while active;
+5. nested tasks within a matching project remain usable;
+6. projectless pinned tasks are absent while active;
+7. the Teaching view badge and menu On state are visible while active;
+8. selecting **Teaching view** again restores the full sidebar and normal title;
+9. no feature configuration is committed as enabled; and
+10. all targeted automated, current-DMG patch, and runtime checks pass.

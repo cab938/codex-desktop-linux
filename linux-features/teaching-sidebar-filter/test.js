@@ -15,22 +15,27 @@ const { patchAssetFiles } = require("../../scripts/patches/lib/assets.js");
 const {
   DEFAULT_FLAGS,
   DEFAULT_PROJECT_PATTERN,
+  CONTROLS_PATCH_MARKER,
   INDICATOR_ID,
+  IPC_CHANNEL,
   MAIN_PAGE_ASSET_PATTERN,
   MAIN_PAGE_PATCH_MARKER,
   MAIN_PROCESS_MARKER,
+  PRELOAD_MARKER,
   PROJECTS_PATCH_MARKER,
   PROJECTS_SIDEBAR_ASSET_PATTERN,
   RUNTIME_MARKER,
   SHARED_OBJECT_KEY,
+  STATE_FILE_NAME,
   WINDOW_PATCH_MARKER,
   applyMainPagePatch,
   applyMainProcessPatch,
+  applyPreloadBridgePatch,
   applyProjectsSidebarPatch,
   descriptors,
+  mainRuntimeSource,
   normalizedFilterSettings,
   runtimeSource,
-  validatePreloadBridge,
 } = require("./patch.js");
 
 const manifest = {
@@ -94,35 +99,47 @@ function mainBundleFixture() {
   ].join("");
 }
 
-async function createFixtureWindow(source, argv, savedBounds) {
+async function createFixtureWindow(source, active, savedBounds) {
+  const electron = {
+    app: { getName: () => "Codex", getPath: () => os.tmpdir() },
+    ipcMain: { handle() {} },
+    BrowserWindow: class {
+      constructor(options) {
+        this.options = options;
+        this.onceEvents = [];
+      }
+      getTitle() {
+        return this.options.title;
+      }
+      isDestroyed() {
+        return false;
+      }
+      maximize() {}
+      on() {}
+      once(name) {
+        this.onceEvents.push(name);
+      }
+      setTitle(title) {
+        this.options.title = title;
+      }
+    },
+  };
+  electron.BrowserWindow.fromWebContents = () => null;
   const context = {
     V: "primary-host",
-    c: {
-      app: { getName: () => "Codex" },
-      BrowserWindow: class {
-        constructor(options) {
-          this.options = options;
-          this.onceEvents = [];
-        }
-        getTitle() {
-          return this.options.title;
-        }
-        isDestroyed() {
-          return false;
-        }
-        maximize() {}
-        on() {}
-        once(name) {
-          this.onceEvents.push(name);
-        }
-        setTitle(title) {
-          this.options.title = title;
-        }
-      },
+    c: electron,
+    process: {
+      env: { CODEX_LINUX_SETTINGS_FILE: path.join(os.tmpdir(), "missing-settings.json") },
+      pid: 123,
     },
-    process: { argv, platform: "linux" },
+    require(specifier) {
+      if (specifier === "electron") return electron;
+      return require(specifier);
+    },
+    setTimeout,
   };
   vm.runInNewContext(`${source};globalThis.TestWindowManager=WindowManager`, context);
+  context.codexLinuxTeachingViewState.active = active;
   const manager = new context.TestWindowManager();
   manager.savedBounds = savedBounds;
   return manager.createWindow();
@@ -152,6 +169,9 @@ function mainPageBundleFixture() {
     "b=K(yC,y),x=K(yC,u.threadKeys),N=GV({conversationFilter:_,flatConversationHistory:m===`list`||g===`codex`}),{data:L,isLoading:R}=Km(data),",
     "T=u.projectGroups,D=new Map([...T,...u.connectionGroups]);",
     "return {b,x,N,T,D,conversationByKey:new Map,projectByKey:new Map,threadContainerId:`pinned`}}",
+    "function CJ(e){let{forceOpen:n,onOpenDocs:r}=e,f=fmt(`sidebarHelp.openAriaLabel`),p=(0,EJ.jsx)(ko,{className:`icon-sm`}),m=(0,EJ.jsx)(nr,{\"aria-label\":f,className:`size-8 shrink-0`,color:`ghost`,size:`icon`,uniform:!0,children:p}),x=(0,EJ.jsx)(VO.Item,{onSelect:wJ,children:`sidebarHelp.keyboardShortcuts`}),C=(0,EJ.jsx)(VO.Item,{onClick:r,children:`Help`});return(0,EJ.jsxs)(UO,{align:`start`,contentWidth:`menu`,open:n,side:`top`,sideOffset:6,triggerButton:m,children:[x,C]})}",
+    "function kJ(){let r=qo(`410065390`),i=Wm(dt.CODEX_MOBILE_SETUP_COMPLETED),s=!0,c=!0;return(0,PJ.jsx)(AJ,{showChromeExtensionSetup:r,showMobileSetup:s,showRemoteSetup:c})}",
+    "function KJ(){let t=p(FS),i=(0,JJ.jsx)(hJ,{}),a=(0,JJ.jsx)(ZS,{electron:!0,children:ES(t)?(0,JJ.jsx)(nJ,{variant:`sidebarFooter`}):(0,JJ.jsx)(kJ,{})}),o=(0,JJ.jsx)(ZS,{browser:!0,children:(0,JJ.jsx)(AJ,{})});return(0,JJ.jsxs)(`div`,{className:`flex h-toolbar items-center gap-2 px-row-x`,children:[i,a,o]})}",
   ].join("");
 }
 
@@ -357,7 +377,7 @@ test("runtime installs an active Teaching view indicator", () => {
   );
 });
 
-test("main process patch publishes startup mode and configures the Teaching view window", async () => {
+test("main process patch publishes persisted mode and configures the Teaching view window", async () => {
   const source = mainBundleFixture();
   const patched = applyMainProcessPatch(
     source,
@@ -366,7 +386,8 @@ test("main process patch publishes startup mode and configures the Teaching view
   assert.notEqual(patched, source);
   assert.match(patched, new RegExp(MAIN_PROCESS_MARKER));
   assert.match(patched, new RegExp(WINDOW_PATCH_MARKER));
-  assert.match(patched, /process\.argv\.includes\(`--teaching-mode`\)/);
+  assert.doesNotMatch(patched, /teaching-mode/);
+  assert.match(patched, /codexLinuxTeachingViewBindRepository\(this\.sharedObjectRepository\)/);
   assert.match(patched, /projectPattern:"\^class-",flags:"m"/);
   assert.match(patched, /codexLinuxTeachingWindowActive\?1920:/);
   assert.match(patched, /codexLinuxTeachingWindowActive\?1080:/);
@@ -380,7 +401,7 @@ test("main process patch publishes startup mode and configures the Teaching view
 
   const teachingWindow = await createFixtureWindow(
     patched,
-    ["electron", "--teaching-mode"],
+    true,
     { x: 40, y: 50, width: 1400, height: 900, isMaximized: true },
   );
   assert.deepEqual(
@@ -398,7 +419,7 @@ test("main process patch publishes startup mode and configures the Teaching view
 
   const normalWindow = await createFixtureWindow(
     patched,
-    ["electron"],
+    false,
     { x: 40, y: 50, width: 1400, height: 900, isMaximized: true },
   );
   assert.deepEqual(
@@ -408,7 +429,112 @@ test("main process patch publishes startup mode and configures the Teaching view
   assert.deepEqual(Array.from(normalWindow.onceEvents), ["ready-to-show"]);
 });
 
-test("preload bridge validation accepts the current getter and warns on drift", () => {
+test("persisted UI activation updates shared state, window identity, and renderer", async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "teaching-view-state-"));
+  try {
+    let ipcHandler;
+    const published = [];
+    const window = {
+      bounds: { x: 40, y: 50, width: 1400, height: 900 },
+      maximized: true,
+      reloads: 0,
+      title: "Codex",
+      getBounds() {
+        return this.bounds;
+      },
+      getTitle() {
+        return this.title;
+      },
+      isDestroyed() {
+        return false;
+      },
+      isMaximized() {
+        return this.maximized;
+      },
+      setBounds(bounds) {
+        this.bounds = bounds;
+      },
+      setTitle(title) {
+        this.title = title;
+      },
+      unmaximize() {
+        this.maximized = false;
+      },
+      webContents: {
+        reload() {
+          window.reloads += 1;
+        },
+      },
+    };
+    const electron = {
+      app: { getName: () => "Codex", getPath: () => tempDir },
+      BrowserWindow: { fromWebContents: (sender) => sender.window },
+      ipcMain: {
+        handle(channel, handler) {
+          assert.equal(channel, IPC_CHANNEL);
+          ipcHandler = handler;
+        },
+      },
+    };
+    const context = {
+      process: {
+        env: { CODEX_LINUX_SETTINGS_FILE: path.join(tempDir, "settings.json") },
+        pid: 321,
+      },
+      require(specifier) {
+        if (specifier === "electron") return electron;
+        return require(specifier);
+      },
+      setTimeout(callback) {
+        callback();
+      },
+    };
+    vm.runInNewContext(
+      `${mainRuntimeSource({ projectPattern: "^class-", flags: "i" })};` +
+        "globalThis.bind=codexLinuxTeachingViewBindRepository",
+      context,
+    );
+    context.bind({ set: (key, value) => published.push({ key, value }) });
+    assert.equal(typeof ipcHandler, "function");
+    assert.equal(published.at(-1).key, SHARED_OBJECT_KEY);
+    assert.equal(published.at(-1).value.active, false);
+
+    const enabled = await ipcHandler(
+      { sender: { window } },
+      { active: true },
+    );
+    assert.equal(enabled.ok, true);
+    assert.equal(window.title, "Codex (teaching mode)");
+    assert.equal(window.maximized, false);
+    assert.deepEqual(JSON.parse(JSON.stringify(window.bounds)), {
+      x: 40,
+      y: 50,
+      width: 1920,
+      height: 1080,
+    });
+    assert.equal(window.reloads, 1);
+    const statePath = path.join(tempDir, STATE_FILE_NAME);
+    assert.deepEqual(JSON.parse(fs.readFileSync(statePath, "utf8")), {
+      schemaVersion: 1,
+      active: true,
+    });
+    assert.equal(fs.statSync(statePath).mode & 0o777, 0o600);
+    assert.equal(published.at(-1).value.active, true);
+
+    const disabled = await ipcHandler(
+      { sender: { window } },
+      { active: false },
+    );
+    assert.equal(disabled.ok, true);
+    assert.equal(window.title, "Codex");
+    assert.equal(window.reloads, 2);
+    assert.equal(published.at(-1).value.active, false);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("preload bridge adds the Teaching view setter and warns on drift", () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "teaching-sidebar-filter-preload-"));
   try {
     const buildDir = path.join(tempDir, ".vite", "build");
@@ -416,13 +542,18 @@ test("preload bridge validation accepts the current getter and warns on drift", 
     const preloadPath = path.join(buildDir, "preload.js");
     fs.writeFileSync(
       preloadPath,
-      "const channel=`get-shared-object-snapshot`;const bridge={getSharedObjectSnapshotValue(){}};",
+      "let e=require(\"electron\");let k={};const channel=`get-shared-object-snapshot`;e.contextBridge.exposeInMainWorld(`electronBridge`,{getSharedObjectSnapshotValue:e=>k[e]});",
     );
-    assert.deepEqual(validatePreloadBridge(tempDir), { changed: false });
+    assert.deepEqual(applyPreloadBridgePatch(tempDir), { changed: true, matched: true });
+    const patched = fs.readFileSync(preloadPath, "utf8");
+    assert.match(patched, new RegExp(PRELOAD_MARKER));
+    assert.match(patched, new RegExp(`teachingView:\\{setActive:e=>e\\.ipcRenderer\\.invoke\\(\"${IPC_CHANNEL}\"`));
+    assert.deepEqual(applyPreloadBridgePatch(tempDir), { changed: false, matched: true });
 
     fs.writeFileSync(preloadPath, "const bridge={};");
-    const { value, warnings } = captureWarns(() => validatePreloadBridge(tempDir));
-    assert.deepEqual(value, { changed: false });
+    const { value, warnings } = captureWarns(() => applyPreloadBridgePatch(tempDir));
+    assert.equal(value.changed, false);
+    assert.equal(value.matched, false);
     assert.equal(warnings.length, 1);
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -444,11 +575,20 @@ test("projects renderer patch filters data before group calculation", () => {
   assert.doesNotThrow(() => new vm.Script(patched));
 });
 
-test("main page patch filters alternate and unified pinned data atomically", () => {
+test("main page patch adds the personal control beside Help and filters pinned data atomically", () => {
   const source = mainPageBundleFixture();
   const patched = applyMainPagePatch(source);
   assert.notEqual(patched, source);
   assert.match(patched, new RegExp(MAIN_PAGE_PATCH_MARKER));
+  assert.match(patched, new RegExp(CONTROLS_PATCH_MARKER));
+  assert.match(patched, /children:"¿"/);
+  assert.match(patched, /"aria-label":"Open personal controls"/);
+  assert.match(patched, /children:"Teaching view"/);
+  assert.match(patched, /electronBridge\?\.teachingView/);
+  assert.match(
+    patched,
+    /children:\[\(0,JJ\.jsx\)\(codexLinuxTeachingControlsMenu,\{\}\),\(0,JJ\.jsx\)\(kJ,\{\}\)\]/,
+  );
   assert.match(patched, /codexLinuxTeachingSidebarFilterAllProjectGroups/);
   assert.match(patched, /codexLinuxTeachingSidebarFilterUnifiedAllProjectGroups/);
   assert.match(
@@ -472,6 +612,10 @@ test("upstream marker drift leaves each target byte-identical", () => {
     [
       applyMainPagePatch,
       mainPageBundleFixture().replace("threadContainerId:`pinned`", "threadContainerId:`other`"),
+    ],
+    [
+      applyMainPagePatch,
+      mainPageBundleFixture().replace("sidebarHelp.openAriaLabel", "sidebarHelp.openMenuLabel"),
     ],
   ];
   for (const [apply, source] of driftCases) {
