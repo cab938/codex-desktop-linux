@@ -37,13 +37,12 @@ Application-owned path, revision, counts, status, and change flags use context
 kind `application`. Repository-controlled Markdown uses kind `untrusted`. The
 feature does not auto-steer an active turn and introduces no MCP server.
 
-The declaratively staged `project-work` skill is installed at launch under
-`${CODEX_HOME:-~/.codex}/skills/project-work/`. It defines the agent's editing
-and verification norms; the Markdown file remains durable data, and turn
-context remains dynamic awareness. A management marker prevents later launches
-from overwriting user changes. When the feature is disabled, its cleanup hook
-removes only an unchanged, marker-owned copy and preserves unmanaged or modified
-skills.
+A proposed `project-work` skill is retained only as a draft under
+`skill-draft/project-work/`. The feature does not stage, install, register, or
+remove a global skill. Installation policy is intentionally deferred until a
+human chooses the destination and installation mechanism. The draft defines
+possible agent editing norms; the Markdown file remains durable data, and turn
+context remains dynamic awareness.
 
 ## Enable and verify locally
 
@@ -70,8 +69,8 @@ bash tests/scripts_smoke.sh
 
 At runtime, open tasks in the same and different roots; create/edit/delete the
 file externally; toggle an item in the card; attempt a stale-revision toggle;
-submit a later turn; inspect the installed skill; then rebuild with the feature
-disabled and confirm the card, bridge, and context markers are absent.
+submit a later turn; confirm no skill was installed; then rebuild with the
+feature disabled and confirm the card, bridge, and context markers are absent.
 
 Version one intentionally omits inline renaming, reordering, rich Markdown
 editing, subtree toggles, cross-worktree sharing, a global dashboard, and

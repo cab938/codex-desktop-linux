@@ -2,18 +2,15 @@
 "use strict";
 
 const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 
 const {
-  disabledLinuxFeatureCleanupHooks,
   enabledLinuxFeatureIds,
   enabledLinuxFeatureInstallPlan,
   loadLinuxFeaturePatchDescriptors,
-  stageEnabledLinuxFeatureInstall,
 } = require("../../scripts/lib/linux-features.js");
 const {
   CONTEXT_ASSET_PATTERN,
@@ -505,65 +502,13 @@ test("feature is disabled by default and exposes descriptors only when locally e
   ]);
 });
 
-test("declarative resources install and safely clean up the managed skill", (t) => {
-  const temp = tempDirectory("codex-project-work-stage-");
-  t.after(() => fs.rmSync(temp, { force: true, recursive: true }));
+test("skill draft stays in the worktree without automatic installation", () => {
   withFeatureConfig(["project-work"], () => {
     const plan = enabledLinuxFeatureInstallPlan({ featuresRoot: FEATURE_ROOT });
-    assert.deepEqual(plan.resources.map((entry) => [entry.target, entry.mode]), [
-      [".codex-linux/features/project-work/skills/project-work/SKILL.md", 0o644],
-      [".codex-linux/features/project-work/skills/project-work/agents/openai.yaml", 0o644],
-    ]);
-    assert.deepEqual(plan.runtimeHooks.map((entry) => [entry.key, entry.target, entry.mode]), [
-      ["prelaunch", ".codex-linux/prelaunch.d/project-work-install-skill.sh", 0o755],
-    ]);
-    const app = path.join(temp, "app");
-    stageEnabledLinuxFeatureInstall(app, { featuresRoot: FEATURE_ROOT });
-    const featuresDir = path.join(app, ".codex-linux", "features");
-    const hook = path.join(app, ".codex-linux", "prelaunch.d", "project-work-install-skill.sh");
-    const codexHome = path.join(temp, "codex-home");
-    const result = spawnSync("bash", [hook], {
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        CODEX_HOME: codexHome,
-        CODEX_LINUX_FEATURES_DIR: featuresDir,
-        HOME: "",
-      },
-    });
-    assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
-    assert.match(result.stderr, /Installed Project work skill/);
-    assert.match(fs.readFileSync(path.join(codexHome, "skills", "project-work", "SKILL.md"), "utf8"), /^name: project-work$/m);
-    assert.match(fs.readFileSync(path.join(codexHome, "skills", "project-work", "agents", "openai.yaml"), "utf8"), /display_name: "Project Work"/);
-    const marker = path.join(codexHome, "skills", "project-work", ".codex-linux-project-work-managed");
-    assert.match(fs.readFileSync(marker, "utf8"), /managed-by=codex-desktop-linux-project-work/);
-    assert.equal(fs.existsSync(path.join(codexHome, "config.toml")), false);
-
-    const cleanup = path.join(__dirname, "cleanup.sh");
-    fs.appendFileSync(path.join(codexHome, "skills", "project-work", "SKILL.md"), "\nUser note\n");
-    const preserved = spawnSync("bash", [cleanup], {
-      encoding: "utf8",
-      env: { ...process.env, CODEX_HOME: codexHome, HOME: "" },
-    });
-    assert.equal(preserved.status, 0, `${preserved.stderr}\n${preserved.stdout}`);
-    assert.match(preserved.stderr, /has user changes/);
-    assert.equal(fs.existsSync(marker), true);
-
-    fs.copyFileSync(path.join(featuresDir, "project-work", "skills", "project-work", "SKILL.md"), path.join(codexHome, "skills", "project-work", "SKILL.md"));
-    const removed = spawnSync("bash", [cleanup], {
-      encoding: "utf8",
-      env: { ...process.env, CODEX_HOME: codexHome, HOME: "" },
-    });
-    assert.equal(removed.status, 0, `${removed.stderr}\n${removed.stdout}`);
-    assert.match(removed.stderr, /Removed the managed Project work skill/);
-    assert.equal(fs.existsSync(path.join(codexHome, "skills", "project-work")), false);
+    assert.deepEqual(plan.resources, []);
+    assert.deepEqual(plan.runtimeHooks, []);
   });
-  withFeatureConfig([], () => {
-    assert.deepEqual(
-      disabledLinuxFeatureCleanupHooks({ featuresRoot: FEATURE_ROOT })
-        .filter((entry) => entry.id === "project-work")
-        .map((entry) => path.basename(entry.path)),
-      ["cleanup.sh"],
-    );
-  });
+  const draftRoot = path.join(__dirname, "skill-draft", "project-work");
+  assert.match(fs.readFileSync(path.join(draftRoot, "SKILL.md"), "utf8"), /^name: project-work$/m);
+  assert.match(fs.readFileSync(path.join(draftRoot, "agents", "openai.yaml"), "utf8"), /display_name: "Project Work"/);
 });

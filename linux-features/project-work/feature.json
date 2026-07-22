@@ -4,26 +4,6 @@
   "description": "Adds a project-scoped Markdown checklist card and trusted turn-context metadata to local conversations.",
   "defaultEnabled": false,
   "entrypoints": {
-    "cleanupHook": "./cleanup.sh",
     "patchDescriptors": "./patch.js"
-  },
-  "resources": [
-    {
-      "source": "skills/project-work/SKILL.md",
-      "target": ".codex-linux/features/project-work/skills/project-work/SKILL.md",
-      "mode": "0644"
-    },
-    {
-      "source": "skills/project-work/agents/openai.yaml",
-      "target": ".codex-linux/features/project-work/skills/project-work/agents/openai.yaml",
-      "mode": "0644"
-    }
-  ],
-  "runtimeHooks": {
-    "prelaunch": {
-      "source": "install-skill.sh",
-      "name": "install-skill.sh",
-      "mode": "0755"
-    }
   }
 }
