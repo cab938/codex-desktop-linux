@@ -124,7 +124,7 @@ function applyPreloadBridgePatch(extractedDir) {
   }
   const electronAlias = electronMatch[1];
   const bridge =
-    `teachingView:{setActive:e=>${electronAlias}.ipcRenderer.invoke(${JSON.stringify(IPC_CHANNEL)},{active:e})},`;
+    `teachingView:{setActive:codexLinuxTeachingViewActive=>${electronAlias}.ipcRenderer.invoke(${JSON.stringify(IPC_CHANNEL)},{active:codexLinuxTeachingViewActive})},`;
   const patched =
     `var ${PRELOAD_MARKER}=!0;` +
     source.replace(getterNeedle, `${bridge}${getterNeedle}`);
