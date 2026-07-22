@@ -134,18 +134,20 @@ function codexLinuxProjectWorkStateFromPayloadRuntime(payload) {
 
 function codexLinuxProjectWorkCardRuntime(props) {
   const { shouldHideInlineImmediately, shouldShow } = props;
-  const route = r(Ai);
+  const route = codexLinuxProjectWorkRouteHook(codexLinuxProjectWorkRouteAtom);
   const threadId = route.value.routeKind === "local-thread"
     ? route.value.conversationId
     : null;
-  const environment = o(cs);
-  const workspaceRoot = environment.cwd == null ? null : te(environment.cwd);
-  const [state, setState] = Gy.useState(null);
-  const [error, setError] = Gy.useState(null);
-  const [pendingLine, setPendingLine] = Gy.useState(null);
-  const [hideCompleted, setHideCompleted] = Gy.useState(false);
+  const environment = codexLinuxProjectWorkEnvironmentHook(codexLinuxProjectWorkEnvironmentAtom);
+  const workspaceRoot = environment.cwd == null
+    ? null
+    : codexLinuxProjectWorkNormalizePath(environment.cwd);
+  const [state, setState] = codexLinuxProjectWorkReact.useState(null);
+  const [error, setError] = codexLinuxProjectWorkReact.useState(null);
+  const [pendingLine, setPendingLine] = codexLinuxProjectWorkReact.useState(null);
+  const [hideCompleted, setHideCompleted] = codexLinuxProjectWorkReact.useState(false);
 
-  Gy.useEffect(() => {
+  codexLinuxProjectWorkReact.useEffect(() => {
     let disposed = false;
     setState(null);
     setError(null);
@@ -194,7 +196,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
     };
   }, [workspaceRoot]);
 
-  Gy.useEffect(() => {
+  codexLinuxProjectWorkReact.useEffect(() => {
     if (threadId != null && workspaceRoot != null) {
       globalThis.codexLinuxProjectWorkContext?.associate?.(threadId, workspaceRoot);
     }
@@ -259,11 +261,11 @@ function codexLinuxProjectWorkCardRuntime(props) {
   const items = Array.isArray(state?.items) ? state.items : [];
   const visibleItems = hideCompleted ? items.filter((item) => !item.checked) : items;
   const visibleError = error ?? state?.error?.message ?? state?.watchError ?? null;
-  const title = (0, tS.jsxs)("span", {
+  const title = (0, codexLinuxProjectWorkJsx.jsxs)("span", {
     className: "flex items-center gap-2",
     children: [
-      (0, tS.jsx)("span", { children: "Project work" }),
-      (0, tS.jsx)("span", {
+      (0, codexLinuxProjectWorkJsx.jsx)("span", { children: "Project work" }),
+      (0, codexLinuxProjectWorkJsx.jsx)("span", {
         className: "text-xs font-normal text-token-description-foreground",
         children: state == null
           ? ""
@@ -271,17 +273,17 @@ function codexLinuxProjectWorkCardRuntime(props) {
       }),
     ],
   });
-  const body = (0, tS.jsxs)("div", {
+  const body = (0, codexLinuxProjectWorkJsx.jsxs)("div", {
     className: "flex flex-col gap-2 px-3 pb-3",
     "data-project-work-root": workspaceRoot,
     "data-project-work-revision": state?.revision ?? "loading",
     "data-project-work-status": state?.status ?? "loading",
     children: [
-      (0, tS.jsxs)("div", {
+      (0, codexLinuxProjectWorkJsx.jsxs)("div", {
         className: "flex flex-wrap items-center gap-2",
         children: [
           state?.status === "missing"
-            ? (0, tS.jsx)("button", {
+            ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
                 type: "button",
                 className: "rounded-md border border-token-border px-2 py-1 text-xs hover:bg-token-bg-secondary",
                 onClick: createFile,
@@ -289,7 +291,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
               })
             : null,
           state?.status !== "missing"
-            ? (0, tS.jsx)("button", {
+            ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
                 type: "button",
                 className: "rounded-md border border-token-border px-2 py-1 text-xs hover:bg-token-bg-secondary",
                 onClick: openMarkdown,
@@ -297,7 +299,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
               })
             : null,
           items.some((item) => item.checked)
-            ? (0, tS.jsx)("button", {
+            ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
                 type: "button",
                 className: "rounded-md px-2 py-1 text-xs text-token-description-foreground hover:bg-token-bg-secondary",
                 onClick: () => setHideCompleted(!hideCompleted),
@@ -308,33 +310,33 @@ function codexLinuxProjectWorkCardRuntime(props) {
       }),
       visibleError == null
         ? null
-        : (0, tS.jsx)("div", {
+        : (0, codexLinuxProjectWorkJsx.jsx)("div", {
             role: "alert",
             className: "rounded-md border border-red-500/40 bg-red-500/10 px-2 py-1.5 text-xs text-red-700 dark:text-red-300",
             children: visibleError,
           }),
       state == null
-        ? (0, tS.jsx)("div", {
+        ? (0, codexLinuxProjectWorkJsx.jsx)("div", {
             className: "text-xs text-token-description-foreground",
             children: "Loading Project work…",
           })
         : state.status === "missing"
-          ? (0, tS.jsx)("div", {
+          ? (0, codexLinuxProjectWorkJsx.jsx)("div", {
               className: "text-xs text-token-description-foreground",
               children: "No .codex/work-packages.md file exists for this project.",
             })
           : items.length === 0
-            ? (0, tS.jsx)("div", {
+            ? (0, codexLinuxProjectWorkJsx.jsx)("div", {
                 className: "text-xs text-token-description-foreground",
                 children: "No Markdown checklist items found. Use Open Markdown to add work packages.",
               })
-            : (0, tS.jsx)("div", {
+            : (0, codexLinuxProjectWorkJsx.jsx)("div", {
                 className: "flex flex-col gap-1",
-                children: visibleItems.map((item) => (0, tS.jsxs)("label", {
+                children: visibleItems.map((item) => (0, codexLinuxProjectWorkJsx.jsxs)("label", {
                   className: "flex min-w-0 items-start gap-2 rounded-md px-1.5 py-1 hover:bg-token-bg-secondary",
                   style: { paddingLeft: String(Math.min(8 + item.depth * 16, 72)) + "px" },
                   children: [
-                    (0, tS.jsx)("input", {
+                    (0, codexLinuxProjectWorkJsx.jsx)("input", {
                       type: "checkbox",
                       checked: item.checked,
                       disabled: pendingLine != null,
@@ -342,7 +344,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
                       className: "mt-0.5 shrink-0",
                       "aria-label": item.text,
                     }),
-                    (0, tS.jsx)("span", {
+                    (0, codexLinuxProjectWorkJsx.jsx)("span", {
                       className: item.checked
                         ? "min-w-0 break-words text-sm text-token-description-foreground line-through"
                         : "min-w-0 break-words text-sm text-token-foreground",
@@ -353,29 +355,43 @@ function codexLinuxProjectWorkCardRuntime(props) {
               }),
     ],
   });
-  const section = (0, tS.jsx)(J.Section, {
+  const section = (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Section, {
     sectionKey: "project-work",
     title,
     children: body,
   });
-  return (0, tS.jsx)(J.Root, {
+  return (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Root, {
     shouldHideInlineImmediately,
     shouldShow,
-    children: (0, tS.jsx)(J.Content, { children: section }),
+    children: (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Content, { children: section }),
   });
 }
 
-function sidebarRuntimeSource() {
+function sidebarRuntimeSource(aliases) {
+  let cardSource = codexLinuxProjectWorkCardRuntime.toString().replace(
+    "codexLinuxProjectWorkCardRuntime",
+    "codexLinuxProjectWorkCard",
+  );
+  const replacements = {
+    codexLinuxProjectWorkEnvironmentAtom: aliases.environmentAtom,
+    codexLinuxProjectWorkEnvironmentHook: aliases.environmentHook,
+    codexLinuxProjectWorkJsx: aliases.jsx,
+    codexLinuxProjectWorkNormalizePath: aliases.normalizePath,
+    codexLinuxProjectWorkReact: aliases.react,
+    codexLinuxProjectWorkRouteAtom: aliases.routeAtom,
+    codexLinuxProjectWorkRouteHook: aliases.routeHook,
+    codexLinuxProjectWorkSummary: aliases.summary,
+  };
+  for (const [placeholder, replacement] of Object.entries(replacements)) {
+    cardSource = cardSource.replaceAll(placeholder, replacement);
+  }
   return [
     `var codexLinuxProjectWorkSidebarMarker=${JSON.stringify(SIDEBAR_MARKER)};`,
     codexLinuxProjectWorkStateFromPayloadRuntime.toString().replace(
       "codexLinuxProjectWorkStateFromPayloadRuntime",
       "codexLinuxProjectWorkStateFromPayload",
     ),
-    codexLinuxProjectWorkCardRuntime.toString().replace(
-      "codexLinuxProjectWorkCardRuntime",
-      "codexLinuxProjectWorkCard",
-    ),
+    cardSource,
   ].join("");
 }
 
@@ -398,6 +414,53 @@ function findFunctions(source) {
   return functions;
 }
 
+function inferSidebarAliases(source, target, jsx, summary) {
+  const planFunctions = findFunctions(source).filter(({ text }) =>
+    text.includes("codex.localConversation.plan.title"),
+  );
+  if (planFunctions.length !== 1) {
+    warn(`Expected one current plan summary function, found ${planFunctions.length}`, "sidebar patch");
+    return null;
+  }
+  const plan = planFunctions[0].text;
+  const route = plan.match(
+    /\b([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\(([A-Za-z_$][\w$]*)\),([A-Za-z_$][\w$]*)=\1\.value\.routeKind===[`'"]local-thread[`'"]\?\1\.value\.conversationId:null/,
+  );
+  const workspace = plan.match(
+    /\b([A-Za-z_$][\w$]*)\.cwd==null\?null:([A-Za-z_$][\w$]*)\(\1\.cwd\)/,
+  );
+  if (route == null || workspace == null) {
+    warn("Could not infer current route or workspace aliases from the plan summary", "sidebar patch");
+    return null;
+  }
+  const environmentPattern = new RegExp(
+    `\\b${workspace[1]}=([A-Za-z_$][\\w$]*)\\(([A-Za-z_$][\\w$]*)\\)`,
+  );
+  const environment = plan.match(environmentPattern);
+  if (environment == null) {
+    warn("Could not infer the current environment selector aliases", "sidebar patch");
+    return null;
+  }
+  const modulePrefix = source.slice(Math.max(0, target.start - 4000), target.start);
+  const reactImports = [
+    ...modulePrefix.matchAll(/\b([A-Za-z_$][\w$]*)=t\(u\(\),1\)/g),
+  ];
+  if (reactImports.length === 0) {
+    warn("Could not infer the current React namespace alias", "sidebar patch");
+    return null;
+  }
+  return {
+    environmentAtom: environment[2],
+    environmentHook: environment[1],
+    jsx,
+    normalizePath: workspace[2],
+    react: reactImports.at(-1)[1],
+    routeAtom: route[3],
+    routeHook: route[2],
+    summary,
+  };
+}
+
 function applySidebarPatch(source) {
   if (typeof source !== "string") {
     warn("Webview source is not a string", "sidebar patch");
@@ -416,27 +479,31 @@ function applySidebarPatch(source) {
   const targets = findFunctions(source).filter(({ text }) =>
     text.includes("shouldHideInlineImmediately") &&
     text.includes("registerEnvironmentActionCommands") &&
-    text.includes("J.Content") &&
-    text.includes("J.Root"),
+    text.includes(".Content") &&
+    text.includes(".Root"),
   );
   if (targets.length !== 1) {
     warn(`Expected one inline task summary card, found ${targets.length}`, "sidebar patch");
     return source;
   }
   const target = targets[0];
-  const rootPattern = /([A-Za-z_$][\w$]*)=\(0,([A-Za-z_$][\w$]*)\.jsx\)\(J\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:([A-Za-z_$][\w$]*)\}\)/g;
+  const rootPattern = /([A-Za-z_$][\w$]*)=\(0,([A-Za-z_$][\w$]*)\.jsx\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:([A-Za-z_$][\w$]*)\}\)/g;
   const roots = [...target.text.matchAll(rootPattern)];
   if (roots.length !== 1) {
     warn(`Expected one inline task summary root, found ${roots.length}`, "sidebar patch");
     return source;
   }
-  const [full, resultName, jsxName, hideName, showName, childrenName] = roots[0];
+  const [full, resultName, jsxName, summaryName, hideName, showName, childrenName] = roots[0];
+  const aliases = inferSidebarAliases(source, target, jsxName, summaryName);
+  if (aliases == null) {
+    return source;
+  }
   const replacement =
     `${resultName}=(0,${jsxName}.jsxs)(${jsxName}.Fragment,{children:[` +
-    `(0,${jsxName}.jsx)(J.Root,{shouldHideInlineImmediately:${hideName},shouldShow:${showName},children:${childrenName}}),` +
+    `(0,${jsxName}.jsx)(${summaryName}.Root,{shouldHideInlineImmediately:${hideName},shouldShow:${showName},children:${childrenName}}),` +
     `(0,${jsxName}.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:${hideName},shouldShow:${showName}})]})`;
   const patchedTarget = target.text.replace(full, replacement);
-  return source.slice(0, target.start) + sidebarRuntimeSource() + patchedTarget + source.slice(target.end);
+  return source.slice(0, target.start) + sidebarRuntimeSource(aliases) + patchedTarget + source.slice(target.end);
 }
 
 module.exports = {

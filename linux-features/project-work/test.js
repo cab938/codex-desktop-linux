@@ -107,11 +107,12 @@ function syntheticContextBundle() {
 function syntheticSidebarBundle() {
   return [
     "const a='codex.localConversation.environmentSummary.title';",
-    "const b='codex.localConversation.plan.title';",
+    "function Plan(){let a=r(Di),b=a.value.routeKind===`local-thread`?a.value.conversationId:null,c=o(ss),d=c.cwd==null?null:ee(c.cwd);return 'codex.localConversation.plan.title'}",
+    "var Ux=t(u(),1);",
     "function Summary({shouldHideInlineImmediately:e,shouldShow:t}){",
     "registerEnvironmentActionCommands();",
-    "let c=(0,tS.jsx)(J.Content,{children:null}),",
-    "d=(0,tS.jsx)(J.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});",
+    "let c=(0,tS.jsx)(Y.Content,{children:null}),",
+    "d=(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});",
     "return d}",
   ].join("");
 }
@@ -434,6 +435,11 @@ test("patches apply once to current semantic shapes", () => {
   assert.match(patchedSidebar, /codexLinuxProjectWorkSidebarV1/);
   assert.match(patchedSidebar, /data-project-work-status/);
   assert.match(patchedSidebar, /Project work/);
+  assert.match(patchedSidebar, /Ux\.useState/);
+  assert.match(patchedSidebar, /r\(Di\)/);
+  assert.match(patchedSidebar, /o\(ss\)/);
+  assert.match(patchedSidebar, /ee\(environment\.cwd\)/);
+  assert.match(patchedSidebar, /Y\.Section/);
   assert.equal(applySidebarPatch(patchedSidebar), patchedSidebar);
 });
 
