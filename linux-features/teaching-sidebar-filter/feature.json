@@ -1,0 +1,13 @@
+{
+  "id": "teaching-sidebar-filter",
+  "title": "Teaching View",
+  "description": "Adds an opt-in Teaching view with a recognizable window title and size plus filtered sidebar projects and pinned items.",
+  "defaultEnabled": false,
+  "entrypoints": {
+    "patchDescriptors": "./patch.js"
+  },
+  "filter": {
+    "projectPattern": "^teaching-",
+    "flags": "i"
+  }
+}
