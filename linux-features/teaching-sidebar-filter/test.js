@@ -534,7 +534,7 @@ test("persisted UI activation updates shared state, window identity, and rendere
   }
 });
 
-test("preload bridge adds the Teaching view setter and warns on drift", () => {
+test("preload bridge adds the Teaching view setter and warns on drift", async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "teaching-sidebar-filter-preload-"));
   try {
     const buildDir = path.join(tempDir, ".vite", "build");
@@ -547,7 +547,38 @@ test("preload bridge adds the Teaching view setter and warns on drift", () => {
     assert.deepEqual(applyPreloadBridgePatch(tempDir), { changed: true, matched: true });
     const patched = fs.readFileSync(preloadPath, "utf8");
     assert.match(patched, new RegExp(PRELOAD_MARKER));
-    assert.match(patched, new RegExp(`teachingView:\\{setActive:e=>e\\.ipcRenderer\\.invoke\\(\"${IPC_CHANNEL}\"`));
+    assert.match(
+      patched,
+      new RegExp(
+        `teachingView:\\{setActive:codexLinuxTeachingViewActive=>e\\.ipcRenderer\\.invoke\\(\"${IPC_CHANNEL}\"`,
+      ),
+    );
+    const invokes = [];
+    let exposed;
+    const electron = {
+      contextBridge: {
+        exposeInMainWorld(name, value) {
+          assert.equal(name, "electronBridge");
+          exposed = value;
+        },
+      },
+      ipcRenderer: {
+        invoke(channel, payload) {
+          invokes.push({ channel, payload });
+          return Promise.resolve({ ok: true });
+        },
+      },
+    };
+    vm.runInNewContext(patched, {
+      require(specifier) {
+        assert.equal(specifier, "electron");
+        return electron;
+      },
+    });
+    assert.deepEqual(await exposed.teachingView.setActive(true), { ok: true });
+    assert.deepEqual(JSON.parse(JSON.stringify(invokes)), [
+      { channel: IPC_CHANNEL, payload: { active: true } },
+    ]);
     assert.deepEqual(applyPreloadBridgePatch(tempDir), { changed: false, matched: true });
 
     fs.writeFileSync(preloadPath, "const bridge={};");
