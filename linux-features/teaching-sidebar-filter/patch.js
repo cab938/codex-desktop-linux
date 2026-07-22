@@ -12,11 +12,15 @@ const DEFAULT_PROJECT_PATTERN = "^teaching-";
 const DEFAULT_FLAGS = "i";
 const MAX_PATTERN_LENGTH = 256;
 const SHARED_OBJECT_KEY = "codex_linux_teaching_sidebar_filter";
+const IPC_CHANNEL = "codex_desktop:teaching-view";
+const STATE_FILE_NAME = "teaching-view.json";
 const MAIN_PROCESS_MARKER = "codexLinuxTeachingSidebarFilterMainProcess";
+const PRELOAD_MARKER = "codexLinuxTeachingSidebarFilterPreload";
 const WINDOW_PATCH_MARKER = "codexLinuxTeachingWindowActive";
 const RUNTIME_MARKER = "codexLinuxTeachingSidebarFilterRuntime";
 const PROJECTS_PATCH_MARKER = "codexLinuxTeachingSidebarFilterProjectsPatch";
 const MAIN_PAGE_PATCH_MARKER = "codexLinuxTeachingSidebarFilterMainPagePatch";
+const CONTROLS_PATCH_MARKER = "codexLinuxTeachingSidebarFilterControlsPatch";
 const INDICATOR_ID = "codex-linux-teaching-view-indicator";
 
 const PROJECTS_SIDEBAR_ASSET_PATTERN =
@@ -87,28 +91,60 @@ function normalizedFilterSettings(context = {}) {
   return { projectPattern, flags };
 }
 
-function validatePreloadBridge(extractedDir) {
+function applyPreloadBridgePatch(extractedDir) {
   const buildDir = path.join(extractedDir, ".vite", "build");
   const candidates = fs.existsSync(buildDir)
     ? fs.readdirSync(buildDir).filter((name) => /^preload(?:-[^.]+)?\.js$/.test(name))
     : [];
   if (candidates.length !== 1) {
     console.warn(
-      `WARN: Could not find exactly one current preload bundle in ${buildDir} - teaching-sidebar-filter cannot verify its shared-object bridge`,
+      `WARN: Could not find exactly one current preload bundle in ${buildDir} - teaching-sidebar-filter cannot install its control bridge`,
     );
-    return { changed: false };
+    return { changed: false, matched: false, reason: "current preload bundle was not unique" };
   }
 
-  const source = fs.readFileSync(path.join(buildDir, candidates[0]), "utf8");
+  const preloadPath = path.join(buildDir, candidates[0]);
+  const source = fs.readFileSync(preloadPath, "utf8");
+  if (source.includes(PRELOAD_MARKER)) {
+    return { changed: false, matched: true };
+  }
+  const electronMatch = source.match(/^let ([A-Za-z_$][\w$]*)=require\(["'`]electron["'`]\);/);
+  const getterNeedle = "getSharedObjectSnapshotValue:e=>k[e]";
   if (
+    electronMatch == null ||
+    source.split(getterNeedle).length !== 2 ||
     !source.includes("getSharedObjectSnapshotValue") ||
-    !source.includes("get-shared-object-snapshot")
+    !source.includes("get-shared-object-snapshot") ||
+    !source.includes("exposeInMainWorld(`electronBridge`")
   ) {
     console.warn(
-      "WARN: Current preload bundle does not expose the shared-object snapshot getter - teaching-sidebar-filter cannot activate safely",
+      "WARN: Current preload electronBridge shape drifted - teaching-sidebar-filter cannot install its control bridge",
     );
+    return { changed: false, matched: false, reason: "current preload electronBridge anchor drifted" };
   }
-  return { changed: false };
+  const electronAlias = electronMatch[1];
+  const bridge =
+    `teachingView:{setActive:e=>${electronAlias}.ipcRenderer.invoke(${JSON.stringify(IPC_CHANNEL)},{active:e})},`;
+  const patched =
+    `var ${PRELOAD_MARKER}=!0;` +
+    source.replace(getterNeedle, `${bridge}${getterNeedle}`);
+  fs.writeFileSync(preloadPath, patched, "utf8");
+  return { changed: true, matched: true };
+}
+
+function mainRuntimeSource({ projectPattern, flags }) {
+  return [
+    `var ${MAIN_PROCESS_MARKER}=!0,codexLinuxTeachingViewState={active:!1,projectPattern:${JSON.stringify(projectPattern)},flags:${JSON.stringify(flags)}},codexLinuxTeachingViewRepository=null,codexLinuxTeachingViewNormalTitles=new WeakMap,codexLinuxTeachingViewIpcInstalled=!1;`,
+    `function codexLinuxTeachingViewStatePath(){try{let e=require(\"node:path\"),t=process.env.CODEX_LINUX_SETTINGS_FILE,n=typeof t===\"string\"&&t.length>0?e.dirname(t):require(\"electron\").app.getPath(\"userData\");return e.join(n,${JSON.stringify(STATE_FILE_NAME)})}catch{return null}}`,
+    `function codexLinuxTeachingViewReadState(){try{let e=codexLinuxTeachingViewStatePath();if(e==null)return!1;let t=JSON.parse(require(\"node:fs\").readFileSync(e,\"utf8\"));return t?.schemaVersion===1&&t.active===!0}catch{return!1}}`,
+    `codexLinuxTeachingViewState.active=codexLinuxTeachingViewReadState();`,
+    `function codexLinuxTeachingViewSnapshot(){return{marker:${JSON.stringify(MAIN_PROCESS_MARKER)},active:codexLinuxTeachingViewState.active===!0,projectPattern:codexLinuxTeachingViewState.projectPattern,flags:codexLinuxTeachingViewState.flags}}`,
+    `function codexLinuxTeachingViewPublish(){try{codexLinuxTeachingViewRepository?.set?.(${JSON.stringify(SHARED_OBJECT_KEY)},codexLinuxTeachingViewSnapshot())}catch{}}`,
+    `function codexLinuxTeachingViewWriteState(e){let t=codexLinuxTeachingViewStatePath();if(t==null)return{ok:!1,error:\"Teaching view settings path is unavailable\"};let n=require(\"node:fs\"),r=require(\"node:path\"),i=t+\".\"+String(process.pid)+\".tmp\";try{return n.mkdirSync(r.dirname(t),{recursive:!0,mode:448}),n.writeFileSync(i,JSON.stringify({schemaVersion:1,active:e})+\"\\n\",{encoding:\"utf8\",mode:384}),n.renameSync(i,t),{ok:!0}}catch(e){try{n.unlinkSync(i)}catch{}return{ok:!1,error:e instanceof Error?e.message:String(e)}}}`,
+    `function codexLinuxTeachingViewApplyWindow(e,t){if(e==null||e.isDestroyed?.())return;let n=require(\"electron\");if(t){codexLinuxTeachingViewNormalTitles.has(e)||codexLinuxTeachingViewNormalTitles.set(e,e.getTitle?.()??n.app.getName());try{e.isMaximized?.()&&e.unmaximize?.();let t=e.getBounds?.();t!=null&&e.setBounds?.({...t,width:1920,height:1080})}catch{}}try{e.setTitle?.(t?\"Codex (teaching mode)\":codexLinuxTeachingViewNormalTitles.get(e)??n.app.getName())}catch{}}`,
+    `function codexLinuxTeachingViewSetActive(e,t){if(typeof e!==\"boolean\")return{ok:!1,error:\"Teaching view active state must be boolean\"};let n=codexLinuxTeachingViewWriteState(e);if(!n.ok)return n;codexLinuxTeachingViewState.active=e,codexLinuxTeachingViewPublish();let r=require(\"electron\").BrowserWindow.fromWebContents?.(t)??null;codexLinuxTeachingViewApplyWindow(r,e),setTimeout(()=>{try{r!=null&&!r.isDestroyed?.()&&r.webContents?.reload?.()}catch{}},75);return{ok:!0,state:codexLinuxTeachingViewSnapshot()}}`,
+    `function codexLinuxTeachingViewBindRepository(e){codexLinuxTeachingViewRepository=e,codexLinuxTeachingViewPublish();if(codexLinuxTeachingViewIpcInstalled)return;let t=require(\"electron\");t.ipcMain.handle(${JSON.stringify(IPC_CHANNEL)},(e,t)=>codexLinuxTeachingViewSetActive(t?.active,e.sender)),codexLinuxTeachingViewIpcInstalled=!0}`,
+  ].join("");
 }
 
 function runtimeSource() {
@@ -239,7 +275,7 @@ function patchPrimaryWindowMethod(target) {
 
   const boundsReplacement =
     `,${isPrimaryAlias}=${appearanceAlias}===\`primary\`,` +
-    `${WINDOW_PATCH_MARKER}=process.platform===\`linux\`&&process.argv.includes(\`--teaching-mode\`)&&${isPrimaryAlias},` +
+    `${WINDOW_PATCH_MARKER}=codexLinuxTeachingViewState.active===!0&&${isPrimaryAlias},` +
     `${savedBoundsAlias}=${isPrimaryAlias}?this.restorePrimaryWindowBounds():null,` +
     `${browserWidthAlias}=${WINDOW_PATCH_MARKER}?1920:${savedBoundsAlias}?.width??${widthAlias},` +
     `${browserHeightAlias}=${WINDOW_PATCH_MARKER}?1080:${savedBoundsAlias}?.height??${heightAlias},` +
@@ -285,7 +321,7 @@ function applyMainProcessPatch(source, context = {}) {
   const { projectPattern, flags } = normalizedFilterSettings(context);
   const injection =
     `${matches[0][1]}` +
-    `this.sharedObjectRepository.set(${JSON.stringify(SHARED_OBJECT_KEY)},{marker:${JSON.stringify(MAIN_PROCESS_MARKER)},active:process.platform===\`linux\`&&process.argv.includes(\`--teaching-mode\`),projectPattern:${JSON.stringify(projectPattern)},flags:${JSON.stringify(flags)}}),`;
+    `codexLinuxTeachingViewBindRepository(this.sharedObjectRepository),`;
   const withWindow = replaceFunction(source, primaryWindowMethod, patchedPrimaryWindowMethod);
   const sharedObjectIndex = withWindow.indexOf(matches[0][0]);
   if (sharedObjectIndex === -1) {
@@ -293,6 +329,7 @@ function applyMainProcessPatch(source, context = {}) {
     return source;
   }
   return (
+    mainRuntimeSource({ projectPattern, flags }) +
     withWindow.slice(0, sharedObjectIndex) +
     injection +
     withWindow.slice(sharedObjectIndex + matches[0][0].length)
@@ -473,6 +510,82 @@ function patchUnifiedSidebar(functionText, source) {
   return patched;
 }
 
+function inferTeachingControlsUi(source) {
+  const helpMenu = findUniqueFunction(source, [
+    "sidebarHelp.openAriaLabel",
+    "sidebarHelp.keyboardShortcuts",
+    "contentWidth:`menu`",
+  ]);
+  const desktopHelp = findUniqueFunction(source, [
+    "CODEX_MOBILE_SETUP_COMPLETED",
+    "showChromeExtensionSetup",
+    "showMobileSetup",
+    "showRemoteSetup",
+  ]);
+  const sidebarFooter = findUniqueFunction(source, [
+    "flex h-toolbar items-center gap-2 px-row-x",
+    "variant:`sidebarFooter`",
+    "browser:!0",
+  ]);
+  if (helpMenu == null || desktopHelp == null || sidebarFooter == null) {
+    return null;
+  }
+
+  const buttonMatch = helpMenu.text.match(
+    /\(0,([A-Za-z_$][\w$]*)\.jsx\)\(([A-Za-z_$][\w$]*),\{"aria-label":[A-Za-z_$][\w$]*,className:`size-8 shrink-0`,color:`ghost`,size:`icon`,uniform:!0,children:/,
+  );
+  if (buttonMatch == null) {
+    return null;
+  }
+  const [, jsxAlias, buttonAlias] = buttonMatch;
+  const menuMatches = [
+    ...helpMenu.text.matchAll(
+      new RegExp(`\\(0,${escapeRegExp(jsxAlias)}\\.jsx\\)\\(([A-Za-z_$][\\w$]*)\\.Item,\\{`, "g"),
+    ),
+  ];
+  const popoverMatches = [
+    ...helpMenu.text.matchAll(
+      new RegExp(
+        `\\(0,${escapeRegExp(jsxAlias)}\\.jsxs\\)\\(([A-Za-z_$][\\w$]*),\\{align:\`start\`,contentWidth:\`menu\``,
+        "g",
+      ),
+    ),
+  ];
+  const helpCallPattern = new RegExp(
+    `\\(0,([A-Za-z_$][\\w$]*)\\.jsx\\)\\(${escapeRegExp(desktopHelp.name)},\\{\\}\\)`,
+    "g",
+  );
+  const helpCallMatches = [...sidebarFooter.text.matchAll(helpCallPattern)];
+  if (
+    menuMatches.length === 0 ||
+    popoverMatches.length !== 1 ||
+    helpCallMatches.length !== 1
+  ) {
+    return null;
+  }
+  const menuAliases = new Set(menuMatches.map((match) => match[1]));
+  if (menuAliases.size !== 1) {
+    return null;
+  }
+
+  return {
+    buttonAlias,
+    desktopHelp,
+    footerJsxAlias: helpCallMatches[0][1],
+    helpCall: helpCallMatches[0],
+    jsxAlias,
+    menuAlias: [...menuAliases][0],
+    popoverAlias: popoverMatches[0][1],
+    sidebarFooter,
+  };
+}
+
+function teachingControlsSource({ buttonAlias, jsxAlias, menuAlias, popoverAlias }) {
+  return [
+    `function codexLinuxTeachingControlsMenu(){let e=codexLinuxTeachingSidebarFilterActive(),t=(0,${jsxAlias}.jsx)(${buttonAlias},{"aria-label":"Open personal controls",title:"Open personal controls",className:"size-8 shrink-0",color:"ghost",size:"icon",uniform:!0,children:(0,${jsxAlias}.jsx)("span",{"aria-hidden":!0,style:{alignItems:"center",border:"1px solid currentColor",borderRadius:"999px",display:"inline-flex",fontSize:"15px",fontWeight:600,height:"20px",justifyContent:"center",lineHeight:1,width:"20px"},children:"¿"})}),n=(0,${jsxAlias}.jsx)(${menuAlias}.Item,{role:"menuitemcheckbox","aria-checked":e,onSelect:()=>{let t=globalThis.electronBridge?.teachingView;t?.setActive?.(!e)?.catch?.(e=>console.error("Could not update Teaching view",e))},children:(0,${jsxAlias}.jsxs)("div",{className:"flex w-full items-center justify-between gap-3",children:[(0,${jsxAlias}.jsx)("span",{children:"Teaching view"}),(0,${jsxAlias}.jsx)("span",{className:"text-token-description-foreground",children:e?"On":"Off"})]})});return(0,${jsxAlias}.jsx)(${popoverAlias},{align:"start",contentWidth:"menu",side:"top",sideOffset:6,triggerButton:t,children:n})}`,
+  ].join("");
+}
+
 function applyMainPagePatch(source) {
   if (typeof source !== "string") {
     warn("Asset source is not a string", "main-page pinned patch");
@@ -480,10 +593,11 @@ function applyMainPagePatch(source) {
   }
   const alreadyRuntime = source.includes(RUNTIME_MARKER);
   const alreadyPatch = source.includes(MAIN_PAGE_PATCH_MARKER);
-  if (alreadyRuntime && alreadyPatch) {
+  const alreadyControls = source.includes(CONTROLS_PATCH_MARKER);
+  if (alreadyRuntime && alreadyPatch && alreadyControls) {
     return source;
   }
-  if (alreadyRuntime || alreadyPatch) {
+  if (alreadyRuntime || alreadyPatch || alreadyControls) {
     warn("Found a partial existing main-page patch", "main-page pinned patch");
     return source;
   }
@@ -501,8 +615,17 @@ function applyMainPagePatch(source) {
     "projectByKey",
     "threadContainerId:`pinned`",
   ]);
-  if (pinnedTarget == null || unifiedTarget == null || pinnedTarget.start === unifiedTarget.start) {
-    warn("Could not find the current pinned and unified sidebar functions", "main-page pinned patch");
+  const controlsUi = inferTeachingControlsUi(source);
+  if (
+    pinnedTarget == null ||
+    unifiedTarget == null ||
+    pinnedTarget.start === unifiedTarget.start ||
+    controlsUi == null
+  ) {
+    warn(
+      "Could not find the current pinned, unified sidebar, and Help control functions",
+      "main-page pinned patch",
+    );
     return source;
   }
 
@@ -516,12 +639,24 @@ function applyMainPagePatch(source) {
   const replacements = [
     { ...pinnedTarget, text: patchedPinned },
     { ...unifiedTarget, text: patchedUnified },
+    {
+      ...controlsUi.sidebarFooter,
+      text:
+        controlsUi.sidebarFooter.text.slice(0, controlsUi.helpCall.index) +
+        `(0,${controlsUi.footerJsxAlias}.jsxs)(${controlsUi.footerJsxAlias}.Fragment,{children:[(0,${controlsUi.footerJsxAlias}.jsx)(codexLinuxTeachingControlsMenu,{}),${controlsUi.helpCall[0]}]})` +
+        controlsUi.sidebarFooter.text.slice(
+          controlsUi.helpCall.index + controlsUi.helpCall[0].length,
+        ),
+    },
   ].sort((left, right) => right.start - left.start);
   let patched = source;
   for (const replacement of replacements) {
     patched = replaceFunction(patched, replacement, replacement.text);
   }
-  return `${runtimeSource()}var ${MAIN_PAGE_PATCH_MARKER}=!0;${patched}`;
+  return (
+    `${runtimeSource()}${teachingControlsSource(controlsUi)}` +
+    `var ${MAIN_PAGE_PATCH_MARKER}=!0,${CONTROLS_PATCH_MARKER}=!0;${patched}`
+  );
 }
 
 const descriptors = [
@@ -537,7 +672,7 @@ const descriptors = [
     phase: "extracted-app:pre-webview",
     order: 20_905,
     ciPolicy: "optional",
-    apply: validatePreloadBridge,
+    apply: applyPreloadBridgePatch,
   },
   {
     id: "project-groups",
@@ -564,20 +699,25 @@ const descriptors = [
 module.exports = {
   DEFAULT_FLAGS,
   DEFAULT_PROJECT_PATTERN,
+  CONTROLS_PATCH_MARKER,
   INDICATOR_ID,
+  IPC_CHANNEL,
   MAIN_PAGE_ASSET_PATTERN,
   MAIN_PAGE_PATCH_MARKER,
   MAIN_PROCESS_MARKER,
+  PRELOAD_MARKER,
   PROJECTS_PATCH_MARKER,
   PROJECTS_SIDEBAR_ASSET_PATTERN,
   RUNTIME_MARKER,
   SHARED_OBJECT_KEY,
+  STATE_FILE_NAME,
   WINDOW_PATCH_MARKER,
   applyMainPagePatch,
   applyMainProcessPatch,
+  applyPreloadBridgePatch,
   applyProjectsSidebarPatch,
   descriptors,
   normalizedFilterSettings,
+  mainRuntimeSource,
   runtimeSource,
-  validatePreloadBridge,
 };

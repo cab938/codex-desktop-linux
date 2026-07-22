@@ -2,14 +2,16 @@
 
 Optional presentation-oriented mode for Codex Desktop.
 
-When the feature is built in and Electron starts with `--teaching-mode`, project
-groups and pinned items are filtered using a configured regular expression. The
-primary window also opens at 1920x1080 with the exact title `Codex (teaching
-mode)`. A saved maximized state is ignored for this initial Teaching view
-window so it does not override the requested dimensions. The feature calls
-this **Teaching view** because it reduces accidental visual disclosure but does
-not isolate or remove application data. Search, direct routes, notifications,
-open tasks, or future upstream surfaces may still expose filtered projects.
+When the feature is built in, a circled `¿` button appears beside Help in the
+sidebar footer. Its menu toggles **Teaching view** without launch flags. While
+active, project groups and pinned items are filtered using a configured regular
+expression, and the primary window uses the exact title `Codex (teaching mode)`
+at 1920x1080. If the window is maximized when Teaching view is enabled, it is
+unmaximized first so the requested dimensions take effect.
+
+Teaching view reduces accidental visual disclosure but does not isolate or
+remove application data. Search, direct routes, notifications, open tasks, or
+future upstream surfaces may still expose filtered projects.
 
 ## Enable and configure
 
@@ -30,16 +32,22 @@ rebuilding:
 }
 ```
 
-Then regenerate or rebuild the application. Start a reliable separate teaching
-window with:
+Then regenerate or rebuild the application and launch it normally:
 
 ```bash
-./codex-app/start.sh --new-instance --teaching-mode
+./codex-app/start.sh
 ```
 
-A normal launch remains unfiltered and retains the normal title and saved window
-bounds. `--new-instance` avoids handing the flag to an already-running process,
-whose startup mode and initial window geometry cannot be changed retroactively.
+Open the `¿` menu beside Help and select **Teaching view**. The selection is
+written immediately, the current window title and size are updated, and the
+renderer reloads so the sidebar filter changes at once. Selecting it again
+restores the unfiltered sidebar and normal window title. The selected state also
+applies on later normal launches.
+
+The state is stored as `teaching-view.json` beside the launcher's existing
+settings file. For the side-by-side development build this is normally
+`~/.config/codex-desktop-dev/teaching-view.json`. Deleting that file restores
+the default inactive state on the next launch.
 
 The default filter is case-insensitive `^teaching-`. Invalid overrides warn and
 fall back to that safe default. Pinned Codex tasks are matched through their
