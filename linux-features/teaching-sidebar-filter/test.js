@@ -612,7 +612,11 @@ test("main page patch adds the personal control beside Help and filters pinned d
   assert.notEqual(patched, source);
   assert.match(patched, new RegExp(MAIN_PAGE_PATCH_MARKER));
   assert.match(patched, new RegExp(CONTROLS_PATCH_MARKER));
-  assert.match(patched, /children:"¿"/);
+  assert.doesNotMatch(patched, /children:"¿"/);
+  assert.match(
+    patched,
+    /children:\(0,EJ\.jsx\)\(ko,\{className:"icon-sm",style:\{transform:"rotate\(180deg\)"\}\}\)/,
+  );
   assert.match(patched, /"aria-label":"Open personal controls"/);
   assert.match(patched, /children:"Teaching view"/);
   assert.match(patched, /electronBridge\?\.teachingView/);
@@ -647,6 +651,10 @@ test("upstream marker drift leaves each target byte-identical", () => {
     [
       applyMainPagePatch,
       mainPageBundleFixture().replace("sidebarHelp.openAriaLabel", "sidebarHelp.openMenuLabel"),
+    ],
+    [
+      applyMainPagePatch,
+      mainPageBundleFixture().replace("className:`icon-sm`", "className:`help-icon`"),
     ],
   ];
   for (const [apply, source] of driftCases) {
