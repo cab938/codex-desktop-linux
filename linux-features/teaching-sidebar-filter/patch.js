@@ -21,7 +21,6 @@ const RUNTIME_MARKER = "codexLinuxTeachingSidebarFilterRuntime";
 const PROJECTS_PATCH_MARKER = "codexLinuxTeachingSidebarFilterProjectsPatch";
 const MAIN_PAGE_PATCH_MARKER = "codexLinuxTeachingSidebarFilterMainPagePatch";
 const CONTROLS_PATCH_MARKER = "codexLinuxTeachingSidebarFilterControlsPatch";
-const INDICATOR_ID = "codex-linux-teaching-view-indicator";
 
 const PROJECTS_SIDEBAR_ASSET_PATTERN =
   /^app-initial~notebook-preview-panel~app-main~pull-request-route~projects-index-page~cloud-en~[A-Za-z0-9_-]+\.js$/;
@@ -159,7 +158,7 @@ function runtimeSource() {
     `function codexLinuxTeachingSidebarFilterPinnedThreadKeys(e,t){if(!codexLinuxTeachingSidebarFilterActive())return e;let n=new Set(codexLinuxTeachingSidebarFilterGroups(t).flatMap(e=>Array.isArray(e?.threadKeys)?e.threadKeys:[]));return(Array.isArray(e)?e:[]).filter(e=>n.has(e))}`,
     `function codexLinuxTeachingSidebarFilterPinnedItems(e){if(!codexLinuxTeachingSidebarFilterActive())return e;return(Array.isArray(e)?e:[]).filter(codexLinuxTeachingSidebarFilterMatches)}`,
     `function codexLinuxTeachingSidebarFilterChatGptSource(e){if(!codexLinuxTeachingSidebarFilterActive())return e;return e==null||typeof e!==\`object\`?e:{...e,pinnedTargets:codexLinuxTeachingSidebarFilterPinnedItems(e.pinnedTargets),pinnedProjects:codexLinuxTeachingSidebarFilterPinnedItems(e.pinnedProjects)}}`,
-    `function codexLinuxTeachingSidebarFilterInstallIndicator(){if(typeof document===\`undefined\`)return;let e=()=>{let t=codexLinuxTeachingSidebarFilterConfig(),n=t?.active===!0,r=document.documentElement;n?r?.setAttribute(\`data-codex-linux-teaching-view\`,\`active\`):r?.removeAttribute(\`data-codex-linux-teaching-view\`);let i=document.getElementById(${JSON.stringify(INDICATOR_ID)});if(!n){i?.remove();return}if(!i){i=document.createElement(\`div\`),i.id=${JSON.stringify(INDICATOR_ID)},i.setAttribute(\`role\`,\`status\`),i.setAttribute(\`aria-live\`,\`polite\`),i.style.cssText=\`position:fixed;left:12px;bottom:12px;z-index:2147483647;pointer-events:none;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.92);color:#fff;font:600 11px/1.4 system-ui,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.35)\`,(document.body||document.documentElement)?.appendChild(i)}let a=codexLinuxTeachingSidebarFilterMatcher();i.textContent=a===!1?\`Teaching view filter error\`:\`Teaching view\`,i.title=\`Project filter: \${String(t?.projectPattern??\`\`)}\`};document.readyState===\`loading\`&&document.addEventListener(\`DOMContentLoaded\`,e,{once:!0}),e()}codexLinuxTeachingSidebarFilterInstallIndicator();`,
+    `function codexLinuxTeachingSidebarFilterApplyDocumentState(){if(typeof document===\`undefined\`)return;let e=()=>{let t=codexLinuxTeachingSidebarFilterActive(),n=document.documentElement;t?n?.setAttribute(\`data-codex-linux-teaching-view\`,\`active\`):n?.removeAttribute(\`data-codex-linux-teaching-view\`)};document.readyState===\`loading\`&&document.addEventListener(\`DOMContentLoaded\`,e,{once:!0}),e()}codexLinuxTeachingSidebarFilterApplyDocumentState();`,
   ].join("");
 }
 
@@ -716,7 +715,6 @@ module.exports = {
   DEFAULT_FLAGS,
   DEFAULT_PROJECT_PATTERN,
   CONTROLS_PATCH_MARKER,
-  INDICATOR_ID,
   IPC_CHANNEL,
   MAIN_PAGE_ASSET_PATTERN,
   MAIN_PAGE_PATCH_MARKER,
