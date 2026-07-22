@@ -538,6 +538,14 @@ function inferTeachingControlsUi(source) {
     return null;
   }
   const [, jsxAlias, buttonAlias] = buttonMatch;
+  const helpIconMatches = [
+    ...helpMenu.text.matchAll(
+      new RegExp(
+        `\\(0,${escapeRegExp(jsxAlias)}\\.jsx\\)\\(([A-Za-z_$][\\w$]*),\\{className:\`icon-sm\`\\}\\)`,
+        "g",
+      ),
+    ),
+  ];
   const menuMatches = [
     ...helpMenu.text.matchAll(
       new RegExp(`\\(0,${escapeRegExp(jsxAlias)}\\.jsx\\)\\(([A-Za-z_$][\\w$]*)\\.Item,\\{`, "g"),
@@ -557,6 +565,7 @@ function inferTeachingControlsUi(source) {
   );
   const helpCallMatches = [...sidebarFooter.text.matchAll(helpCallPattern)];
   if (
+    helpIconMatches.length !== 1 ||
     menuMatches.length === 0 ||
     popoverMatches.length !== 1 ||
     helpCallMatches.length !== 1
@@ -572,6 +581,7 @@ function inferTeachingControlsUi(source) {
     buttonAlias,
     desktopHelp,
     footerJsxAlias: helpCallMatches[0][1],
+    helpIconAlias: helpIconMatches[0][1],
     helpCall: helpCallMatches[0],
     jsxAlias,
     menuAlias: [...menuAliases][0],
@@ -580,9 +590,15 @@ function inferTeachingControlsUi(source) {
   };
 }
 
-function teachingControlsSource({ buttonAlias, jsxAlias, menuAlias, popoverAlias }) {
+function teachingControlsSource({
+  buttonAlias,
+  helpIconAlias,
+  jsxAlias,
+  menuAlias,
+  popoverAlias,
+}) {
   return [
-    `function codexLinuxTeachingControlsMenu(){let e=codexLinuxTeachingSidebarFilterActive(),t=(0,${jsxAlias}.jsx)(${buttonAlias},{"aria-label":"Open personal controls",title:"Open personal controls",className:"size-8 shrink-0",color:"ghost",size:"icon",uniform:!0,children:(0,${jsxAlias}.jsx)("span",{"aria-hidden":!0,style:{alignItems:"center",border:"1px solid currentColor",borderRadius:"999px",display:"inline-flex",fontSize:"15px",fontWeight:600,height:"20px",justifyContent:"center",lineHeight:1,width:"20px"},children:"¿"})}),n=(0,${jsxAlias}.jsx)(${menuAlias}.Item,{role:"menuitemcheckbox","aria-checked":e,onSelect:()=>{let t=globalThis.electronBridge?.teachingView;t?.setActive?.(!e)?.catch?.(e=>console.error("Could not update Teaching view",e))},children:(0,${jsxAlias}.jsxs)("div",{className:"flex w-full items-center justify-between gap-3",children:[(0,${jsxAlias}.jsx)("span",{children:"Teaching view"}),(0,${jsxAlias}.jsx)("span",{className:"text-token-description-foreground",children:e?"On":"Off"})]})});return(0,${jsxAlias}.jsx)(${popoverAlias},{align:"start",contentWidth:"menu",side:"top",sideOffset:6,triggerButton:t,children:n})}`,
+    `function codexLinuxTeachingControlsMenu(){let e=codexLinuxTeachingSidebarFilterActive(),t=(0,${jsxAlias}.jsx)(${buttonAlias},{"aria-label":"Open personal controls",title:"Open personal controls",className:"size-8 shrink-0",color:"ghost",size:"icon",uniform:!0,children:(0,${jsxAlias}.jsx)(${helpIconAlias},{className:"icon-sm",style:{transform:"rotate(180deg)"}})}),n=(0,${jsxAlias}.jsx)(${menuAlias}.Item,{role:"menuitemcheckbox","aria-checked":e,onSelect:()=>{let t=globalThis.electronBridge?.teachingView;t?.setActive?.(!e)?.catch?.(e=>console.error("Could not update Teaching view",e))},children:(0,${jsxAlias}.jsxs)("div",{className:"flex w-full items-center justify-between gap-3",children:[(0,${jsxAlias}.jsx)("span",{children:"Teaching view"}),(0,${jsxAlias}.jsx)("span",{className:"text-token-description-foreground",children:e?"On":"Off"})]})});return(0,${jsxAlias}.jsx)(${popoverAlias},{align:"start",contentWidth:"menu",side:"top",sideOffset:6,triggerButton:t,children:n})}`,
   ].join("");
 }
 
