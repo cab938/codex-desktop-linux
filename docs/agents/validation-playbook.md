@@ -22,6 +22,13 @@ For launcher behavior changes, rebuild or inspect the generated launcher:
 sed -n '1,160p' codex-app/start.sh
 ```
 
+For side-by-side dev-app UI changes, smoke-test the generated launcher on a
+host-invisible display. See [Testing A Dev App Headlessly](../headless-dev-app-testing.md).
+
+```bash
+make test-dev-app-headless DEV_APP_ID=codex-desktop-dev
+```
+
 If the change affects webview startup probes, run:
 
 ```bash

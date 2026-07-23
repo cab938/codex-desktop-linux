@@ -1,0 +1,12 @@
+{
+  "id": "dev-colorize",
+  "title": "Dev Build Colorize",
+  "description": "Adds persistent Colorize controls to the developer popover for visually distinguishing a development build.",
+  "defaultEnabled": false,
+  "requires": [
+    "teaching-sidebar-filter"
+  ],
+  "entrypoints": {
+    "patchDescriptors": "./patch.js"
+  }
+}
