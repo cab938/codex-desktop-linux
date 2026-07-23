@@ -185,6 +185,42 @@ function writeFile(filePath, content, mode) {
   fs.writeFileSync(filePath, content, mode == null ? undefined : { mode });
 }
 
+function writeMinimalAsar(filePath, relativePath, content) {
+  const parts = relativePath.split("/");
+  const leaf = parts.pop();
+  let files = {
+    [leaf]: {
+      offset: "0",
+      size: Buffer.byteLength(content),
+    },
+  };
+  for (const part of parts.reverse()) {
+    files = { [part]: { files } };
+  }
+  const header = Buffer.from(JSON.stringify({ files }));
+  const archive = Buffer.alloc(16 + header.length + Buffer.byteLength(content));
+  archive.writeUInt32LE(8 + header.length, 4);
+  archive.writeUInt32LE(header.length, 12);
+  header.copy(archive, 16);
+  archive.write(content, 16 + header.length);
+  writeFile(filePath, archive);
+}
+
+test("keeps nested ASAR inventory paths canonical", () =>
+  withTempDir((workspace) => {
+    const appDir = path.join(workspace, "candidate.app");
+    const asarPath = path.join(appDir, "Contents/Resources/app.asar");
+    writeMinimalAsar(asarPath, ".vite/build/main-fixture.js", "fixture");
+
+    const inventory = createInventory({ sourcePath: appDir });
+    const asarEntry = inventory.files.find((file) => file.source === "asar");
+
+    assert.equal(
+      asarEntry.relativePath,
+      "Contents/Resources/app.asar/.vite/build/main-fixture.js",
+    );
+  }));
+
 function writeWorkLouderControlSurface({ asarExtracted, includeHid = true, resources }) {
   const deviceKit = path.join(
     resources,

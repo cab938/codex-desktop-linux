@@ -8,10 +8,19 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
+CODEX_ASAR_NPX_PACKAGE="${CODEX_ASAR_NPX_PACKAGE:-@electron/asar@3.4.1}"
 
 info()  { echo -e "${GREEN}[INFO]${NC} $*" >&2; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*" >&2; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
+
+run_asar() {
+    if [ -n "${CODEX_ASAR_CLI:-}" ]; then
+        "$CODEX_ASAR_CLI" "$@"
+    else
+        npx --yes "$CODEX_ASAR_NPX_PACKAGE" "$@"
+    fi
+}
 
 dependency_help() {
     cat <<'EOF'
