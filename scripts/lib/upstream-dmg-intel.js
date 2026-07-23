@@ -105,7 +105,7 @@ function printableStrings(buffer, minLength = 4) {
   return [...strings].sort();
 }
 
-function asarEntries(asarPath, prefix = "app.asar") {
+function asarEntries(asarPath, archivePrefix = "app.asar") {
   const archive = fs.readFileSync(asarPath);
   if (archive.length < 16) {
     throw new Error(`Invalid ASAR archive: ${asarPath}`);
@@ -117,9 +117,9 @@ function asarEntries(asarPath, prefix = "app.asar") {
   const dataStart = 8 + headerSize;
   const entries = [];
 
-  function walk(prefix, files) {
+  function walk(parentPath, files) {
     for (const [name, entry] of Object.entries(files ?? {})) {
-      const fullPath = prefix ? `${prefix}/${name}` : name;
+      const fullPath = parentPath ? `${parentPath}/${name}` : name;
       if (entry.files) {
         walk(fullPath, entry.files);
       } else {
@@ -129,7 +129,7 @@ function asarEntries(asarPath, prefix = "app.asar") {
         const buffer = unpacked ? null : archive.subarray(dataStart + offset, dataStart + offset + size);
         entries.push({
           buffer,
-          relativePath: `${prefix}/${fullPath}`,
+          relativePath: `${archivePrefix}/${fullPath}`,
           size,
           source: "asar",
           unpacked,

@@ -211,7 +211,7 @@ APP_DIR="$(find "$WORK_DIR/dmg" -maxdepth 3 -name "*.app" -type d | head -1)"
 ASAR_PATH="$APP_DIR/Contents/Resources/app.asar"
 [ -f "$ASAR_PATH" ] || fail "Could not find app.asar in DMG"
 ASAR_EXTRACT_DIR="$WORK_DIR/app-extracted"
-npx --yes asar extract "$ASAR_PATH" "$ASAR_EXTRACT_DIR"
+npx --yes @electron/asar@3.4.1 extract "$ASAR_PATH" "$ASAR_EXTRACT_DIR"
 
 dmg_electron_version="$(detect_dmg_electron_version "$APP_DIR" "$ASAR_EXTRACT_DIR")"
 dmg_codex_version="$(json_file_field "$ASAR_EXTRACT_DIR/package.json" "value.version")"
