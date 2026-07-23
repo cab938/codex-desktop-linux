@@ -157,6 +157,7 @@ function projectsBundleFixture() {
 
 function mainPageBundleFixture() {
   return [
+    "function useStore(){return(0,RH.useSyncExternalStore)(subscribe,getSnapshot)}",
     "function Gq(){let{allProjectGroups:S,allSidebarItems:C}=K(wD,{canStartProjectlessChat:o,localProjectActionsEnabled:c,sidebarMode:r});return[S,C]}",
     "function hq(e){",
     "let t=cache(),{showPinnedProjectGroups:s}=e,d=s===void 0?!0:s,p=!0,m=!0,y={canStartProjectlessChat:p,localProjectActionsEnabled:m,sidebarMode:`codex`};",
@@ -603,7 +604,7 @@ test("projects renderer patch filters data before group calculation", () => {
   assert.doesNotThrow(() => new vm.Script(patched));
 });
 
-test("main page patch adds the personal control beside Help and filters pinned data atomically", () => {
+test("main page patch adds the developer control beside Help and filters pinned data atomically", () => {
   const source = mainPageBundleFixture();
   const patched = applyMainPagePatch(source);
   assert.notEqual(patched, source);
@@ -614,9 +615,12 @@ test("main page patch adds the personal control beside Help and filters pinned d
     patched,
     /children:\(0,EJ\.jsx\)\(ko,\{className:"icon-sm",style:\{transform:"rotate\(180deg\)"\}\}\)/,
   );
-  assert.match(patched, /"aria-label":"Open personal controls"/);
+  assert.match(patched, /"aria-label":"Open developer controls"/);
   assert.match(patched, /children:"Teaching view"/);
   assert.match(patched, /electronBridge\?\.teachingView/);
+  assert.match(patched, /globalThis\.codexLinuxDeveloperControls/);
+  assert.match(patched, /useSyncExternalStore:RH\.useSyncExternalStore/);
+  assert.match(patched, /children:\[n,\.\.\.r\]/);
   assert.match(
     patched,
     /children:\[\(0,JJ\.jsx\)\(codexLinuxTeachingControlsMenu,\{\}\),\(0,JJ\.jsx\)\(kJ,\{\}\)\]/,
