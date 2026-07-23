@@ -163,9 +163,9 @@ function mainPageBundleFixture() {
     "let t=cache(),{showPinnedProjectGroups:s}=e,d=s===void 0?!0:s,p=!0,m=!0,y={canStartProjectlessChat:p,localProjectActionsEnabled:m,sidebarMode:`codex`};",
     "let{isWorkspaceRootOptionsLoading:b,pinnedProjectGroups:S,pinnedThreadKeys:C}=K(CD,y),w=K(wi,`pinned`);",
     "return {b,S,C,w,d,locationIdPrefix:`pinned-project`}}",
-    "function TK({codexFeaturesAllowed:e}){",
-    "let t=!0,n=!0,l=[],u=K(qM,`chatgpt`),{chatSortMode:d,projectSortMode:f}=P(zx),m=K(WM,`chatgpt`),g=Hm({codexFeaturesAllowed:e}),_=`tasks`,",
-    "{pinnedProjectGroups:v,pinnedThreadKeys:y}=K(CD,{canStartProjectlessChat:t,localProjectActionsEnabled:n,sidebarMode:`chatgpt`}),",
+    "function TK({codexFeaturesAllowed:e,sidebarMode:r}){",
+    "let t=!0,n=!0,l=[],u=K(qM,r),{chatSortMode:d,projectSortMode:f}=P(zx),m=K(WM,r),g=Hm({codexFeaturesAllowed:e}),_=`tasks`,",
+    "{pinnedProjectGroups:v,pinnedThreadKeys:y}=K(CD,{canStartProjectlessChat:t,localProjectActionsEnabled:n,sidebarMode:r}),",
     "b=K(yC,y),x=K(yC,u.threadKeys),N=GV({conversationFilter:_,flatConversationHistory:m===`list`||g===`codex`}),{data:L,isLoading:R}=Km(data),",
     "T=u.projectGroups,D=new Map([...T,...u.connectionGroups]);",
     "return {b,x,N,T,D,conversationByKey:new Map,projectByKey:new Map,threadContainerId:`pinned`}}",
@@ -667,19 +667,15 @@ test("upstream marker drift leaves each target byte-identical", () => {
 
 test("webview descriptors target only their current semantic chunks", () => {
   assert.equal(
-    PROJECTS_SIDEBAR_ASSET_PATTERN.test(
-      "app-initial~notebook-preview-panel~app-main~pull-request-route~projects-index-page~cloud-en~lpx9dmpy-current.js",
-    ),
+    PROJECTS_SIDEBAR_ASSET_PATTERN.test("app-initial-lpx9dmpy-current.js"),
     true,
   );
   assert.equal(
-    PROJECTS_SIDEBAR_ASSET_PATTERN.test("app-initial~app-main~settings-page-current.js"),
+    PROJECTS_SIDEBAR_ASSET_PATTERN.test("projects-index-page-current.js"),
     false,
   );
   assert.equal(
-    MAIN_PAGE_ASSET_PATTERN.test(
-      "app-initial~app-main~appgen-settings-page~page~appgen-library-page~appgen-page~appgen-setti~ogh9jurw-current.js",
-    ),
+    MAIN_PAGE_ASSET_PATTERN.test("app-initial-ogh9jurw-current.js"),
     true,
   );
   assert.equal(MAIN_PAGE_ASSET_PATTERN.test("page-current.js"), false);
@@ -691,18 +687,8 @@ test("asset patching reports one changed projects and main-page bundle", () => {
     const assetsDir = path.join(tempDir, "webview", "assets");
     fs.mkdirSync(assetsDir, { recursive: true });
     fs.writeFileSync(
-      path.join(
-        assetsDir,
-        "app-initial~notebook-preview-panel~app-main~pull-request-route~projects-index-page~cloud-en~lpx9dmpy-current.js",
-      ),
-      projectsBundleFixture(),
-    );
-    fs.writeFileSync(
-      path.join(
-        assetsDir,
-        "app-initial~app-main~appgen-settings-page~page~appgen-library-page~appgen-page~appgen-setti~ogh9jurw-current.js",
-      ),
-      mainPageBundleFixture(),
+      path.join(assetsDir, "app-initial-current.js"),
+      `${projectsBundleFixture()}${mainPageBundleFixture()}`,
     );
 
     const projectsResult = patchAssetFiles(

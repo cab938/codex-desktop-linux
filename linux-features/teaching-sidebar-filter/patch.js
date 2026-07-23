@@ -23,9 +23,9 @@ const MAIN_PAGE_PATCH_MARKER = "codexLinuxTeachingSidebarFilterMainPagePatch";
 const CONTROLS_PATCH_MARKER = "codexLinuxTeachingSidebarFilterControlsPatch";
 
 const PROJECTS_SIDEBAR_ASSET_PATTERN =
-  /^app-initial~notebook-preview-panel~app-main~pull-request-route~projects-index-page~cloud-en~[A-Za-z0-9_-]+\.js$/;
+  /^app-initial-[A-Za-z0-9_-]+\.js$/;
 const MAIN_PAGE_ASSET_PATTERN =
-  /^app-initial~app-main~appgen-settings-page~page~appgen-library-page~appgen-page~appgen-setti~[A-Za-z0-9_-]+\.js$/;
+  /^app-initial-[A-Za-z0-9_-]+\.js$/;
 
 function warn(message, patchName) {
   console.warn(`WARN: ${message} - skipping teaching-sidebar-filter ${patchName}`);
@@ -186,7 +186,16 @@ function findUniqueFunction(source, markers) {
   const matches = findFunctions(source).filter(({ text }) =>
     markers.every((marker) => text.includes(marker)),
   );
-  return matches.length === 1 ? matches[0] : null;
+  const innermostMatches = matches.filter(
+    (candidate) =>
+      !matches.some(
+        (nested) =>
+          nested !== candidate &&
+          candidate.start < nested.start &&
+          candidate.end > nested.end,
+      ),
+  );
+  return innermostMatches.length === 1 ? innermostMatches[0] : null;
 }
 
 function replaceFunction(source, target, replacement) {
@@ -440,7 +449,7 @@ function patchUnifiedSidebar(functionText, source) {
   const [, selectorHook, allProjectsSelector] = selectorMatch;
 
   const projectSourcePattern =
-    /,([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\(([A-Za-z_$][\w$]*),`chatgpt`\),\{chatSortMode:/g;
+    /,([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\(([A-Za-z_$][\w$]*),([A-Za-z_$][\w$]*)\),\{chatSortMode:/g;
   const projectSourceMatches = [...functionText.matchAll(projectSourcePattern)];
   if (projectSourceMatches.length !== 1) {
     return null;
@@ -450,6 +459,7 @@ function patchUnifiedSidebar(functionText, source) {
     projectSourceVar,
     projectSourceHook,
     projectSourceSelector,
+    sidebarModeVar,
   ] = projectSourceMatches[0];
   if (projectSourceHook !== selectorHook) {
     return null;
@@ -457,7 +467,7 @@ function patchUnifiedSidebar(functionText, source) {
 
   let patched =
     functionText.slice(0, projectSourceMatches[0].index) +
-    `,${projectSourceVar}=${projectSourceHook}(${projectSourceSelector},\`chatgpt\`);` +
+    `,${projectSourceVar}=${projectSourceHook}(${projectSourceSelector},${sidebarModeVar});` +
     `if(codexLinuxTeachingSidebarFilterActive())${projectSourceVar}={...${projectSourceVar},projectGroups:codexLinuxTeachingSidebarFilterGroups(${projectSourceVar}.projectGroups),connectionGroups:codexLinuxTeachingSidebarFilterGroups(${projectSourceVar}.connectionGroups)};` +
     `let{chatSortMode:` +
     functionText.slice(
@@ -465,7 +475,7 @@ function patchUnifiedSidebar(functionText, source) {
     );
 
   const pinnedPattern =
-    /\{pinnedProjectGroups:([A-Za-z_$][\w$]*),pinnedThreadKeys:([A-Za-z_$][\w$]*)\}=([A-Za-z_$][\w$]*)\(([A-Za-z_$][\w$]*),(\{canStartProjectlessChat:[A-Za-z_$][\w$]*,localProjectActionsEnabled:[A-Za-z_$][\w$]*,sidebarMode:`chatgpt`\})\),([A-Za-z_$][\w$]*)=\3\(([A-Za-z_$][\w$]*),\2\),/g;
+    /\{pinnedProjectGroups:([A-Za-z_$][\w$]*),pinnedThreadKeys:([A-Za-z_$][\w$]*)\}=([A-Za-z_$][\w$]*)\(([A-Za-z_$][\w$]*),(\{canStartProjectlessChat:[A-Za-z_$][\w$]*,localProjectActionsEnabled:[A-Za-z_$][\w$]*,sidebarMode:[A-Za-z_$][\w$]*\})\),([A-Za-z_$][\w$]*)=\3\(([A-Za-z_$][\w$]*),\2\),/g;
   const pinnedMatches = [...patched.matchAll(pinnedPattern)];
   if (pinnedMatches.length !== 1) {
     return null;
@@ -618,7 +628,12 @@ function applyMainPagePatch(source) {
   if (alreadyRuntime && alreadyPatch && alreadyControls) {
     return source;
   }
-  if (alreadyRuntime || alreadyPatch || alreadyControls) {
+  const composedAfterProjectsPatch = alreadyRuntime && source.includes(PROJECTS_PATCH_MARKER);
+  if (
+    alreadyPatch ||
+    alreadyControls ||
+    (alreadyRuntime && !composedAfterProjectsPatch)
+  ) {
     warn("Found a partial existing main-page patch", "main-page pinned patch");
     return source;
   }
@@ -675,7 +690,7 @@ function applyMainPagePatch(source) {
     patched = replaceFunction(patched, replacement, replacement.text);
   }
   return (
-    `${runtimeSource()}${teachingControlsSource(controlsUi)}` +
+    `${alreadyRuntime ? "" : runtimeSource()}${teachingControlsSource(controlsUi)}` +
     `var ${MAIN_PAGE_PATCH_MARKER}=!0,${CONTROLS_PATCH_MARKER}=!0;${patched}`
   );
 }
