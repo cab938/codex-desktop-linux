@@ -104,17 +104,24 @@ function syntheticContextBundle() {
   return "class Client{async sendRequest(e,t,n){if(this.dispatchMessage==null)throw Error(`AppServerRequestClient is missing a message dispatcher`);return e===`config/read`?this.sendConfigReadRequest(t,n):this.enqueueRequest(e,t,n)}}";
 }
 
-function syntheticSidebarBundle() {
+function syntheticSidebarBundle({ wrapped = false } = {}) {
+  const root = wrapped
+    ? "d;return t[0]!==e?(d=(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c}),(0,tS.jsx)(codexLinuxQuickLauncherCard,{shouldHideInlineImmediately:e,shouldShow:t})]}),t[0]=e,t[1]=d):d=t[1],d"
+    : "d=(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});";
+  const popoverChild = wrapped
+    ? "(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(codexLinuxQuickLauncherCard,{embedded:!0}),(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})]})"
+    : "(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})";
   return [
     "const a='codex.localConversation.environmentSummary.title';",
     "function Plan(){let a=r(Di),b=a.value.routeKind===`local-thread`?a.value.conversationId:null,c=o(ss),d=c.cwd==null?null:ee(c.cwd);return 'codex.localConversation.plan.title'}",
     "var Ux=t(u(),1);",
+    "function EnvironmentCreate(){let a=(0,tS.jsx)(Y.IconButton,{label:k.formatMessage({id:`threadPage.runAction.environment.create`,defaultMessage:`Create environment`,description:`CTA to create a local environment from a thread`}),onClick:m,children:(0,tS.jsx)(At,{})});return a}",
     "function Summary({shouldHideInlineImmediately:e,shouldShow:t}){",
     "registerEnvironmentActionCommands();",
     "let c=(0,tS.jsx)(Y.Content,{children:null}),",
-    "d=(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});",
-    "return d}",
-    "function Popover(){let a=(0,tS.jsx)(Y.PopoverContent,{children:(0,tS.jsx)(Y.Content,{children:(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})})});return a}",
+    root,
+    wrapped ? "}" : "return d}",
+    `function Popover(){let a=(0,tS.jsx)(Y.PopoverContent,{children:(0,tS.jsx)(Y.Content,{children:${popoverChild}})});return a}`,
   ].join("");
 }
 
@@ -430,27 +437,32 @@ test("patches apply once to current semantic shapes", () => {
   assert.match(patchedContext, /codexLinuxProjectWorkPrepared/);
   assert.equal(applyContextDeliveryPatch(patchedContext), patchedContext);
 
-  const sidebar = syntheticSidebarBundle();
-  const patchedSidebar = applySidebarPatch(sidebar);
-  assert.notEqual(patchedSidebar, sidebar);
-  assert.match(patchedSidebar, /codexLinuxProjectWorkSidebarV1/);
-  assert.match(patchedSidebar, /data-project-work-status/);
-  assert.match(patchedSidebar, /data-project-work-create/);
-  assert.match(patchedSidebar, /Create Project work file/);
-  assert.match(patchedSidebar, /\.SectionActions/);
-  assert.match(patchedSidebar, /after: createAction/);
-  assert.match(
-    patchedSidebar,
-    /codexLinuxProjectWorkCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}/,
-  );
-  assert.doesNotMatch(patchedSidebar, /Create file/);
-  assert.match(patchedSidebar, /Project work/);
-  assert.match(patchedSidebar, /Ux\.useState/);
-  assert.match(patchedSidebar, /r\(Di\)/);
-  assert.match(patchedSidebar, /o\(ss\)/);
-  assert.match(patchedSidebar, /ee\(environment\.cwd\)/);
-  assert.match(patchedSidebar, /Y\.Section/);
-  assert.equal(applySidebarPatch(patchedSidebar), patchedSidebar);
+  for (const wrapped of [false, true]) {
+    const sidebar = syntheticSidebarBundle({ wrapped });
+    const patchedSidebar = applySidebarPatch(sidebar);
+    assert.notEqual(patchedSidebar, sidebar);
+    assert.match(patchedSidebar, /codexLinuxProjectWorkSidebarV1/);
+    assert.match(patchedSidebar, /data-project-work-status/);
+    assert.match(patchedSidebar, /data-project-work-create/);
+    assert.match(patchedSidebar, /Create Project work file/);
+    assert.match(patchedSidebar, /\.SectionActions/);
+    assert.match(patchedSidebar, /Y\.IconButton/);
+    assert.match(patchedSidebar, /\(0,tS\.jsx\)\(At,\{\}\)/);
+    assert.doesNotMatch(patchedSidebar, /inline-flex size-6/);
+    assert.match(patchedSidebar, /after: createAction/);
+    assert.match(
+      patchedSidebar,
+      /codexLinuxProjectWorkCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}/,
+    );
+    assert.doesNotMatch(patchedSidebar, /Create file/);
+    assert.match(patchedSidebar, /Project work/);
+    assert.match(patchedSidebar, /Ux\.useState/);
+    assert.match(patchedSidebar, /r\(Di\)/);
+    assert.match(patchedSidebar, /o\(ss\)/);
+    assert.match(patchedSidebar, /ee\(environment\.cwd\)/);
+    assert.match(patchedSidebar, /Y\.Section/);
+    assert.equal(applySidebarPatch(patchedSidebar), patchedSidebar);
+  }
 });
 
 test("preload patch exposes a scoped projectWork bridge and is idempotent", (t) => {
