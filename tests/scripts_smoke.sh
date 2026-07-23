@@ -2801,6 +2801,15 @@ test_transactional_install_uses_managed_node_and_isolated_reports() {
     assert_contains "$REPO_DIR/install.sh" "harden_bundled_plugin_source_tree"
 }
 
+test_installer_uses_maintained_asar_cli() {
+    info "Checking installer uses the maintained ASAR CLI"
+    assert_contains "$REPO_DIR/scripts/lib/install-helpers.sh" "@electron/asar@3.4.1"
+    assert_contains "$REPO_DIR/scripts/lib/asar-patch.sh" "run_asar extract"
+    assert_contains "$REPO_DIR/scripts/lib/asar-patch.sh" "run_asar pack"
+    assert_not_contains "$REPO_DIR/scripts/lib/asar-patch.sh" "npx --yes asar"
+    assert_contains "$REPO_DIR/flake.nix" "export CODEX_ASAR_CLI=asar"
+}
+
 test_installer_cleanup_handles_readonly_trees() {
     info "Checking installer cleanup handles immutable-source directory modes"
     local workspace="$TMP_DIR/readonly-installer-cleanup"
@@ -8570,7 +8579,7 @@ test_linux_explicit_quit_patch_smoke() {
     mkdir -p "$workspace"
     bundle_body="$(cat <<'JS'
 const x={o:e=>e};let s=require(`node:url`),n=require(`electron`);n=x.o(n);let l=require(`node:os`);l=x.o(l);let i=require(`node:path`);i=x.o(i);let d=require(`node:util`),q=require(`node:crypto`),a=require(`node:fs`);a=x.o(a);
-var pb=class{getNativeTrayMenuItems(){return[{label:rB(this.appName),click:()=>{n.app.quit()}}]}};
+var pb=class{getNativeTrayMenuItems(){return[{label:this.systemQuitMenuItemLabel,click:()=>{n.app.quit()}}]}};
 function qB(r,o){if(o.type===`quit-app`){n.app.quit();return}return o}
 n.app.on(`before-quit`,o=>{let s=BI(),c=t.sr().some(e=>e.status===`ACTIVE`);if(e||i.canQuitWithoutPrompt()||r||!s&&!c){g=!0,a.markAppQuitting();return}let l=n.app.getName();if(n.dialog.showMessageBoxSync({type:`warning`,buttons:[`Quit`,`Cancel`],defaultId:0,cancelId:1,noLink:!0,title:`Quit ${l}?`,message:`Quit ${l}?`,detail:vB({hasInProgressLocalConversation:s,hasEnabledAutomations:c})})!==0){o.preventDefault();return}i.markQuitApproved(),g=!0,a.markAppQuitting()});
 n.app.on(`will-quit`,e=>{if(g=!0,!h){if(i.shouldSkipDrainBeforeQuit()){mB({hotkeyWindowLifecycleManager:c,globalDictationLifecycleManager:l,flushAndDisposeContexts:d,disposables:f});return}e.preventDefault(),h=!0,c.dispose(),l.dispose(),Promise.all([u.flush(),p.flush()]).finally(()=>{d(),f.dispose(),n.app.quit()})}});
@@ -8581,7 +8590,7 @@ JS
     node "$REPO_DIR/scripts/patch-linux-window-ui.js" "$extracted" >"$output_log" 2>&1
     assert_contains "$extracted/.vite/build/main-test.js" 'codexLinuxPrepareForExplicitQuit=()=>{codexLinuxExplicitQuitApproved=!0,codexLinuxMarkQuitInProgress()}'
     assert_contains "$extracted/.vite/build/main-test.js" 'codexLinuxShouldBypassQuitPrompt=()=>codexLinuxExplicitQuitApproved===!0'
-    assert_contains "$extracted/.vite/build/main-test.js" '{label:rB(this.appName),click:()=>{typeof codexLinuxPrepareForExplicitQuit===`function`?codexLinuxPrepareForExplicitQuit():typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress(),n.app.quit()}}'
+    assert_contains "$extracted/.vite/build/main-test.js" '{label:this.systemQuitMenuItemLabel,click:()=>{typeof codexLinuxPrepareForExplicitQuit===`function`?codexLinuxPrepareForExplicitQuit():typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress(),n.app.quit()}}'
     assert_contains "$extracted/.vite/build/main-test.js" 'if(o.type===`quit-app`){typeof codexLinuxPrepareForExplicitQuit===`function`?codexLinuxPrepareForExplicitQuit():typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress(),n.app.quit();return}'
     assert_contains "$extracted/.vite/build/main-test.js" 'if((typeof codexLinuxShouldBypassQuitPrompt===`function`&&codexLinuxShouldBypassQuitPrompt())||e||i.canQuitWithoutPrompt()||r||!s&&!c){process.platform===`linux`&&typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress(),g=!0,a.markAppQuitting();return}'
     assert_contains "$extracted/.vite/build/main-test.js" 'process.platform===`linux`&&typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress(),i.markQuitApproved(),g=!0,a.markAppQuitting()'
@@ -8601,7 +8610,7 @@ const source = fs.readFileSync(process.argv[2], "utf8");
 const helperStart = source.indexOf("let codexLinuxTray=null");
 const helperEnd = source.indexOf(";n.app.on(`before-quit`,()=>codexLinuxDestroyTray())", helperStart) + 1;
 const helperSnippet = helperStart === -1 || helperEnd === 0 ? null : source.slice(helperStart, helperEnd);
-const traySnippet = source.match(/\{label:rB\(this\.appName\),click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}/)?.[0];
+const traySnippet = source.match(/\{label:this\.systemQuitMenuItemLabel,click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}/)?.[0];
 const quitAppSnippet = source.match(/if\(o\.type===`quit-app`\)\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\);return\}/)?.[0];
 const beforeQuitSnippet = source.match(/if\(\(typeof codexLinuxShouldBypassQuitPrompt===`function`&&codexLinuxShouldBypassQuitPrompt\(\)\)\|\|e\|\|i\.canQuitWithoutPrompt\(\)\|\|r\|\|!s&&!c\)\{process\.platform===`linux`&&typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),g=!0,a\.markAppQuitting\(\);return\}/)?.[0];
 if (!helperSnippet || !traySnippet || !quitAppSnippet || !beforeQuitSnippet) {
@@ -10366,6 +10375,7 @@ main() {
     test_user_local_updates_preserve_the_running_app_gate
     test_transactional_install_reenters_with_current_bash
     test_transactional_install_uses_managed_node_and_isolated_reports
+    test_installer_uses_maintained_asar_cli
     test_installer_cleanup_handles_readonly_trees
     test_native_shortcut_targets_compose_existing_flows
     test_sudo_alert_wrapper
