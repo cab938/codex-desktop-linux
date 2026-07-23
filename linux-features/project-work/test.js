@@ -434,6 +434,11 @@ test("patches apply once to current semantic shapes", () => {
   assert.notEqual(patchedSidebar, sidebar);
   assert.match(patchedSidebar, /codexLinuxProjectWorkSidebarV1/);
   assert.match(patchedSidebar, /data-project-work-status/);
+  assert.match(patchedSidebar, /data-project-work-create/);
+  assert.match(patchedSidebar, /Create Project work file/);
+  assert.match(patchedSidebar, /\.SectionActions/);
+  assert.match(patchedSidebar, /after: createAction/);
+  assert.doesNotMatch(patchedSidebar, /Create file/);
   assert.match(patchedSidebar, /Project work/);
   assert.match(patchedSidebar, /Ux\.useState/);
   assert.match(patchedSidebar, /r\(Di\)/);

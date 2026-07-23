@@ -4,8 +4,8 @@
 **Project work** card beneath the task summary in local-conversation sidebars.
 The card reads the active workspace's `.codex/work-packages.md`, displays nested
 checkboxes and open/completed counts, toggles individual markers, can hide
-completed items, creates a missing file, and opens the Markdown file in the
-normal desktop editor.
+completed items, creates a missing file from a compact `+` action in the card
+header, and opens the Markdown file in the normal desktop editor.
 
 ## File lifecycle and safety
 
