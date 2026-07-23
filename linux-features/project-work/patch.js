@@ -262,7 +262,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
   const visibleItems = hideCompleted ? items.filter((item) => !item.checked) : items;
   const visibleError = error ?? state?.error?.message ?? state?.watchError ?? null;
   const title = (0, codexLinuxProjectWorkJsx.jsxs)("span", {
-    className: "flex items-center gap-2",
+    className: "flex min-w-0 items-center gap-2",
     children: [
       (0, codexLinuxProjectWorkJsx.jsx)("span", { children: "Project work" }),
       (0, codexLinuxProjectWorkJsx.jsx)("span", {
@@ -273,23 +273,33 @@ function codexLinuxProjectWorkCardRuntime(props) {
       }),
     ],
   });
+  const createAction = state?.status === "missing"
+    ? (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.SectionActions, {
+        children: (0, codexLinuxProjectWorkJsx.jsx)("button", {
+            type: "button",
+            "aria-label": "Create Project work file",
+            title: "Create Project work file",
+            "data-project-work-create": "true",
+            className: "inline-flex size-6 shrink-0 items-center justify-center rounded-md text-lg leading-none text-token-description-foreground hover:bg-token-bg-secondary hover:text-token-foreground",
+            onClick: createFile,
+            children: (0, codexLinuxProjectWorkJsx.jsx)("span", {
+              "aria-hidden": "true",
+              className: "-mt-px",
+              children: "+",
+            }),
+          }),
+      })
+    : null;
   const body = (0, codexLinuxProjectWorkJsx.jsxs)("div", {
     className: "flex flex-col gap-2 px-3 pb-3",
     "data-project-work-root": workspaceRoot,
     "data-project-work-revision": state?.revision ?? "loading",
     "data-project-work-status": state?.status ?? "loading",
     children: [
-      (0, codexLinuxProjectWorkJsx.jsxs)("div", {
-        className: "flex flex-wrap items-center gap-2",
-        children: [
-          state?.status === "missing"
-            ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
-                type: "button",
-                className: "rounded-md border border-token-border px-2 py-1 text-xs hover:bg-token-bg-secondary",
-                onClick: createFile,
-                children: "Create file",
-              })
-            : null,
+      state?.status !== "missing"
+        ? (0, codexLinuxProjectWorkJsx.jsxs)("div", {
+            className: "flex flex-wrap items-center gap-2",
+            children: [
           state?.status !== "missing"
             ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
                 type: "button",
@@ -306,8 +316,9 @@ function codexLinuxProjectWorkCardRuntime(props) {
                 children: hideCompleted ? "Show completed" : "Hide completed",
               })
             : null,
-        ],
-      }),
+            ],
+          })
+        : null,
       visibleError == null
         ? null
         : (0, codexLinuxProjectWorkJsx.jsx)("div", {
@@ -357,6 +368,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
   });
   const section = (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Section, {
     sectionKey: "project-work",
+    after: createAction,
     title,
     children: body,
   });

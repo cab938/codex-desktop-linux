@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Work"
+  short_description: "Maintain durable project work packages"
+  default_prompt: "Use $project-work to reconcile the current project work checklist."
