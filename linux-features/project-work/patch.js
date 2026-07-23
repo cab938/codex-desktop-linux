@@ -133,7 +133,11 @@ function codexLinuxProjectWorkStateFromPayloadRuntime(payload) {
 }
 
 function codexLinuxProjectWorkCardRuntime(props) {
-  const { shouldHideInlineImmediately, shouldShow } = props;
+  const {
+    embedded = false,
+    shouldHideInlineImmediately,
+    shouldShow,
+  } = props;
   const route = codexLinuxProjectWorkRouteHook(codexLinuxProjectWorkRouteAtom);
   const threadId = route.value.routeKind === "local-thread"
     ? route.value.conversationId
@@ -372,6 +376,9 @@ function codexLinuxProjectWorkCardRuntime(props) {
     title,
     children: body,
   });
+  if (embedded) {
+    return section;
+  }
   return (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Root, {
     shouldHideInlineImmediately,
     shouldShow,
@@ -515,7 +522,48 @@ function applySidebarPatch(source) {
     `(0,${jsxName}.jsx)(${summaryName}.Root,{shouldHideInlineImmediately:${hideName},shouldShow:${showName},children:${childrenName}}),` +
     `(0,${jsxName}.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:${hideName},shouldShow:${showName}})]})`;
   const patchedTarget = target.text.replace(full, replacement);
-  return source.slice(0, target.start) + sidebarRuntimeSource(aliases) + patchedTarget + source.slice(target.end);
+
+  const popoverTargets = findFunctions(source).filter(({ text }) =>
+    text.includes("registerEnvironmentActionCommands:!1") &&
+    text.includes(".PopoverContent") &&
+    text.includes(".Content"),
+  );
+  if (popoverTargets.length !== 1) {
+    warn(`Expected one compact task summary popover, found ${popoverTargets.length}`, "sidebar patch");
+    return source;
+  }
+  const popoverTarget = popoverTargets[0];
+  const contentAnchor = `(0,${jsxName}.jsx)(${summaryName}.Content,{`;
+  const contentStart = popoverTarget.text.indexOf(contentAnchor);
+  if (
+    contentStart === -1 ||
+    popoverTarget.text.indexOf(contentAnchor, contentStart + contentAnchor.length) !== -1
+  ) {
+    warn("Could not find one current compact summary content wrapper", "sidebar patch");
+    return source;
+  }
+  const contentPropsOpen = contentStart + contentAnchor.length - 1;
+  const contentPropsClose = findMatchingBrace(popoverTarget.text, contentPropsOpen);
+  const contentProps = contentPropsClose === -1
+    ? null
+    : popoverTarget.text.slice(contentPropsOpen + 1, contentPropsClose);
+  if (contentProps == null || !contentProps.startsWith("children:")) {
+    warn("Could not isolate current compact summary content", "sidebar patch");
+    return source;
+  }
+  const contentChild = contentProps.slice("children:".length);
+  const popoverReplacement =
+    `children:(0,${jsxName}.jsxs)(${jsxName}.Fragment,{children:[` +
+    `(0,${jsxName}.jsx)(codexLinuxProjectWorkCard,{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0}),` +
+    `${contentChild}]})`;
+  const patchedPopoverTarget =
+    popoverTarget.text.slice(0, contentPropsOpen + 1) +
+    popoverReplacement +
+    popoverTarget.text.slice(contentPropsClose);
+  const patchedSource = source
+    .replace(target.text, patchedTarget)
+    .replace(popoverTarget.text, patchedPopoverTarget);
+  return sidebarRuntimeSource(aliases) + patchedSource;
 }
 
 module.exports = {

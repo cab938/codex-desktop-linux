@@ -114,6 +114,7 @@ function syntheticSidebarBundle() {
     "let c=(0,tS.jsx)(Y.Content,{children:null}),",
     "d=(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});",
     "return d}",
+    "function Popover(){let a=(0,tS.jsx)(Y.PopoverContent,{children:(0,tS.jsx)(Y.Content,{children:(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})})});return a}",
   ].join("");
 }
 
@@ -438,6 +439,10 @@ test("patches apply once to current semantic shapes", () => {
   assert.match(patchedSidebar, /Create Project work file/);
   assert.match(patchedSidebar, /\.SectionActions/);
   assert.match(patchedSidebar, /after: createAction/);
+  assert.match(
+    patchedSidebar,
+    /codexLinuxProjectWorkCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}/,
+  );
   assert.doesNotMatch(patchedSidebar, /Create file/);
   assert.match(patchedSidebar, /Project work/);
   assert.match(patchedSidebar, /Ux\.useState/);
