@@ -106,8 +106,8 @@ function syntheticContextBundle() {
 
 function syntheticSidebarBundle({ wrapped = false } = {}) {
   const root = wrapped
-    ? "d;return t[0]!==e?(d=(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c}),(0,tS.jsx)(codexLinuxQuickLauncherCard,{shouldHideInlineImmediately:e,shouldShow:t})]}),t[0]=e,t[1]=d):d=t[1],d"
-    : "d=(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});";
+    ? "d;return t[0]!==e?(d=(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsxs)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:[h,c]}),(0,tS.jsx)(codexLinuxQuickLauncherCard,{shouldHideInlineImmediately:e,shouldShow:t})]}),t[0]=e,t[1]=d):d=t[1],d"
+    : "d=(0,tS.jsxs)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:[h,c]});";
   const popoverChild = wrapped
     ? "(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(codexLinuxQuickLauncherCard,{embedded:!0}),(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})]})"
     : "(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})";
@@ -115,7 +115,7 @@ function syntheticSidebarBundle({ wrapped = false } = {}) {
     "const a='codex.localConversation.environmentSummary.title';",
     "function Plan(){let a=r(Di),b=a.value.routeKind===`local-thread`?a.value.conversationId:null,c=o(ss),d=c.cwd==null?null:ee(c.cwd);return 'codex.localConversation.plan.title'}",
     "var Ux=t(u(),1);",
-    "function EnvironmentCreate(){let a=(0,tS.jsx)(Y.IconButton,{label:k.formatMessage({id:`threadPage.runAction.environment.create`,defaultMessage:`Create environment`,description:`CTA to create a local environment from a thread`}),onClick:m,children:(0,tS.jsx)(At,{})});return a}",
+    "function EnvironmentCreate(){let u=(0,tS.jsx)(At,{}),d=(0,tS.jsx)(Y.IconButton,{disabled:n,label:l,children:u}),f=(0,tS.jsx)(H,{id:`threadPage.runAction.environment.createMenuTitle`,defaultMessage:`Create environment`,description:`Title for the menu that offers local environment creation methods`});return d}",
     "function Summary({shouldHideInlineImmediately:e,shouldShow:t}){",
     "registerEnvironmentActionCommands();",
     "let c=(0,tS.jsx)(Y.Content,{children:null}),",
@@ -496,8 +496,8 @@ test("patch drift is fail-soft and reports actionable current-anchor failures", 
 });
 
 test("asset patterns select the intended current chunk families narrowly", () => {
-  assert.equal(CONTEXT_ASSET_PATTERN.test("app-initial~artifact-tab-content.electron~notebook-preview-panel~app-main~business-checkout~oxnpxkxc-hash.js"), true);
-  assert.equal(CONTEXT_ASSET_PATTERN.test("app-initial~artifact-tab-content.electron~notebook-preview-panel~app-main~business-checkout~other-hash.js"), false);
+  assert.equal(CONTEXT_ASSET_PATTERN.test("app-initial-BTphDPeq.js"), true);
+  assert.equal(CONTEXT_ASSET_PATTERN.test("app-prefetch-impl-BmB2QJVt.js"), false);
   assert.equal(SIDEBAR_ASSET_PATTERN.test("local-conversation-thread-hash.js"), true);
   assert.equal(SIDEBAR_ASSET_PATTERN.test("local-conversation-thread-hash.css"), false);
 });
