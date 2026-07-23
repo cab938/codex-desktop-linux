@@ -130,6 +130,11 @@ Repository governance: [issue and pull request labels](docs/label-governance.md)
 
 - `scripts/patch-linux-window-ui.js` is the build-facing ASAR patcher CLI only.
   Do not import internals from it; use runner/helper APIs.
+- Unless a task explicitly requires a distinct treatment, feature UI that
+  should match an upstream control must reuse the upstream component and icon
+  rather than recreating its appearance with parallel markup or CSS. Infer the
+  current upstream aliases where patching requires it, and add regression
+  coverage that detects a fallback to custom look-alike styling.
 - Core patch descriptors are the source of truth for shipped Linux
   compatibility patches. Read `scripts/patches/core/README.md` before adding
   or moving descriptors.

@@ -1,0 +1,9 @@
+{
+  "id": "quick-launcher",
+  "title": "Quick Launcher",
+  "description": "Adds project-scoped command buttons backed by .codex/quicklaunch.yaml to the local task sidebar.",
+  "defaultEnabled": false,
+  "entrypoints": {
+    "patchDescriptors": "./patch.js"
+  }
+}
