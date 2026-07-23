@@ -522,11 +522,15 @@ function appendInlineCard(targetText) {
   const containing = fragments.filter((fragment) => {
     const arrayOpen = fragment.index + fragment[0].length - 1;
     const arrayClose = findMatchingDelimiter(targetText, arrayOpen, "[", "]");
+    const resultName = fragment[1];
+    const returnsResult =
+      targetText.includes(`return ${resultName}`) ||
+      new RegExp(`(?:[:,])${resultName}(?:[=,;}])`).test(targetText);
     return (
       arrayClose !== -1 &&
       rootCalls[0].index >= arrayOpen &&
       rootCalls[0].index + rootCall.length <= arrayClose &&
-      targetText.includes(`return ${fragment[1]}`)
+      returnsResult
     );
   });
   if (containing.length !== 1) {

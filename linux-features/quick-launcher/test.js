@@ -106,7 +106,7 @@ function syntheticContextBundle() {
 
 function syntheticSidebarBundle({ wrapped = false } = {}) {
   const root = wrapped
-    ? "d=(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c}),(0,tS.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:e,shouldShow:t})]});"
+    ? "d;return t[0]!==e?(d=(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c}),(0,tS.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:e,shouldShow:t})]}),t[0]=e,t[1]=d):d=t[1],d"
     : "d=(0,tS.jsx)(Y.Root,{shouldHideInlineImmediately:e,shouldShow:t,children:c});";
   const popoverChild = wrapped
     ? "(0,tS.jsxs)(tS.Fragment,{children:[(0,tS.jsx)(codexLinuxProjectWorkCard,{embedded:!0}),(0,tS.jsx)(Qx,{registerEnvironmentActionCommands:!1})]})"
@@ -120,7 +120,7 @@ function syntheticSidebarBundle({ wrapped = false } = {}) {
     "registerEnvironmentActionCommands();",
     "let c=(0,tS.jsx)(Y.Content,{children:null}),",
     root,
-    "return d}",
+    wrapped ? "}" : "return d}",
     `function Popover(){let a=(0,tS.jsx)(Y.PopoverContent,{children:(0,tS.jsx)(Y.Content,{children:${popoverChild}})});return a}`,
   ].join("");
 }
