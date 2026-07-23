@@ -570,6 +570,7 @@ PY
             export CODEX_LINUX_COMPUTER_USE_COSMIC_SOURCE="${codexComputerUseBinaries}/bin/codex-computer-use-cosmic"
             export CODEX_CHROME_EXTENSION_HOST_SOURCE="${codexComputerUseBinaries}/bin/codex-chrome-extension-host"
             export CODEX_NOTIFICATION_ACTIONS_SOURCE="${codexNotificationActionsBinary}/bin/codex-notification-actions-linux"
+            export CODEX_ASAR_CLI=asar
             ${pkgs.lib.optionalString (builtins.elem "mcp-helper-reaper" effectiveLinuxFeatureIds) ''
             export CODEX_MCP_HELPER_REAPER_SOURCE="${codexMcpHelperReaper}/bin/codex-mcp-helper-reaper"
             ''}
@@ -583,12 +584,6 @@ PY
             cp -R ./. "$source_dir/"
             chmod -R u+w "$source_dir"
             cp ${codexDmg} "$source_dir/Codex.dmg"
-
-            substituteInPlace "$source_dir/scripts/lib/asar-patch.sh" \
-              --replace-fail "npx --yes asar" "asar" \
-              --replace-fail "npx asar" "asar"
-            substituteInPlace "$source_dir/scripts/lib/dmg.sh" \
-              --replace-fail "npx --yes asar" "asar"
 
             export CODEX_INSTALL_DIR="$out/opt/codex-desktop"
             ${pkgs.bash}/bin/bash "$source_dir/install.sh" "$source_dir/Codex.dmg"
