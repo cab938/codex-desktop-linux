@@ -582,7 +582,7 @@ test("subagent nickname metadata patch accepts current upstream patched aliases"
   assert.deepEqual(warnings, []);
 });
 
-test("subagent metadata descriptor ignores matching sibling bundles without metadata", () => {
+test("subagent metadata descriptor targets the current app-initial bundle", () => {
   const descriptor = corePatchDescriptors().find((candidate) =>
     candidate.id === "subagent-nickname-metadata-shape",
   );
@@ -600,18 +600,18 @@ test("subagent metadata descriptor ignores matching sibling bundles without meta
       "function Xl(e){return e==null?null:Zl(e.agentNickname)??Zl(B(e.source)?.agentNickname)}",
       "function Zl(e){if(e==null)return null;let t=e.trim();return t.length===0?null:t}",
     ].join("");
-    fs.writeFileSync(path.join(assetsDir, "app-server-manager-signals-test.js"), siblingSource);
-    fs.writeFileSync(path.join(assetsDir, "use-host-config-test.js"), metadataSource);
+    fs.writeFileSync(path.join(assetsDir, "use-host-config-test.js"), siblingSource);
+    fs.writeFileSync(path.join(assetsDir, "app-initial-test.js"), metadataSource);
 
     const { value: result, warnings } = captureWarns(() =>
       patchAssetFiles(tempRoot, descriptor.pattern, descriptor.apply, "missing subagent metadata bundle"),
     );
 
-    assert.deepEqual(result, { matched: 2, changed: 1 });
+    assert.deepEqual(result, { matched: 1, changed: 1 });
     assert.deepEqual(warnings, []);
-    assert.equal(fs.readFileSync(path.join(assetsDir, "app-server-manager-signals-test.js"), "utf8"), siblingSource);
+    assert.equal(fs.readFileSync(path.join(assetsDir, "use-host-config-test.js"), "utf8"), siblingSource);
     assert.match(
-      fs.readFileSync(path.join(assetsDir, "use-host-config-test.js"), "utf8"),
+      fs.readFileSync(path.join(assetsDir, "app-initial-test.js"), "utf8"),
       /Zl\(e\.agentNickname\)\?\?Zl\(e\.agent_nickname\)\?\?Zl\(B\(e\.source\)\?\.agentNickname\)/,
     );
   } finally {
@@ -1315,11 +1315,8 @@ test("fast-mode guard descriptor follows upstream service-tier bundle names", ()
     descriptor.id === "linux-fast-mode-model-guard",
   );
 
-  assert.ok(descriptor.pattern.test("use-is-fast-mode-enabled-abc.js"));
-  assert.ok(descriptor.pattern.test("read-service-tier-for-request-BJ8QN0Q7.js"));
-  assert.ok(descriptor.pattern.test("use-service-tier-settings-DFXPADNF.js"));
-  assert.ok(descriptor.pattern.test("app-server-manager-signals-BOGyjFm3.js"));
-  assert.equal(descriptor.pattern.test("service-tier-icons-CsNhab5W.js"), false);
+  assert.ok(descriptor.pattern.test("app-initial-BTphDPeq.js"));
+  assert.equal(descriptor.pattern.test("use-is-fast-mode-enabled-abc.js"), false);
 });
 
 test("subagent nickname metadata descriptor follows upstream metadata bundle names", () => {
@@ -1327,8 +1324,8 @@ test("subagent nickname metadata descriptor follows upstream metadata bundle nam
     descriptor.id === "subagent-nickname-metadata-shape",
   );
 
-  assert.ok(descriptor.pattern.test("app-server-manager-signals-BOGyjFm3.js"));
-  assert.ok(descriptor.pattern.test("use-host-config-Dpd_LQBD.js"));
+  assert.ok(descriptor.pattern.test("app-initial-BTphDPeq.js"));
+  assert.equal(descriptor.pattern.test("use-host-config-Dpd_LQBD.js"), false);
   assert.equal(descriptor.pattern.test("thread-context-inputs-D5uMjcUB.js"), false);
 });
 
@@ -1368,7 +1365,7 @@ function singleInstanceBundleFixture() {
 
 function explicitQuitBundleFixture() {
   return [
-    "var pb=class{getNativeTrayMenuItems(){return[{label:rB(this.appName),click:()=>{n.app.quit()}}]}};",
+    "var pb=class{getNativeTrayMenuItems(){return[{label:this.systemQuitMenuItemLabel,click:()=>{n.app.quit()}}]}};",
     "if(o.type===`quit-app`){n.app.quit();return}",
   ].join("");
 }
@@ -2658,7 +2655,7 @@ test("marks Linux quit-in-progress for the tray quit path", () => {
 
   assert.match(
     patched,
-    /\{label:rB\(this\.appName\),click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}/,
+    /\{label:this\.systemQuitMenuItemLabel,click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}/,
   );
 });
 
@@ -2675,31 +2672,20 @@ test("marks Linux quit-in-progress for the quit-app IPC path", () => {
   );
 });
 
-test("supports explicit tray quit patching when minified aliases drift", () => {
+test("supports current explicit tray quit patching when the Electron alias drifts", () => {
   const source =
-    "let x=require(`electron`);var q=class{getNativeTrayMenuItems(){return[{label:rB(this.appName),click:()=>{x.app.quit()}}]}};if(m.type===`quit-app`){x.app.quit();return}";
+    "let x=require(`electron`);var q=class{getNativeTrayMenuItems(){return[{label:this.systemQuitMenuItemLabel,click:()=>{x.app.quit()}}]}};if(m.type===`quit-app`){x.app.quit();return}";
   const patched = applyPatchTwice(applyLinuxExplicitTrayQuitPatch, source);
 
   assert.match(
     patched,
-    /\{label:rB\(this\.appName\),click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),x\.app\.quit\(\)\}\}/,
-  );
-});
-
-test("supports explicit tray quit patching when upstream renames the quit label helper", () => {
-  const source =
-    "let n=require(`electron`);var q=class{getNativeTrayMenuItems(){return[{label:mH(this.appName),click:()=>{n.app.quit()}}]}};function mH(e){let t=n.Menu.buildFromTemplate([{role:`quit`}]);return(Array.isArray(t)?t:t.items)[0]?.label??`Quit ${e}`}";
-  const patched = applyPatchTwice(applyLinuxExplicitTrayQuitPatch, source);
-
-  assert.match(
-    patched,
-    /\{label:mH\(this\.appName\),click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}/,
+    /\{label:this\.systemQuitMenuItemLabel,click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),x\.app\.quit\(\)\}\}/,
   );
 });
 
 test("supports explicit IPC quit patching when minified aliases drift", () => {
   const source =
-    "let x=require(`electron`);var q=class{getNativeTrayMenuItems(){return[{label:rB(this.appName),click:()=>{x.app.quit()}}]}};if(m.type===`quit-app`){x.app.quit();return}";
+    "let x=require(`electron`);var q=class{getNativeTrayMenuItems(){return[{label:this.systemQuitMenuItemLabel,click:()=>{x.app.quit()}}]}};if(m.type===`quit-app`){x.app.quit();return}";
   const patched = applyPatchTwice(applyLinuxExplicitIpcQuitPatch, source);
 
   assert.match(
@@ -2711,8 +2697,8 @@ test("supports explicit IPC quit patching when minified aliases drift", () => {
 test("patches remaining explicit quit handlers when another copy is already patched", () => {
   const quitMarkerExpression =
     "typeof codexLinuxPrepareForExplicitQuit===`function`?codexLinuxPrepareForExplicitQuit():typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress(),";
-  const patchedTrayQuit = `{label:rB(this.appName),click:()=>{${quitMarkerExpression}n.app.quit()}}`;
-  const unpatchedTrayQuit = "{label:rB(this.appName),click:()=>{n.app.quit()}}";
+  const patchedTrayQuit = `{label:this.systemQuitMenuItemLabel,click:()=>{${quitMarkerExpression}n.app.quit()}}`;
+  const unpatchedTrayQuit = "{label:this.systemQuitMenuItemLabel,click:()=>{n.app.quit()}}";
   const patchedIpcQuit = `if(o.type===\`quit-app\`){${quitMarkerExpression}n.app.quit();return}`;
   const unpatchedIpcQuit = "if(o.type===`quit-app`){n.app.quit();return}";
 
@@ -2728,7 +2714,7 @@ test("patches remaining explicit quit handlers when another copy is already patc
   assert.equal((patchedTray.match(/codexLinuxPrepareForExplicitQuit\(\)/g) ?? []).length, 2);
   assert.match(
     patchedTray,
-    /function createSecondTray\(\)\{return \{label:rB\(this\.appName\),click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}\}/,
+    /function createSecondTray\(\)\{return \{label:this\.systemQuitMenuItemLabel,click:\(\)=>\{typeof codexLinuxPrepareForExplicitQuit===`function`\?codexLinuxPrepareForExplicitQuit\(\):typeof codexLinuxMarkQuitInProgress===`function`&&codexLinuxMarkQuitInProgress\(\),n\.app\.quit\(\)\}\}\}/,
   );
   assert.equal((patchedIpc.match(/codexLinuxPrepareForExplicitQuit\(\)/g) ?? []).length, 2);
   assert.match(
