@@ -25,6 +25,10 @@ DEV_APP_ID ?= codex-cua-lab
 DEV_APP_NAME ?= Codex CUA Lab
 DEV_APP_DIR ?= $(CURDIR)/$(DEV_APP_ID)-app
 DEV_APP_BIN ?= $(CURDIR)/bin/$(DEV_APP_ID)
+HEADLESS_SCREEN ?= 1600x1000
+HEADLESS_TIMEOUT ?= 90
+HEADLESS_SETTLE ?= 5
+HEADLESS_ARTIFACT_DIR ?=
 DEB_GLOB := $(CURDIR)/dist/$(PACKAGE_NAME)_*.deb
 RPM_GLOB := $(CURDIR)/dist/$(PACKAGE_NAME)-*.rpm
 PACMAN_GLOB := $(CURDIR)/dist/$(PACKAGE_NAME)-[0-9]*.pkg.tar.*
@@ -66,7 +70,7 @@ if [ -z "$$format" ]; then \
 fi; \
 printf '%s\n' "$$format"
 
-.PHONY: help check test build-updater maybe-build-updater update rebuild rebuild-install inspect-upstream inspect-upstream-intel inspect-upstream-intel-devcontainer build-app build-app-fresh setup-native bootstrap-native install-native update-native rebuild-next run-app build-dev-app run-dev-app deb rpm pacman appimage package install service-enable service-status clean-dist clean-state
+.PHONY: help check test build-updater maybe-build-updater update rebuild rebuild-install inspect-upstream inspect-upstream-intel inspect-upstream-intel-devcontainer build-app build-app-fresh setup-native bootstrap-native install-native update-native rebuild-next run-app build-dev-app run-dev-app test-dev-app-headless run-dev-app-headless deb rpm pacman appimage package install service-enable service-status clean-dist clean-state
 
 help:
 	@printf '\nChatGPT Desktop for Linux Make Targets\n\n'
@@ -89,6 +93,8 @@ help:
 	@printf '  %-18s %s\n' "make run-app" "Launch the local generated Electron app from codex-app/"
 	@printf '  %-18s %s\n' "make build-dev-app" "Build a side-by-side test app with a distinct app id/bin"
 	@printf '  %-18s %s\n' "make run-dev-app" "Launch the side-by-side test app"
+	@printf '  %-18s %s\n' "make test-dev-app-headless" "Smoke-test the dev app on a host-invisible desktop"
+	@printf '  %-18s %s\n' "make run-dev-app-headless" "Keep a host-invisible desktop open for automation"
 	@printf '  %-18s %s\n' "make deb" "Build the Debian package into dist/"
 	@printf '  %-18s %s\n' "make rpm" "Build the RPM package into dist/ (Fedora/openSUSE)"
 	@printf '  %-18s %s\n' "make pacman" "Build the pacman package into dist/ (Arch)"
@@ -109,6 +115,10 @@ help:
 	@printf '  %-18s %s\n' "REBUILD_REPORT_DIR=..." "Override inspect/rebuild report output directory"
 	@printf '  %-18s %s\n' "DEV_APP_ID=..." "Override side-by-side test app id/bin (default: codex-cua-lab)"
 	@printf '  %-18s %s\n' "DEV_APP_NAME=..." "Override side-by-side test app display name"
+	@printf '  %-18s %s\n' "HEADLESS_SCREEN=..." "Headless test screen size (default: 1600x1000)"
+	@printf '  %-18s %s\n' "HEADLESS_TIMEOUT=..." "Headless app-window startup timeout (default: 90)"
+	@printf '  %-18s %s\n' "HEADLESS_SETTLE=..." "Delay before headless screenshot capture (default: 5)"
+	@printf '  %-18s %s\n' "HEADLESS_ARTIFACT_DIR=..." "Optional headless test screenshot/log directory"
 	@printf '  %-18s %s\n' "PACKAGE_VERSION=..." "Override the package version for make deb / make rpm / make pacman / make appimage"
 	@printf '  %-18s %s\n' "PACKAGE_WITH_UPDATER=0" "Build packages without codex-update-manager or the updater service"
 	@printf '  %-18s %s\n' "CODEX_CLI_BUNDLE_SOURCE=..." "Embed an installed Codex CLI package in a local AppImage"
@@ -139,6 +149,8 @@ help:
 	@printf '  %s\n' "make run-app"
 	@printf '  %s\n' "make build-dev-app"
 	@printf '  %s\n' "./bin/codex-cua-lab"
+	@printf '  %s\n' "make test-dev-app-headless DEV_APP_ID=codex-cua-lab"
+	@printf '  %s\n' "make run-dev-app-headless DEV_APP_ID=codex-cua-lab"
 	@printf '  %s\n' "make deb PACKAGE_VERSION=2026.03.24.220723+88f07cd3"
 	@printf '  %s\n' "make rpm PACKAGE_VERSION=2026.03.24.220723+88f07cd3"
 	@printf '  %s\n' "MAX_BUILD_THREADS=8 make install-native"
@@ -272,6 +284,35 @@ build-dev-app:
 run-dev-app:
 	@echo "[make] Launching side-by-side Electron app"
 	"$(DEV_APP_BIN)"
+
+test-dev-app-headless:
+	@echo "[make] Smoke-testing side-by-side Electron app headlessly"
+	@args=( \
+		--app "$(DEV_APP_BIN)" \
+		--window-class "$(DEV_APP_ID)" \
+		--screen "$(HEADLESS_SCREEN)" \
+		--timeout "$(HEADLESS_TIMEOUT)" \
+		--settle "$(HEADLESS_SETTLE)" \
+	); \
+	if [ -n "$(HEADLESS_ARTIFACT_DIR)" ]; then \
+		args+=(--artifact-dir "$(HEADLESS_ARTIFACT_DIR)"); \
+	fi; \
+	./scripts/dev/test-dev-app-headless.sh "$${args[@]}"
+
+run-dev-app-headless:
+	@echo "[make] Launching side-by-side Electron app headlessly for automation"
+	@args=( \
+		--interactive \
+		--app "$(DEV_APP_BIN)" \
+		--window-class "$(DEV_APP_ID)" \
+		--screen "$(HEADLESS_SCREEN)" \
+		--timeout "$(HEADLESS_TIMEOUT)" \
+		--settle "$(HEADLESS_SETTLE)" \
+	); \
+	if [ -n "$(HEADLESS_ARTIFACT_DIR)" ]; then \
+		args+=(--artifact-dir "$(HEADLESS_ARTIFACT_DIR)"); \
+	fi; \
+	./scripts/dev/test-dev-app-headless.sh "$${args[@]}"
 
 deb: maybe-build-updater
 	@echo "[make] Building Debian package"
