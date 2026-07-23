@@ -6,8 +6,8 @@ Status: UI-controlled implementation baseline
 
 Teaching view provides a presentation-oriented Codex Desktop mode that is easy
 to identify and reduces unrelated project and pinned-item clutter during
-demonstrations. The user controls it from a small personal-controls menu beside
-Help, and the selected state persists across ordinary launches.
+demonstrations. The user controls it from the small developer-controls menu
+beside Help, and the selected state persists across ordinary launches.
 
 The feature is called **Teaching view** in the user interface. It is not a
 security or confidentiality boundary: filtered data remains available to the
@@ -21,7 +21,7 @@ The feature shall:
 - ship as a disabled-by-default Linux feature;
 - accept a project-name regular expression and flags from the gitignored Linux
   feature configuration;
-- add a circled `¿` personal-controls button beside the existing Help control;
+- add a circled `¿` developer-controls button beside the existing Help control;
 - toggle Teaching view from that menu without launch flags;
 - persist the active state locally and apply it on later launches;
 - filter current local and remote project rows before they are rendered;
@@ -129,7 +129,7 @@ refreshes, without a data migration.
 ### FR-6: Mode state
 
 An active renderer shall set `data-codex-linux-teaching-view="active"` on the
-document root, and the personal-controls menu shall report the state as **On**.
+document root, and the developer-controls menu shall report the state as **On**.
 The feature shall not add a persistent disclosure badge, overlay, or watermark.
 
 ### FR-7: Window identity and dimensions
@@ -178,10 +178,11 @@ beside the existing snapshot getter.
 
 ### AR-3: Renderer integration
 
-Renderer patches shall add the personal-controls button by reusing the current
-Help button, popover, and menu component family. They shall filter project and
-pin arrays before row rendering. CSS selectors and DOM observers shall not be
-the authoritative filter.
+Renderer patches shall add the developer-controls button by reusing the current
+Help button, popover, and menu component family. The menu shall expose a small
+renderer registry so other enabled development features can place controls in
+the same popover. They shall filter project and pin arrays before row rendering.
+CSS selectors and DOM observers shall not be the authoritative filter.
 
 ### AR-4: Current-upstream policy
 
@@ -207,7 +208,7 @@ Automated tests shall cover:
 - pinned ChatGPT labels;
 - nonvisual active-state marking without a disclosure badge;
 - persisted main-process state and shared-object publication;
-- the preload state setter and renderer personal-controls menu;
+- the preload state setter and renderer developer-controls menu;
 - Teaching view title, dimensions, and maximized-state suppression;
 - live enable, disable, renderer reload, and normal-title restoration;
 - atomic behavior on upstream marker drift;
