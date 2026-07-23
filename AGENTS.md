@@ -27,6 +27,10 @@ update-builder bundle.
 - If an optional feature needs a new core touchpoint, add the smallest generic
   extension point to core, then keep feature-specific logic inside that feature
   directory.
+- Unless the user explicitly asks for a custom treatment, reuse current
+  upstream UI components for feature controls that should share the upstream
+  look and feel. Prefer inferring the upstream component and icon aliases over
+  recreating equivalent controls with feature-local markup and styling.
 - Do not enable optional features in committed config. `linux-features/features.json`
   is local and gitignored; `features.example.json` stays empty.
 - Each repository feature under `linux-features/<id>/` and each local feature
