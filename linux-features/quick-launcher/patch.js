@@ -22,8 +22,7 @@ const CONTEXT_MARKER = "codexLinuxQuickLauncherContextV1";
 const REQUEST_PATCH_MARKER = "codexLinuxQuickLauncherPrepared";
 const SIDEBAR_MARKER = "codexLinuxQuickLauncherSidebarV1";
 
-const CONTEXT_ASSET_PATTERN =
-  /^app-initial~artifact-tab-content\.electron~notebook-preview-panel~app-main~business-checkout~oxnpxkxc-[A-Za-z0-9_-]+\.js$/;
+const CONTEXT_ASSET_PATTERN = /^app-initial-[A-Za-z0-9_-]+\.js$/;
 const SIDEBAR_ASSET_PATTERN = /^local-conversation-thread-[A-Za-z0-9_-]+\.js$/;
 
 function warn(message, patchName) {
@@ -449,24 +448,30 @@ function inferSidebarAliases(source, target, jsx, summary) {
   }
   const modulePrefix = source.slice(Math.max(0, target.start - 4000), target.start);
   const reactImports = [
-    ...modulePrefix.matchAll(/\b([A-Za-z_$][\w$]*)=t\(u\(\),1\)/g),
+    ...modulePrefix.matchAll(
+      /\b([A-Za-z_$][\w$]*)=t\([A-Za-z_$][\w$]*\(\),1\)/g,
+    ),
   ];
   if (reactImports.length === 0) {
     warn("Could not infer the current React namespace alias", "sidebar patch");
     return null;
   }
-  const nativePlusPattern = new RegExp(
-    "defaultMessage:`Create environment`,description:`CTA to create a local environment from a thread`\\}\\)," +
-      "onClick:[A-Za-z_$][\\w$]*,children:\\(0,[A-Za-z_$][\\w$]*\\.jsx\\)\\(([A-Za-z_$][\\w$]*),\\{\\}\\)\\}\\)",
-    "g",
+  const createEnvironmentFunctions = findFunctions(source).filter(({ text }) =>
+    text.includes("threadPage.runAction.environment.createMenuTitle") &&
+    text.includes("defaultMessage:`Create environment`") &&
+    text.includes(`${summary}.IconButton`),
   );
-  const nativePlusMatches = [...source.matchAll(nativePlusPattern)].filter((match) =>
-    source.slice(Math.max(0, match.index - 500), match.index)
-      .includes(`${summary}.IconButton`),
-  );
-  if (nativePlusMatches.length !== 1) {
+  const nativePlusMatch = createEnvironmentFunctions.length === 1
+    ? createEnvironmentFunctions[0].text.match(
+      new RegExp(
+        `\\b([A-Za-z_$][\\w$]*)=\\(0,([A-Za-z_$][\\w$]*)\\.jsx\\)\\(([A-Za-z_$][\\w$]*),\\{\\}\\)` +
+        `[\\s\\S]{0,800}?\\(0,\\2\\.jsx\\)\\(${summary}\\.IconButton,\\{[^{}]{0,300}?children:\\1\\}\\)`,
+      ),
+    )
+    : null;
+  if (nativePlusMatch == null) {
     warn(
-      `Expected one native summary plus icon, found ${nativePlusMatches.length}`,
+      `Expected one current native summary plus icon, found ${createEnvironmentFunctions.length}`,
       "sidebar patch",
     );
     return null;
@@ -476,13 +481,44 @@ function inferSidebarAliases(source, target, jsx, summary) {
     environmentHook: environment[1],
     jsx,
     normalizePath: workspace[2],
-    plusIcon: nativePlusMatches[0][1],
+    plusIcon: nativePlusMatch[3],
     react: reactImports.at(-1)[1],
     summary,
   };
 }
 
 function appendInlineCard(targetText) {
+  const currentRootPattern =
+    /([A-Za-z_$][\w$]*)=\(0,([A-Za-z_$][\w$]*)\.jsxs\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:\[/g;
+  const currentRoots = [...targetText.matchAll(currentRootPattern)];
+  if (currentRoots.length === 1) {
+    const [prefix, resultName, jsx, summary, hideName, showName] = currentRoots[0];
+    const arrayOpen = currentRoots[0].index + prefix.length - 1;
+    const arrayClose = findMatchingDelimiter(targetText, arrayOpen, "[", "]");
+    if (arrayClose === -1 || targetText.slice(arrayClose, arrayClose + 3) !== "]})") {
+      return { reason: "Could not isolate the current inline task summary root" };
+    }
+    const rootEnd = arrayClose + 3;
+    const rootExpression = targetText.slice(
+      currentRoots[0].index + prefix.indexOf("=") + 1,
+      rootEnd,
+    );
+    return {
+      hideName,
+      jsx,
+      showName,
+      summary,
+      text:
+        targetText.slice(0, currentRoots[0].index) +
+        `${resultName}=(0,${jsx}.jsxs)(${jsx}.Fragment,{children:[${rootExpression},` +
+        `(0,${jsx}.jsx)(codexLinuxQuickLauncherCard,{shouldHideInlineImmediately:${hideName},shouldShow:${showName}})]})` +
+        targetText.slice(rootEnd),
+    };
+  }
+  if (currentRoots.length > 1) {
+    return { reason: `Expected one current inline task summary root, found ${currentRoots.length}` };
+  }
+
   const directRootPattern = /([A-Za-z_$][\w$]*)=\(0,([A-Za-z_$][\w$]*)\.jsx\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:([A-Za-z_$][\w$]*)\}\)/g;
   const directRoots = [...targetText.matchAll(directRootPattern)];
   if (directRoots.length === 1) {
@@ -505,7 +541,8 @@ function appendInlineCard(targetText) {
     return { reason: `Expected one inline task summary root, found ${directRoots.length}` };
   }
 
-  const rootCallPattern = /\(0,([A-Za-z_$][\w$]*)\.jsx\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:([A-Za-z_$][\w$]*)\}\)/g;
+  const rootCallPattern =
+    /\(0,([A-Za-z_$][\w$]*)\.(?:jsx|jsxs)\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:(?:[A-Za-z_$][\w$]*|\[)/g;
   const rootCalls = [...targetText.matchAll(rootCallPattern)];
   if (rootCalls.length !== 1) {
     return { reason: `Expected one current inline task summary root call, found ${rootCalls.length}` };
