@@ -39,6 +39,29 @@ update-builder bundle.
   cross-format changes unless the code explicitly scopes them to one package
   format or desktop target.
 
+## Feature Branch Workflow
+
+- Give every new Linux feature a stable, descriptive kebab-case feature ID.
+  Use that ID for its `linux-features/<id>/` directory and track its development
+  on a matching `feature/<id>` branch, for example
+  `linux-features/dev-colorize/` on `feature/dev-colorize`.
+- Keep feature-specific implementation and follow-up fixes on the owning
+  feature branch. Do not develop a feature only on `dev/combined`, and do not
+  copy or cherry-pick parallel versions of a feature into that branch.
+- Treat `main` as the upstream-tracking base. Keep personal optional features
+  off `main`, update it from `upstream/main`, and then update active feature
+  branches from the refreshed base.
+- Use `dev/combined` as the regular integration branch for the complete running
+  development build. Merge the actual `feature/<id>` branches into it, preserve
+  their merge ancestry, and run combined acceptance and private-display UI
+  tests there.
+- Record feature dependencies in `feature.json` and merge prerequisites before
+  dependents. A dependent feature branch may temporarily stack on its
+  prerequisite branch when the dependency cannot yet be represented by a small
+  generic extension point.
+- Before reporting a feature integration complete, verify the feature on its
+  owning branch and verify the enabled feature set together on `dev/combined`.
+
 ## Issue And Pull Request Labels
 
 - [`.github/labels.json`](.github/labels.json) is the source of truth for label
