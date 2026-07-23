@@ -498,9 +498,8 @@ test("feature is disabled by default, requires its host, and exposes three descr
     ],
   );
   assert.equal(
-    MAIN_PAGE_ASSET_PATTERN.test(
-      "app-initial~app-main~appgen-settings-page~page~appgen-library-page~appgen-page~appgen-setti~ogh9jurw-current.js",
-    ),
+    MAIN_PAGE_ASSET_PATTERN.test("app-initial-ogh9jurw-current.js"),
     true,
   );
+  assert.equal(MAIN_PAGE_ASSET_PATTERN.test("projects-index-page-current.js"), false);
 });

@@ -21,7 +21,7 @@ const DEFAULT_STRENGTH = 50;
 const COLOR_TOKEN = "__CODEX_LINUX_DEV_COLORIZE_TINT__";
 const STRENGTH_TOKEN = "__CODEX_LINUX_DEV_COLORIZE_STRENGTH__";
 const MAIN_PAGE_ASSET_PATTERN =
-  /^app-initial~app-main~appgen-settings-page~page~appgen-library-page~appgen-page~appgen-setti~[A-Za-z0-9_-]+\.js$/;
+  /^app-initial-[A-Za-z0-9_-]+\.js$/;
 
 const COLORIZE_CSS_TEMPLATE = [
   ":root.electron-light, .electron-light {",
