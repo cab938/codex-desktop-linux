@@ -1,0 +1,8 @@
+{
+  "id": "collaborative-markdown-editor",
+  "title": "Collaborative Markdown Editor",
+  "description": "Optional Codex Desktop plugin for human and agent collaboration on workspace Markdown through a shared Yjs document.",
+  "defaultEnabled": false,
+  "requires": [],
+  "conflicts": []
+}
