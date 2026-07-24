@@ -511,9 +511,15 @@ test("patches Quick Launcher only into the right-side section list", () => {
       )].length,
       1,
     );
-    assert.doesNotMatch(
+    assert.equal(
+      [...patchedSidebar.matchAll(
+        /\(0,tS\.jsx\)\(codexLinuxQuickLauncherCard,\{\}\)/g,
+      )].length,
+      1,
+    );
+    assert.match(
       patchedSidebar,
-      /\(0,tS\.jsx\)\(codexLinuxQuickLauncherCard,\{shouldHideInlineImmediately:/,
+      /Y\.Content,\{children:\(0,tS\.jsxs\)\(tS\.Fragment,\{children:\[\(0,tS\.jsx\)\(codexLinuxQuickLauncherCard,\{\}\),/,
     );
     assert.equal(applySidebarPatch(patchedSidebar), patchedSidebar);
   }
