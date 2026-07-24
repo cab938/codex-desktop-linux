@@ -35,6 +35,12 @@ function runLifecycle(command, buildRoot) {
   assert.equal(result.status, 0, result.stderr || result.stdout);
 }
 
+function writeFixtureBundle(buildRoot) {
+  const bundle = path.join(buildRoot, "web", "editor-preview.html");
+  fs.mkdirSync(path.dirname(bundle), { recursive: true });
+  fs.writeFileSync(bundle, "<!doctype html><title>fixture</title>\n");
+}
+
 function makeIsolatedFeaturesRoot() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "codex-collaborative-markdown-feature-"));
   fs.writeFileSync(
@@ -52,7 +58,7 @@ function makeIsolatedFeaturesRoot() {
   return root;
 }
 
-test("manifest is a disabled feature shell without premature integration hooks", () => {
+test("manifest remains disabled without premature integration hooks", () => {
   const manifest = readJson(path.join(featureRoot, "feature.json"));
   assert.equal(manifest.id, featureId);
   assert.equal(manifest.defaultEnabled, false);
@@ -77,7 +83,7 @@ test("repository feature discovery finds the shell and required README", () => {
   assert.equal(fs.existsSync(feature.readmePath), true);
 });
 
-test("enabled shell has an empty framework install and patch plan", () => {
+test("enabled feature has an empty framework install and patch plan until packaging", () => {
   const root = makeIsolatedFeaturesRoot();
   try {
     assert.deepEqual(enabledLinuxFeatureInstallPlan({ featuresRoot: root }), {
@@ -99,8 +105,15 @@ test("build and stage are deterministic and clean is feature-scoped", () => {
     fs.mkdirSync(unrelated);
     fs.writeFileSync(path.join(unrelated, "keep"), "keep\n");
 
+    writeFixtureBundle(root);
     runLifecycle("build", root);
     const first = fs.readFileSync(path.join(root, "feature-shell.json"), "utf8");
+    const manifest = JSON.parse(first);
+    assert.equal(manifest.status, "editor-integrated");
+    assert.deepEqual(
+      manifest.runtimeFiles.map((entry) => entry.path),
+      ["web/editor-preview.html"],
+    );
     runLifecycle("build", root);
     const second = fs.readFileSync(path.join(root, "feature-shell.json"), "utf8");
     assert.equal(second, first);
@@ -109,6 +122,10 @@ test("build and stage are deterministic and clean is feature-scoped", () => {
     assert.equal(
       fs.readFileSync(path.join(root, "stage", "feature-shell.json"), "utf8"),
       first,
+    );
+    assert.equal(
+      fs.readFileSync(path.join(root, "stage", "web", "editor-preview.html"), "utf8"),
+      "<!doctype html><title>fixture</title>\n",
     );
 
     runLifecycle("clean", root);

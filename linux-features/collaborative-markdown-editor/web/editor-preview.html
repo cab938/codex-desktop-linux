@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collaborative Markdown Editor</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="toolbar">
+        <div>
+          <strong>Collaborative Markdown Editor</strong>
+          <span id="status">one Y.Text · local preview harness</span>
+        </div>
+        <div class="toolbar-actions" aria-label="Editor controls">
+          <button id="preview" type="button" aria-pressed="true">Live preview</button>
+          <button id="undo" type="button">Undo</button>
+          <button id="redo" type="button">Redo</button>
+          <button id="agent-edit" type="button">Simulate agent edit</button>
+        </div>
+      </header>
+      <section id="editor" aria-label="Markdown editor"></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
