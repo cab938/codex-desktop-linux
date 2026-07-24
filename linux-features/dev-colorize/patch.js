@@ -8,7 +8,7 @@ const {
   webviewAssetPatch,
 } = require("../../scripts/patches/descriptor.js");
 
-const MAIN_MARKER = "codexLinuxDevColorizeMainV3";
+const MAIN_MARKER = "codexLinuxDevColorizeMainV4";
 const PRELOAD_MARKER = "codexLinuxDevColorizePreloadV3";
 const CONTROLS_MARKER = "codexLinuxDevColorizeControlsV3";
 const TEACHING_CONTROLS_MARKER = "codexLinuxTeachingSidebarFilterControlsPatch";
@@ -18,43 +18,9 @@ const STATE_CHANNEL = "codex_desktop:dev-colorize-state";
 const STATE_FILE_NAME = "dev-colorize.json";
 const DEFAULT_COLOR = "#fffdf8";
 const DEFAULT_STRENGTH = 50;
-const COLOR_TOKEN = "__CODEX_LINUX_DEV_COLORIZE_TINT__";
-const STRENGTH_TOKEN = "__CODEX_LINUX_DEV_COLORIZE_STRENGTH__";
+const TITLEBAR_HEIGHT = 30;
 const MAIN_PAGE_ASSET_PATTERN =
   /^app-initial-[A-Za-z0-9_-]+\.js$/;
-
-const COLORIZE_CSS_TEMPLATE = [
-  ":root.electron-light, .electron-light {",
-  `  --codex-linux-dev-colorize-source: ${COLOR_TOKEN};`,
-  `  --codex-linux-dev-colorize-tint: color-mix(in srgb, var(--codex-linux-dev-colorize-source) ${STRENGTH_TOKEN}%, #fff);`,
-  "  --gray-0: var(--codex-linux-dev-colorize-tint) !important;",
-  "  --gray-50: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 88%, #ebe7df) !important;",
-  "  --gray-75: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 78%, #ddd8cf) !important;",
-  "  --gray-100: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 66%, #cec8be) !important;",
-  "  --gray-300: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 28%, #9f978d) !important;",
-  "  --gray-500: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 8%, #5b554f) !important;",
-  "  --gray-550: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 6%, #4f4944) !important;",
-  "  --gray-600: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 5%, #423d38) !important;",
-  "  --gray-700: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 4%, #322e2a) !important;",
-  "  --vscode-sideBar-background: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 88%, #ebe7df) !important;",
-  "  --vscode-editor-background: var(--codex-linux-dev-colorize-tint) !important;",
-  "  --color-background-surface: var(--codex-linux-dev-colorize-tint) !important;",
-  "  --color-background-surface-under: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 88%, #ebe7df) !important;",
-  "  --color-background-editor-opaque: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 72%, transparent) !important;",
-  "  --color-background-elevated-primary: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 86%, transparent) !important;",
-  "  --color-background-elevated-primary-opaque: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 94%, #f0ece5) !important;",
-  "  --color-background-elevated-secondary-opaque: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 72%, #ded8cf) !important;",
-  "  --color-border: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 48%, #bdb5aa) !important;",
-  "  --color-border-light: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 66%, #cbc4ba) !important;",
-  "  --color-border-heavy: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 36%, #aaa196) !important;",
-  "  --color-token-side-bar-background: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 88%, #ebe7df) !important;",
-  "  --color-token-bg-primary: color-mix(in srgb, var(--codex-linux-dev-colorize-tint) 88%, #ebe7df) !important;",
-  "  --color-token-main-surface-primary: var(--codex-linux-dev-colorize-tint) !important;",
-  "}",
-  ":root.electron-light body, body.electron-light, .electron-light {",
-  "  background-color: var(--color-background-surface) !important;",
-  "}",
-].join("\n");
 
 function validColor(value) {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
@@ -64,27 +30,55 @@ function validStrength(value) {
   return Number.isInteger(value) && value >= 0 && value <= 100;
 }
 
-function colorizeCss(color = DEFAULT_COLOR, strength = DEFAULT_STRENGTH) {
-  return COLORIZE_CSS_TEMPLATE
-    .replaceAll(
-      COLOR_TOKEN,
-      validColor(color) ? color.toLowerCase() : DEFAULT_COLOR,
-    )
-    .replaceAll(
-      STRENGTH_TOKEN,
-      String(validStrength(strength) ? strength : DEFAULT_STRENGTH),
-    );
+function titlebarColor(color = DEFAULT_COLOR, strength = DEFAULT_STRENGTH) {
+  const source = validColor(color) ? color.toLowerCase() : DEFAULT_COLOR;
+  const amount = validStrength(strength) ? strength : DEFAULT_STRENGTH;
+  const channels = [1, 3, 5].map((offset) => Number.parseInt(source.slice(offset, offset + 2), 16));
+  return `#${channels
+    .map((channel) => Math.round(255 + ((channel - 255) * amount) / 100).toString(16).padStart(2, "0"))
+    .join("")}`;
 }
 
-const COLORIZE_CSS = colorizeCss();
+function titlebarCss(color = DEFAULT_COLOR, strength = DEFAULT_STRENGTH) {
+  return [
+    ":root.electron-light body::before, body.electron-light::before {",
+    '  content: "";',
+    "  position: fixed;",
+    "  inset: 0 0 auto 0;",
+    `  height: ${TITLEBAR_HEIGHT}px;`,
+    `  background: ${titlebarColor(color, strength)};`,
+    "  mix-blend-mode: multiply;",
+    "  pointer-events: none;",
+    "  z-index: 2147483646;",
+    "}",
+  ].join("\n");
+}
 
 function warn(message, patchName) {
   console.warn(`WARN: ${message} - skipping dev-colorize ${patchName}`);
 }
 
+function applyTitlebarHelperPatch(source) {
+  if (source.includes("typeof codexLinuxDevColorizeTitlebarColor")) {
+    return source;
+  }
+  const helperPattern =
+    /(function codexLinuxTitleBarOverlay\(e=1\)\{return\{color:([A-Za-z_$][\w$]*)\.nativeTheme\.shouldUseDarkColors\?`#111111`:)([A-Za-z_$][\w$]*)(,symbolColor:)/;
+  const match = source.match(helperPattern);
+  if (match == null) {
+    warn("Could not find the current Linux title-bar overlay helper", "title-bar controls patch");
+    return source;
+  }
+  const lightBackgroundAlias = match[3];
+  return source.replace(
+    helperPattern,
+    `$1(typeof codexLinuxDevColorizeTitlebarColor==="function"&&codexLinuxDevColorizeState?.active?codexLinuxDevColorizeTitlebarColor():${lightBackgroundAlias})$4`,
+  );
+}
+
 function mainRuntimeSource() {
   return [
-    `var ${MAIN_MARKER}=!0,codexLinuxDevColorizeDefaultColor=${JSON.stringify(DEFAULT_COLOR)},codexLinuxDevColorizeDefaultStrength=${DEFAULT_STRENGTH},codexLinuxDevColorizeCssTemplate=${JSON.stringify(COLORIZE_CSS_TEMPLATE)},codexLinuxDevColorizeState={active:!0,color:${JSON.stringify(DEFAULT_COLOR)},strength:${DEFAULT_STRENGTH}},codexLinuxDevColorizeRepository=null,codexLinuxDevColorizeCssKeys=new Map,codexLinuxDevColorizeInstalledContents=new WeakSet,codexLinuxDevColorizeIpcInstalled=!1,codexLinuxDevColorizeRevision=0;`,
+    `var ${MAIN_MARKER}=!0,codexLinuxDevColorizeDefaultColor=${JSON.stringify(DEFAULT_COLOR)},codexLinuxDevColorizeDefaultStrength=${DEFAULT_STRENGTH},codexLinuxDevColorizeState={active:!0,color:${JSON.stringify(DEFAULT_COLOR)},strength:${DEFAULT_STRENGTH}},codexLinuxDevColorizeRepository=null,codexLinuxDevColorizeInstalledWindows=new WeakSet,codexLinuxDevColorizeCssKeys=new Map,codexLinuxDevColorizeRevision=0,codexLinuxDevColorizeIpcInstalled=!1;`,
     `function codexLinuxDevColorizeValidColor(e){return typeof e==="string"&&/^#[0-9a-f]{6}$/i.test(e)}`,
     `function codexLinuxDevColorizeValidStrength(e){return Number.isInteger(e)&&e>=0&&e<=100}`,
     `function codexLinuxDevColorizeStatePath(){try{let e=require("node:path"),t=process.env.CODEX_LINUX_SETTINGS_FILE,n=typeof t==="string"&&t.length>0?e.dirname(t):require("electron").app.getPath("userData");return e.join(n,${JSON.stringify(STATE_FILE_NAME)})}catch{return null}}`,
@@ -94,19 +88,20 @@ function mainRuntimeSource() {
     `function codexLinuxDevColorizePublish(){try{codexLinuxDevColorizeRepository?.set?.(${JSON.stringify(SHARED_OBJECT_KEY)},codexLinuxDevColorizeSnapshot())}catch{}}`,
     `function codexLinuxDevColorizeSendSnapshot(e){try{e?.isDestroyed?.()||e?.send?.(${JSON.stringify(STATE_CHANNEL)},codexLinuxDevColorizeSnapshot())}catch{}}`,
     `function codexLinuxDevColorizeWriteState(e){let t=codexLinuxDevColorizeStatePath();if(t==null)return{ok:!1,error:"Colorize settings path is unavailable"};let n=require("node:fs"),r=require("node:path"),i=t+"."+String(process.pid)+".tmp";try{return n.mkdirSync(r.dirname(t),{recursive:!0,mode:448}),n.writeFileSync(i,JSON.stringify({schemaVersion:3,active:e.active,color:e.color,strength:e.strength})+"\\n",{encoding:"utf8",mode:384}),n.renameSync(i,t),{ok:!0}}catch(e){try{n.unlinkSync(i)}catch{}return{ok:!1,error:e instanceof Error?e.message:String(e)}}}`,
-    `function codexLinuxDevColorizeCss(){return codexLinuxDevColorizeCssTemplate.replaceAll(${JSON.stringify(COLOR_TOKEN)},codexLinuxDevColorizeState.color).replaceAll(${JSON.stringify(STRENGTH_TOKEN)},String(codexLinuxDevColorizeState.strength))}`,
+    `function codexLinuxDevColorizeTitlebarColor(){let e=codexLinuxDevColorizeState.color,t=codexLinuxDevColorizeState.strength,n=[1,3,5].map(t=>Number.parseInt(e.slice(t,t+2),16));return"#"+n.map(e=>Math.round(255+(e-255)*t/100).toString(16).padStart(2,"0")).join("")}`,
+    `function codexLinuxDevColorizeCss(){return${JSON.stringify(titlebarCss())}.replace(${JSON.stringify(titlebarColor())},codexLinuxDevColorizeTitlebarColor())}`,
     `function codexLinuxDevColorizeRemoveCss(e){let t=codexLinuxDevColorizeCssKeys.get(e?.id);if(t==null)return;codexLinuxDevColorizeCssKeys.delete(e.id);try{e.isDestroyed?.()||e.removeInsertedCSS?.(t)}catch{}}`,
-    `function codexLinuxDevColorizeApplyContents(e){if(e==null||e.isDestroyed?.())return;if(!codexLinuxDevColorizeState.active){codexLinuxDevColorizeRemoveCss(e);return}if(codexLinuxDevColorizeCssKeys.has(e.id))return;let t=codexLinuxDevColorizeRevision;try{Promise.resolve(e.insertCSS?.(codexLinuxDevColorizeCss(),{cssOrigin:"author"})).then(n=>{if(typeof n!=="string"||n.length===0)return;if(codexLinuxDevColorizeState.active&&t===codexLinuxDevColorizeRevision&&!e.isDestroyed?.())codexLinuxDevColorizeCssKeys.set(e.id,n);else try{e.isDestroyed?.()||e.removeInsertedCSS?.(n)}catch{}}).catch(()=>{})}catch{}}`,
-    `function codexLinuxDevColorizeRefreshContents(e){codexLinuxDevColorizeRemoveCss(e),codexLinuxDevColorizeApplyContents(e)}`,
-    `function codexLinuxDevColorizeInstallWindow(e){let t=e?.webContents;if(t==null||codexLinuxDevColorizeInstalledContents.has(t))return;codexLinuxDevColorizeInstalledContents.add(t),t.on?.("did-finish-load",()=>{codexLinuxDevColorizeRevision++,codexLinuxDevColorizeRefreshContents(t),codexLinuxDevColorizeSendSnapshot(t)}),t.once?.("destroyed",()=>{codexLinuxDevColorizeCssKeys.delete(t.id)}),codexLinuxDevColorizeApplyContents(t)}`,
-    `function codexLinuxDevColorizeApplyAllWindows(){codexLinuxDevColorizeRevision++;try{for(let e of require("electron").BrowserWindow.getAllWindows())codexLinuxDevColorizeInstallWindow(e),codexLinuxDevColorizeState.active?codexLinuxDevColorizeRefreshContents(e.webContents):codexLinuxDevColorizeRemoveCss(e.webContents),codexLinuxDevColorizeSendSnapshot(e.webContents)}catch{}}`,
+    `function codexLinuxDevColorizeRefreshCss(e){if(e==null||e.isDestroyed?.())return;codexLinuxDevColorizeRemoveCss(e);if(!codexLinuxDevColorizeState.active||require("electron").nativeTheme.shouldUseDarkColors)return;let t=codexLinuxDevColorizeRevision;try{Promise.resolve(e.insertCSS?.(codexLinuxDevColorizeCss(),{cssOrigin:"author"})).then(n=>{if(typeof n!=="string"||n.length===0)return;if(codexLinuxDevColorizeState.active&&!require("electron").nativeTheme.shouldUseDarkColors&&t===codexLinuxDevColorizeRevision&&!e.isDestroyed?.())codexLinuxDevColorizeCssKeys.set(e.id,n);else try{e.isDestroyed?.()||e.removeInsertedCSS?.(n)}catch{}}).catch(()=>{})}catch{}}`,
+    `function codexLinuxDevColorizeApplyWindow(e){if(e==null||e.isDestroyed?.())return;try{let t=require("electron").nativeTheme.shouldUseDarkColors,n=codexLinuxDevColorizeState.active&&!t?codexLinuxDevColorizeTitlebarColor():t?"#111111":"#ffffff",r=e.webContents?.getZoomFactor?.()??1;e.setTitleBarOverlay?.({color:n,symbolColor:t?"#ffffff":"#000000",height:Math.round(${TITLEBAR_HEIGHT}*r)}),codexLinuxDevColorizeRefreshCss(e.webContents)}catch{}}`,
+    `function codexLinuxDevColorizeInstallWindow(e){let t=e?.webContents;if(t==null)return;if(!codexLinuxDevColorizeInstalledWindows.has(e)){codexLinuxDevColorizeInstalledWindows.add(e),t.on?.("did-finish-load",()=>{codexLinuxDevColorizeApplyWindow(e),codexLinuxDevColorizeSendSnapshot(t)})}codexLinuxDevColorizeApplyWindow(e)}`,
+    `function codexLinuxDevColorizeApplyAllWindows(){codexLinuxDevColorizeRevision++;try{for(let e of require("electron").BrowserWindow.getAllWindows())codexLinuxDevColorizeInstallWindow(e),codexLinuxDevColorizeSendSnapshot(e.webContents)}catch{}}`,
     `function codexLinuxDevColorizeCommit(e){let t=codexLinuxDevColorizeWriteState(e);if(!t.ok)return t;return codexLinuxDevColorizeState=e,codexLinuxDevColorizePublish(),codexLinuxDevColorizeApplyAllWindows(),{ok:!0,state:codexLinuxDevColorizeSnapshot()}}`,
     `function codexLinuxDevColorizeSetActive(e){return typeof e!=="boolean"?{ok:!1,error:"Colorize active state must be boolean"}:codexLinuxDevColorizeCommit({...codexLinuxDevColorizeState,active:e})}`,
     `function codexLinuxDevColorizeSetColor(e){return codexLinuxDevColorizeValidColor(e)?codexLinuxDevColorizeCommit({...codexLinuxDevColorizeState,color:e.toLowerCase()}):{ok:!1,error:"Colorize tint must be a six-digit hex color"}}`,
     `function codexLinuxDevColorizeSetStrength(e){return codexLinuxDevColorizeValidStrength(e)?codexLinuxDevColorizeCommit({...codexLinuxDevColorizeState,strength:e}):{ok:!1,error:"Colorize strength must be an integer from 0 to 100"}}`,
     `function codexLinuxDevColorizeCommand(e){return e?.action==="set-active"?codexLinuxDevColorizeSetActive(e.active):e?.action==="set-color"?codexLinuxDevColorizeSetColor(e.color):e?.action==="set-strength"?codexLinuxDevColorizeSetStrength(e.strength):{ok:!1,error:"Unknown Colorize action"}}`,
     `function codexLinuxDevColorizeBindRepository(e){codexLinuxDevColorizeRepository=e,codexLinuxDevColorizePublish();if(codexLinuxDevColorizeIpcInstalled)return;let t=require("electron");t.ipcMain.handle(${JSON.stringify(IPC_CHANNEL)},(_e,t)=>codexLinuxDevColorizeCommand(t)),codexLinuxDevColorizeIpcInstalled=!0}`,
-    `if(process.platform==="linux")try{let e=require("electron");e.app.on?.("browser-window-created",(_e,t)=>codexLinuxDevColorizeInstallWindow(t));for(let t of e.BrowserWindow.getAllWindows())codexLinuxDevColorizeInstallWindow(t)}catch{}`,
+    `if(process.platform==="linux")try{let e=require("electron");e.app.on?.("browser-window-created",(_e,t)=>codexLinuxDevColorizeInstallWindow(t)),e.nativeTheme.on?.("updated",codexLinuxDevColorizeApplyAllWindows);for(let t of e.BrowserWindow.getAllWindows())codexLinuxDevColorizeInstallWindow(t)}catch{}`,
   ].join("");
 }
 
@@ -128,9 +123,10 @@ function applyMainProcessPatch(source) {
     );
     return source;
   }
+  const withTitlebar = applyTitlebarHelperPatch(source);
   const injection =
     `${matches[0][1]}codexLinuxDevColorizeBindRepository(this.sharedObjectRepository),`;
-  return mainRuntimeSource() + source.replace(matches[0][0], injection);
+  return mainRuntimeSource() + withTitlebar.replace(matches[0][0], injection);
 }
 
 function preloadBridgeSource(electronAlias) {
@@ -249,8 +245,6 @@ const descriptors = [
 ];
 
 module.exports = {
-  COLORIZE_CSS,
-  COLORIZE_CSS_TEMPLATE,
   CONTROLS_MARKER,
   DEFAULT_COLOR,
   DEFAULT_STRENGTH,
@@ -261,10 +255,13 @@ module.exports = {
   SHARED_OBJECT_KEY,
   STATE_CHANNEL,
   STATE_FILE_NAME,
+  TITLEBAR_HEIGHT,
   applyControlsPatch,
   applyMainProcessPatch,
   applyPreloadBridgePatch,
-  colorizeCss,
+  applyTitlebarHelperPatch,
+  titlebarColor,
+  titlebarCss,
   controlsRuntimeSource,
   descriptors,
   mainRuntimeSource,

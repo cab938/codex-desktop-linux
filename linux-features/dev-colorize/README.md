@@ -7,12 +7,14 @@ contains a **Colorize** toggle, a compact **Tint** color picker, and a
 **Strength** slider. The feature does not add a top application menu.
 
 Colorize is on by default for a newly built app identity. In the light theme it
-changes the white surfaces to a slight warm off-white and shifts neutral greys
-toward warmer values. Changing the tint or its strength updates the palette
-immediately. Strength defaults to 50 percent so saturated custom colors remain
-subtle; 0 percent neutralizes the selected tint while 100 percent uses it
-directly. The dark theme is intentionally unchanged. Selecting **Colorize**
-again removes the injected stylesheet immediately.
+colors only the 30-pixel title-bar strip containing the app menu/header and the
+minimize, maximize, and close controls. The sidebar, editor, conversation, and
+other application surfaces keep their normal theme colors. Changing the tint
+or its strength updates the title bar immediately. Strength defaults to 50
+percent so saturated custom colors remain subtle; 0 percent neutralizes the
+selected tint while 100 percent uses it directly. The dark theme is
+intentionally unchanged. Selecting **Colorize** again restores the normal
+title-bar color immediately.
 
 The selected state is stored in `dev-colorize.json` beside the launcher's
 per-app settings file. Side-by-side app IDs therefore keep independent
@@ -43,8 +45,8 @@ For runtime verification, build with a distinct `CODEX_APP_ID` and run the
 generated launcher in an isolated Xvfb session. Confirm that the bottom `¿`
 popover contains **Teaching view**, **Colorize**, **Tint**, and **Strength**,
 that the custom rows use the same type scale as the menu items, that no top
-**Dev** menu is added, and that toggling or changing either control updates the
-palette.
+**Dev** menu is added, and that toggling or changing either control updates only
+the title bar while the application body retains its normal theme colors.
 
 ## Maintenance risk
 

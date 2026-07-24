@@ -13,7 +13,6 @@ const {
   loadLinuxFeaturePatchDescriptors,
 } = require("../../scripts/lib/linux-features.js");
 const {
-  COLORIZE_CSS,
   CONTROLS_MARKER,
   DEFAULT_COLOR,
   DEFAULT_STRENGTH,
@@ -24,13 +23,16 @@ const {
   SHARED_OBJECT_KEY,
   STATE_FILE_NAME,
   STATE_CHANNEL,
+  TITLEBAR_HEIGHT,
   applyControlsPatch,
   applyMainProcessPatch,
   applyPreloadBridgePatch,
-  colorizeCss,
+  applyTitlebarHelperPatch,
   controlsRuntimeSource,
   descriptors,
   mainRuntimeSource,
+  titlebarColor,
+  titlebarCss,
   validColor,
   validStrength,
 } = require("./patch.js");
@@ -75,6 +77,11 @@ function captureWarnings(callback) {
 function syntheticMainBundle() {
   return [
     "let e=require(`electron`);",
+    "let lightBackground=`#ffffff`,lightSymbol=`#ffffff`,darkSymbol=`#000000`;",
+    "function codexLinuxTitleBarOverlay(e=1){return{color:" +
+      "electron.nativeTheme.shouldUseDarkColors?`#111111`:lightBackground," +
+      "symbolColor:electron.nativeTheme.shouldUseDarkColors?lightSymbol:darkSymbol," +
+      "height:Math.round(30*e)}}",
     "class Host{boot(h){",
     "this.sharedObjectRepository=new R.Store,",
     "this.sharedObjectRepository.set(`host_config`,h),",
@@ -102,6 +109,10 @@ test("main-process patch installs only the Colorize runtime and shared-state bin
     patched,
     /codexLinuxDevColorizeBindRepository\(this\.sharedObjectRepository\)/,
   );
+  assert.match(
+    patched,
+    /typeof codexLinuxDevColorizeTitlebarColor==="function"&&codexLinuxDevColorizeState\?\.active/,
+  );
   assert.match(patched, new RegExp(IPC_CHANNEL));
   assert.doesNotMatch(patched, /label:"Dev"/);
   assert.doesNotMatch(patched, /setApplicationMenu/);
@@ -109,7 +120,19 @@ test("main-process patch installs only the Colorize runtime and shared-state bin
   assert.doesNotThrow(() => new vm.Script(patched));
 });
 
-test("palette uses the selected tint only for the light Electron theme", () => {
+test("title-bar controls use the selected color at window creation", () => {
+  const source =
+    "function codexLinuxTitleBarOverlay(e=1){return{color:" +
+    "electron.nativeTheme.shouldUseDarkColors?`#111111`:lightBackground," +
+    "symbolColor:electron.nativeTheme.shouldUseDarkColors?lightSymbol:darkSymbol," +
+    "height:Math.round(30*e)}}";
+  const patched = applyTitlebarHelperPatch(source);
+  assert.notEqual(patched, source);
+  assert.match(patched, /codexLinuxDevColorizeTitlebarColor\(\):lightBackground/);
+  assert.equal(applyTitlebarHelperPatch(patched), patched);
+});
+
+test("title bar blends the selected tint toward white", () => {
   assert.equal(validColor(DEFAULT_COLOR), true);
   assert.equal(validColor("#aBc123"), true);
   assert.equal(validColor("#abc"), false);
@@ -119,26 +142,19 @@ test("palette uses the selected tint only for the light Electron theme", () => {
   assert.equal(validStrength(100), true);
   assert.equal(validStrength(101), false);
   assert.equal(validStrength(49.5), false);
-  assert.match(COLORIZE_CSS, /:root\.electron-light, \.electron-light/);
-  assert.match(COLORIZE_CSS, /--codex-linux-dev-colorize-source: #fffdf8/);
-  assert.match(
-    COLORIZE_CSS,
-    /--codex-linux-dev-colorize-tint: color-mix\(in srgb, var\(--codex-linux-dev-colorize-source\) 50%, #fff\)/,
-  );
-  assert.match(COLORIZE_CSS, /color-mix\(in srgb/);
-  assert.doesNotMatch(COLORIZE_CSS, /electron-dark/);
-  assert.match(colorizeCss("#e4f2ff", 35), /--codex-linux-dev-colorize-source: #e4f2ff/);
-  assert.match(
-    colorizeCss("#e4f2ff", 35),
-    /var\(--codex-linux-dev-colorize-source\) 35%, #fff/,
-  );
-  assert.doesNotMatch(colorizeCss("#e4f2ff"), /__CODEX_LINUX_DEV_COLORIZE_TINT__/);
-  assert.doesNotMatch(colorizeCss("#e4f2ff"), /__CODEX_LINUX_DEV_COLORIZE_STRENGTH__/);
-  assert.match(colorizeCss("invalid"), /--codex-linux-dev-colorize-source: #fffdf8/);
-  assert.match(colorizeCss("#e4f2ff", 101), /var\(--codex-linux-dev-colorize-source\) 50%/);
+  assert.equal(titlebarColor("#e4f2ff", 0), "#ffffff");
+  assert.equal(titlebarColor("#e4f2ff", 100), "#e4f2ff");
+  assert.equal(titlebarColor("#e4f2ff", 35), "#f6faff");
+  assert.equal(titlebarColor("invalid"), "#fffefc");
+  assert.equal(titlebarColor("#e4f2ff", 101), "#f2f9ff");
+  assert.match(titlebarCss("#e4f2ff", 35), new RegExp(`height: ${TITLEBAR_HEIGHT}px`));
+  assert.match(titlebarCss("#e4f2ff", 35), /background: #f6faff/);
+  assert.match(titlebarCss("#e4f2ff", 35), /pointer-events: none/);
+  assert.match(titlebarCss("#e4f2ff", 35), /mix-blend-mode: multiply/);
+  assert.doesNotMatch(titlebarCss("#e4f2ff", 35), /--gray-|--color-background|html::before/);
 });
 
-test("runtime defaults on, migrates old state, persists tint strength, and refreshes inserted CSS", async (t) => {
+test("runtime defaults on, migrates old state, persists tint strength, and refreshes only title bars", async (t) => {
   const root = tempDirectory("codex-dev-colorize-runtime-");
   t.after(() => fs.rmSync(root, { force: true, recursive: true }));
   const settingsFile = path.join(root, "settings.json");
@@ -146,6 +162,7 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
     path.join(root, STATE_FILE_NAME),
     JSON.stringify({ schemaVersion: 2, active: true, color: "#dff6e8" }),
   );
+  const overlays = [];
   const inserted = [];
   const removed = [];
   const sent = [];
@@ -154,6 +171,7 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
   const published = [];
   const webContents = {
     id: 42,
+    getZoomFactor: () => 1,
     insertCSS(css, options) {
       inserted.push([css, options]);
       return Promise.resolve(`css-${inserted.length}`);
@@ -172,7 +190,13 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
       sent.push({ channel, payload });
     },
   };
-  const windows = [{ webContents }];
+  const windows = [{
+    webContents,
+    isDestroyed: () => false,
+    setTitleBarOverlay(options) {
+      overlays.push(options);
+    },
+  }];
   const electron = {
     app: {
       getPath: () => root,
@@ -180,6 +204,10 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
     },
     BrowserWindow: {
       getAllWindows: () => windows,
+    },
+    nativeTheme: {
+      shouldUseDarkColors: false,
+      on() {},
     },
     ipcMain: {
       handle(channel, handler) {
@@ -217,25 +245,39 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
   assert.equal(context.globalThis.colorizeApi.state().active, true);
   assert.equal(context.globalThis.colorizeApi.state().color, "#dff6e8");
   assert.equal(context.globalThis.colorizeApi.state().strength, DEFAULT_STRENGTH);
-  assert.equal(inserted.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(overlays.at(-1))), {
+    color: "#effbf4",
+    symbolColor: "#000000",
+    height: 30,
+  });
+  await Promise.resolve();
+  assert.match(inserted.at(-1)[0], /height: 30px/);
+  assert.match(inserted.at(-1)[0], /background: #effbf4/);
   assert.equal(published.at(-1).key, SHARED_OBJECT_KEY);
   assert.equal(typeof ipcHandler, "function");
 
   const recolored = ipcHandler({}, { action: "set-color", color: "#e4f2ff" });
   assert.equal(recolored.ok, true);
-  await Promise.resolve();
   assert.equal(context.globalThis.colorizeApi.state().color, "#e4f2ff");
-  assert.match(inserted.at(-1)[0], /--codex-linux-dev-colorize-source: #e4f2ff/);
+  assert.deepEqual(JSON.parse(JSON.stringify(overlays.at(-1))), {
+    color: "#f2f9ff",
+    symbolColor: "#000000",
+    height: 30,
+  });
+  await Promise.resolve();
+  assert.match(inserted.at(-1)[0], /background: #f2f9ff/);
   assert.deepEqual(removed, ["css-1"]);
 
   const restrained = ipcHandler({}, { action: "set-strength", strength: 35 });
   assert.equal(restrained.ok, true);
-  await Promise.resolve();
   assert.equal(context.globalThis.colorizeApi.state().strength, 35);
-  assert.match(
-    inserted.at(-1)[0],
-    /var\(--codex-linux-dev-colorize-source\) 35%, #fff/,
-  );
+  assert.deepEqual(JSON.parse(JSON.stringify(overlays.at(-1))), {
+    color: "#f6faff",
+    symbolColor: "#000000",
+    height: 30,
+  });
+  await Promise.resolve();
+  assert.match(inserted.at(-1)[0], /background: #f6faff/);
   assert.deepEqual(removed, ["css-1", "css-2"]);
   assert.deepEqual(
     JSON.parse(fs.readFileSync(path.join(root, STATE_FILE_NAME), "utf8")),
@@ -246,6 +288,11 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
   const disabled = ipcHandler({}, { action: "set-active", active: false });
   assert.equal(disabled.ok, true);
   assert.equal(context.globalThis.colorizeApi.state().active, false);
+  assert.deepEqual(JSON.parse(JSON.stringify(overlays.at(-1))), {
+    color: "#ffffff",
+    symbolColor: "#000000",
+    height: 30,
+  });
   assert.deepEqual(removed, ["css-1", "css-2", "css-3"]);
   assert.equal(published.at(-1).value.active, false);
   assert.equal(sent.at(-1).channel, STATE_CHANNEL);
