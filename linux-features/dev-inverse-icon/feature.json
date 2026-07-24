@@ -1,0 +1,9 @@
+{
+  "id": "dev-inverse-icon",
+  "title": "Dev Build Inverse Icon",
+  "description": "Inverts the Codex application icon at runtime so a side-by-side development build is easy to distinguish in the system tray.",
+  "defaultEnabled": false,
+  "entrypoints": {
+    "patchDescriptors": "./patch.js"
+  }
+}
