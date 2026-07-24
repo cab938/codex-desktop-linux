@@ -70,7 +70,7 @@ if [ -z "$$format" ]; then \
 fi; \
 printf '%s\n' "$$format"
 
-.PHONY: help check test build-updater maybe-build-updater update rebuild rebuild-install inspect-upstream inspect-upstream-intel inspect-upstream-intel-devcontainer build-app build-app-fresh setup-native bootstrap-native install-native update-native rebuild-next run-app build-dev-app run-dev-app test-dev-app-headless run-dev-app-headless deb rpm pacman appimage package install service-enable service-status clean-dist clean-state
+.PHONY: help check test build-updater maybe-build-updater update rebuild rebuild-install inspect-upstream inspect-upstream-intel inspect-upstream-intel-devcontainer build-app build-app-fresh setup-native bootstrap-native install-native update-native rebuild-next run-app build-dev-app run-dev-app rebuild-relaunch-dev-app test-dev-app-headless run-dev-app-headless deb rpm pacman appimage package install service-enable service-status clean-dist clean-state
 
 help:
 	@printf '\nChatGPT Desktop for Linux Make Targets\n\n'
@@ -93,6 +93,7 @@ help:
 	@printf '  %-18s %s\n' "make run-app" "Launch the local generated Electron app from codex-app/"
 	@printf '  %-18s %s\n' "make build-dev-app" "Build a side-by-side test app with a distinct app id/bin"
 	@printf '  %-18s %s\n' "make run-dev-app" "Launch the side-by-side test app"
+	@printf '  %-18s %s\n' "make rebuild-relaunch-dev-app" "Detach, stop, rebuild, and relaunch Codex Desktop Linux Dev"
 	@printf '  %-18s %s\n' "make test-dev-app-headless" "Smoke-test the dev app on a host-invisible desktop"
 	@printf '  %-18s %s\n' "make run-dev-app-headless" "Keep a host-invisible desktop open for automation"
 	@printf '  %-18s %s\n' "make deb" "Build the Debian package into dist/"
@@ -284,6 +285,10 @@ build-dev-app:
 run-dev-app:
 	@echo "[make] Launching side-by-side Electron app"
 	"$(DEV_APP_BIN)"
+
+rebuild-relaunch-dev-app:
+	@echo "[make] Dispatching detached Codex Desktop Linux Dev rebuild"
+	./scripts/dev/rebuild-relaunch-dev-app.sh
 
 test-dev-app-headless:
 	@echo "[make] Smoke-testing side-by-side Electron app headlessly"

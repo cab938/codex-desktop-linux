@@ -69,6 +69,35 @@ Quick launches are intentionally powerful local actions. Review repository
 changes before clicking a button whose YAML came from an untrusted branch.
 Command output is not shown in the sidebar in version 1.
 
+## Repository self-rebuild button
+
+This repository includes a guarded development-app workflow for a
+project-scoped Quick Launcher button:
+
+```yaml
+version: 1
+launches:
+  - label: Rebuild dev
+    command: make rebuild-relaunch-dev-app
+    cwd: .
+```
+
+The Make target dispatches `scripts/dev/rebuild-relaunch-dev-app.sh` into a
+transient user-systemd unit before the current Electron window is stopped. The
+worker selects only the main process whose executable belongs to
+`codex-desktop-linux-dev-app`, waits for it to exit, builds from
+`dev/combined`, verifies the promoted build identity and source commit, and
+then relaunches. Production Codex processes and unrelated Electron helpers are
+not selected. Concurrent clicks are locked, a failed build is not relaunched,
+and details remain in
+`~/.local/state/codex-desktop-linux-dev/rebuild-relaunch.log`.
+
+Inspect the target without changing app or filesystem state:
+
+```bash
+./scripts/dev/rebuild-relaunch-dev-app.sh --dry-run
+```
+
 ## Enable and verify locally
 
 Create the ignored `linux-features/features.json` with:
