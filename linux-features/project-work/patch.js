@@ -252,15 +252,6 @@ function codexLinuxProjectWorkCardRuntime(props) {
       setError(createError instanceof Error ? createError.message : String(createError));
     }
   };
-  const openMarkdown = async () => {
-    setError(null);
-    try {
-      applyActionResult(await bridge?.request({ action: "open", workspaceRoot }));
-    } catch (openError) {
-      setError(openError instanceof Error ? openError.message : String(openError));
-    }
-  };
-
   const items = Array.isArray(state?.items) ? state.items : [];
   const visibleItems = hideCompleted ? items.filter((item) => !item.checked) : items;
   const visibleError = error ?? state?.error?.message ?? state?.watchError ?? null;
@@ -298,27 +289,15 @@ function codexLinuxProjectWorkCardRuntime(props) {
     "data-project-work-revision": state?.revision ?? "loading",
     "data-project-work-status": state?.status ?? "loading",
     children: [
-      state?.status !== "missing"
-        ? (0, codexLinuxProjectWorkJsx.jsxs)("div", {
+      items.some((item) => item.checked)
+        ? (0, codexLinuxProjectWorkJsx.jsx)("div", {
             className: "flex flex-wrap items-center gap-2",
-            children: [
-          state?.status !== "missing"
-            ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
-                type: "button",
-                className: "rounded-md border border-token-border px-2 py-1 text-xs hover:bg-token-bg-secondary",
-                onClick: openMarkdown,
-                children: "Open Markdown",
-              })
-            : null,
-          items.some((item) => item.checked)
-            ? (0, codexLinuxProjectWorkJsx.jsx)("button", {
-                type: "button",
-                className: "rounded-md px-2 py-1 text-xs text-token-description-foreground hover:bg-token-bg-secondary",
-                onClick: () => setHideCompleted(!hideCompleted),
-                children: hideCompleted ? "Show completed" : "Hide completed",
-              })
-            : null,
-            ],
+            children: (0, codexLinuxProjectWorkJsx.jsx)("button", {
+              type: "button",
+              className: "rounded-md px-2 py-1 text-xs text-token-description-foreground hover:bg-token-bg-secondary",
+              onClick: () => setHideCompleted(!hideCompleted),
+              children: hideCompleted ? "Show completed" : "Hide completed",
+            }),
           })
         : null,
       visibleError == null
@@ -341,7 +320,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
           : items.length === 0
             ? (0, codexLinuxProjectWorkJsx.jsx)("div", {
                 className: "text-xs text-token-description-foreground",
-                children: "No Markdown checklist items found. Use Open Markdown to add work packages.",
+                children: "No Markdown checklist items found.",
               })
             : (0, codexLinuxProjectWorkJsx.jsx)("div", {
                 className: "flex flex-col gap-1",

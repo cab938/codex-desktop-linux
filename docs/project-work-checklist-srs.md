@@ -86,8 +86,6 @@ The card must:
 - Display an appropriate empty state if the file is missing or has no recognized
   checklist items.
 - Offer a way to create the file from the missing-file empty state.
-- Offer an **Open Markdown** action for unrestricted editing in the normal editor
-  workflow.
 - Allow completed work to be collapsed if this can be implemented without making
   the initial integration fragile.
 - Surface read, write, watch, and concurrent-edit failures without discarding or
