@@ -99,7 +99,6 @@ function createProjectWorkFileService(options = {}) {
   const fsp = fs.promises;
   const path = options.path ?? require("node:path");
   const crypto = options.crypto ?? require("node:crypto");
-  const openPath = options.openPath ?? (async () => "");
   const watchFactory = options.watchFactory ?? ((target, watchOptions, listener) => fs.watch(target, watchOptions, listener));
   const maxFileBytes = options.maxFileBytes ?? 8 * 1024 * 1024;
   const createContent = options.createContent ?? "# Project work\n\n";
@@ -561,19 +560,6 @@ function createProjectWorkFileService(options = {}) {
     return { created, state };
   }
 
-  async function open(workspaceRootInput) {
-    const workspaceRoot = await canonicalWorkspaceRoot(workspaceRootInput);
-    const state = await readCanonical(workspaceRoot);
-    if (state.status === "missing") {
-      return fail("PROJECT_WORK_MISSING", "Create the Project work file before opening it", state);
-    }
-    const result = await openPath(state.path);
-    if (typeof result === "string" && result.length > 0) {
-      return fail("PROJECT_WORK_OPEN_FAILED", result, state);
-    }
-    return { ok: true, state };
-  }
-
   async function handle(payload, subscriber = null) {
     try {
       if (payload == null || typeof payload !== "object" || Array.isArray(payload)) {
@@ -586,8 +572,6 @@ function createProjectWorkFileService(options = {}) {
           const result = await create(payload.workspaceRoot);
           return { ok: true, ...result };
         }
-        case "open":
-          return open(payload.workspaceRoot);
         case "toggle":
           return toggle(payload);
         case "watch": {
@@ -623,7 +607,6 @@ function createProjectWorkFileService(options = {}) {
     create,
     dispose,
     handle,
-    open,
     parseChecklist,
     read,
     toggle,
@@ -789,9 +772,7 @@ function installProjectWorkMainBridge(electron) {
   const requestChannel = "codex_desktop:project-work";
   const updateChannel = "codex_desktop:project-work-updated";
   const destroyed = new Set();
-  const service = createProjectWorkFileService({
-    openPath: (filePath) => electron.shell.openPath(filePath),
-  });
+  const service = createProjectWorkFileService();
   electron.ipcMain.handle(requestChannel, async (event, payload) => {
     const sender = event.sender;
     const subscriber = {

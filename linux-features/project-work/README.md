@@ -4,8 +4,8 @@
 **Project work** card beneath the task summary in local-conversation sidebars.
 The card reads the active workspace's `.codex/work-packages.md`, displays nested
 checkboxes and open/completed counts, toggles individual markers, can hide
-completed items, creates a missing file from a compact `+` action in the card
-header, and opens the Markdown file in the normal desktop editor.
+completed items, and creates a missing file from a compact `+` action in the
+card header.
 
 ## File lifecycle and safety
 
@@ -20,9 +20,9 @@ the target line, changes only the single checkbox marker, writes and fsyncs a
 same-directory temporary file, rechecks the revision, atomically renames it,
 and rereads the result. A newer edit is never knowingly overwritten: the UI
 receives a conflict plus current state and can retry. Missing, empty, deleted,
-recreated, malformed, oversized, watch-error, and open-error states remain
-visible in the card. Main-process `fs.watch` handles observe `.codex` and the
-checklist directory without an external daemon and are rebound after renames.
+recreated, malformed, oversized, and watch-error states remain visible in the
+card. Main-process `fs.watch` handles observe `.codex` and the checklist
+directory without an external daemon and are rebound after renames.
 
 ## Agent awareness and trust
 

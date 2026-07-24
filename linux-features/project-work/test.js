@@ -304,24 +304,18 @@ test("file service fails closed for unsafe roots and symlinked project paths", a
   assert.equal(fs.existsSync(path.join(outside, "work-packages.md")), false);
 });
 
-test("open action reports missing and desktop-open failures", async (t) => {
+test("file service exposes no desktop-open action", async (t) => {
   const workspace = createWorkspace();
-  const opened = [];
-  const service = createProjectWorkFileService({
-    openPath: async (filePath) => {
-      opened.push(filePath);
-      return "No editor available";
-    },
-  });
+  const service = createProjectWorkFileService();
   t.after(() => {
     service.dispose();
     fs.rmSync(workspace.root, { force: true, recursive: true });
   });
-  assert.equal((await service.open(workspace.root)).code, "PROJECT_WORK_MISSING");
   writeProjectWork(workspace, "- [ ] One\n");
-  const result = await service.open(workspace.root);
-  assert.equal(result.code, "PROJECT_WORK_OPEN_FAILED");
-  assert.deepEqual(opened, [workspace.file]);
+  assert.equal(service.open, undefined);
+  const result = await service.handle({ action: "open", workspaceRoot: workspace.root });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "PROJECT_WORK_BAD_REQUEST");
 });
 
 test("context coordinator isolates tasks and projects and avoids duplicate revisions", async () => {
@@ -455,6 +449,7 @@ test("patches apply once to current semantic shapes", () => {
       /codexLinuxProjectWorkCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}/,
     );
     assert.doesNotMatch(patchedSidebar, /Create file/);
+    assert.doesNotMatch(patchedSidebar, /Open Markdown|openMarkdown|action:"open"/);
     assert.match(patchedSidebar, /Project work/);
     assert.match(patchedSidebar, /Ux\.useState/);
     assert.match(patchedSidebar, /r\(Di\)/);
@@ -463,6 +458,7 @@ test("patches apply once to current semantic shapes", () => {
     assert.match(patchedSidebar, /Y\.Section/);
     assert.equal(applySidebarPatch(patchedSidebar), patchedSidebar);
   }
+  assert.doesNotMatch(patchedMain, /PROJECT_WORK_OPEN_FAILED|shell\.openPath/);
 });
 
 test("preload patch exposes a scoped projectWork bridge and is idempotent", (t) => {
