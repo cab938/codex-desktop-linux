@@ -136,10 +136,16 @@ function codexLinuxProjectWorkCardRuntime() {
   const threadId = route.value.routeKind === "local-thread"
     ? route.value.conversationId
     : null;
+  const summaryMode = codexLinuxProjectWorkEnvironmentHook(codexLinuxProjectWorkSummaryModeAtom);
   const environment = codexLinuxProjectWorkEnvironmentHook(codexLinuxProjectWorkEnvironmentAtom);
-  const workspaceRoot = environment.cwd == null
-    ? null
-    : codexLinuxProjectWorkNormalizePath(environment.cwd);
+  const lastTurnWorkspace = codexLinuxProjectWorkEnvironmentHook(codexLinuxProjectWorkLastTurnWorkspaceAtom);
+  const workspaceRoot = summaryMode === "last-turn-only"
+    ? lastTurnWorkspace == null
+      ? null
+      : codexLinuxProjectWorkNormalizePath(lastTurnWorkspace)
+    : environment.cwd == null
+      ? null
+      : codexLinuxProjectWorkNormalizePath(environment.cwd);
   const [state, setState] = codexLinuxProjectWorkReact.useState(null);
   const [error, setError] = codexLinuxProjectWorkReact.useState(null);
   const [pendingLine, setPendingLine] = codexLinuxProjectWorkReact.useState(null);
@@ -360,11 +366,13 @@ function sidebarRuntimeSource(aliases) {
     codexLinuxProjectWorkEnvironmentAtom: aliases.environmentAtom,
     codexLinuxProjectWorkEnvironmentHook: aliases.environmentHook,
     codexLinuxProjectWorkJsx: aliases.jsx,
+    codexLinuxProjectWorkLastTurnWorkspaceAtom: aliases.lastTurnWorkspaceAtom,
     codexLinuxProjectWorkNormalizePath: aliases.normalizePath,
     codexLinuxProjectWorkPlusIcon: aliases.plusIcon,
     codexLinuxProjectWorkReact: aliases.react,
     codexLinuxProjectWorkRouteAtom: aliases.routeAtom,
     codexLinuxProjectWorkRouteHook: aliases.routeHook,
+    codexLinuxProjectWorkSummaryModeAtom: aliases.summaryModeAtom,
     codexLinuxProjectWorkSummary: aliases.summary,
   };
   for (const [placeholder, replacement] of Object.entries(replacements)) {
@@ -426,6 +434,47 @@ function inferSidebarAliases(source, target, jsx, summary) {
     warn("Could not infer the current environment selector aliases", "sidebar patch");
     return null;
   }
+  const summaryModeFunctions = findFunctions(source).filter(({ text }) =>
+    text.includes("last-turn-only") &&
+    text.includes("STEPS_PROSE"),
+  );
+  const summaryMode = summaryModeFunctions.length === 1
+    ? summaryModeFunctions[0].text.match(
+      new RegExp(
+        `\\b([A-Za-z_$][\\w$]*)=${environment[1]}\\(([A-Za-z_$][\\w$]*)\\);` +
+        `[\\s\\S]{0,300}?\\1===\`last-turn-only\``,
+      ),
+    )
+    : null;
+  if (summaryMode == null) {
+    warn(
+      `Expected one current summary mode selector, found ${summaryModeFunctions.length}`,
+      "sidebar patch",
+    );
+    return null;
+  }
+  const lastTurnEnvironmentFunctions = findFunctions(source).filter(({ text }) =>
+    text.includes("registerEnvironmentActionCommands") &&
+    text.includes("projectless") &&
+    text.includes("==null") &&
+    !text.includes(".cwd"),
+  );
+  const lastTurnWorkspace = lastTurnEnvironmentFunctions.length === 1
+    ? lastTurnEnvironmentFunctions[0].text.match(
+      new RegExp(
+        `\\b([A-Za-z_$][\\w$]*)=${environment[1]}\\(([A-Za-z_$][\\w$]*)\\)` +
+        `[\\s\\S]{0,240}?\\1==null\\)return null;` +
+        `[\\s\\S]{0,180}?${workspace[2]}\\(\\1\\)`,
+      ),
+    )
+    : null;
+  if (lastTurnWorkspace == null) {
+    warn(
+      `Expected one current last-turn workspace selector, found ${lastTurnEnvironmentFunctions.length}`,
+      "sidebar patch",
+    );
+    return null;
+  }
   const modulePrefix = source.slice(Math.max(0, target.start - 4000), target.start);
   const reactImports = [
     ...modulePrefix.matchAll(
@@ -460,12 +509,14 @@ function inferSidebarAliases(source, target, jsx, summary) {
     environmentAtom: environment[2],
     environmentHook: environment[1],
     jsx,
+    lastTurnWorkspaceAtom: lastTurnWorkspace[2],
     normalizePath: workspace[2],
     plusIcon: nativePlusMatch[3],
     react: reactImports.at(-1)[1],
     routeAtom: route[3],
     routeHook: route[2],
     summary,
+    summaryModeAtom: summaryMode[2],
   };
 }
 
