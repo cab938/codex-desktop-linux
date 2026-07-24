@@ -114,6 +114,8 @@ function syntheticSidebarBundle({ wrapped = false } = {}) {
   return [
     "const a='codex.localConversation.environmentSummary.title';",
     "function Plan(){let a=r(Di),b=a.value.routeKind===`local-thread`?a.value.conversationId:null,c=o(ss),d=c.cwd==null?null:ee(c.cwd);return 'codex.localConversation.plan.title'}",
+    "function SummaryMode(e){let t=m(3),n=o(fd);if(Mn()===`STEPS_PROSE`)return null;let r;return r=n===`last-turn-only`?Last(e):Full(e)}",
+    "function Last({registerEnvironmentActionCommands:r}){let i=r(Di),a=i.value.routeKind===`local-thread`?i.value.conversationId:null,h=o(No),s=o(kc),c=o(Kc);if(W(Bo,a)===`projectless`||s==null)return null;let l;l=ee(s);return l}",
     "var Ux=t(u(),1);",
     "function EnvironmentCreate(){let u=(0,tS.jsx)(At,{}),d=(0,tS.jsx)(Y.IconButton,{disabled:n,label:l,children:u}),f=(0,tS.jsx)(H,{id:`threadPage.runAction.environment.createMenuTitle`,defaultMessage:`Create environment`,description:`Title for the menu that offers local environment creation methods`});return d}",
     "function Summary({shouldHideInlineImmediately:e,shouldShow:t}){",
@@ -496,7 +498,11 @@ test("patches Quick Launcher only into the right-side section list", () => {
     assert.doesNotMatch(patchedSidebar, /inline-flex size-6/);
     assert.match(patchedSidebar, /Quick launcher/);
     assert.match(patchedSidebar, /Ux\.useState/);
+    assert.match(patchedSidebar, /const summaryMode = o\(fd\)/);
     assert.match(patchedSidebar, /o\(ss\)/);
+    assert.match(patchedSidebar, /const lastTurnWorkspace = o\(kc\)/);
+    assert.match(patchedSidebar, /summaryMode === "last-turn-only"/);
+    assert.match(patchedSidebar, /ee\(lastTurnWorkspace\)/);
     assert.match(patchedSidebar, /ee\(environment\.cwd\)/);
     assert.match(patchedSidebar, /Y\.Section/);
     assert.equal(
