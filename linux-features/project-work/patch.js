@@ -131,12 +131,7 @@ function codexLinuxProjectWorkStateFromPayloadRuntime(payload) {
   return { error: payload?.error ?? null, state: payload?.state ?? result?.state ?? null };
 }
 
-function codexLinuxProjectWorkCardRuntime(props) {
-  const {
-    embedded = false,
-    shouldHideInlineImmediately,
-    shouldShow,
-  } = props;
+function codexLinuxProjectWorkCardRuntime() {
   const route = codexLinuxProjectWorkRouteHook(codexLinuxProjectWorkRouteAtom);
   const threadId = route.value.routeKind === "local-thread"
     ? route.value.conversationId
@@ -353,14 +348,7 @@ function codexLinuxProjectWorkCardRuntime(props) {
     title,
     children: body,
   });
-  if (embedded) {
-    return section;
-  }
-  return (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Root, {
-    shouldHideInlineImmediately,
-    shouldShow,
-    children: (0, codexLinuxProjectWorkJsx.jsx)(codexLinuxProjectWorkSummary.Content, { children: section }),
-  });
+  return section;
 }
 
 function sidebarRuntimeSource(aliases) {
@@ -409,36 +397,6 @@ function findFunctions(source) {
     }
   }
   return functions;
-}
-
-function findMatchingDelimiter(source, openIndex, openCharacter, closeCharacter) {
-  let depth = 0;
-  let quote = null;
-  let escaped = false;
-  for (let index = openIndex; index < source.length; index += 1) {
-    const character = source[index];
-    if (quote != null) {
-      if (escaped) {
-        escaped = false;
-      } else if (character === "\\") {
-        escaped = true;
-      } else if (character === quote) {
-        quote = null;
-      }
-      continue;
-    }
-    if (character === "'" || character === '"' || character === "`") {
-      quote = character;
-    } else if (character === openCharacter) {
-      depth += 1;
-    } else if (character === closeCharacter) {
-      depth -= 1;
-      if (depth === 0) {
-        return index;
-      }
-    }
-  }
-  return -1;
 }
 
 function inferSidebarAliases(source, target, jsx, summary) {
@@ -511,104 +469,16 @@ function inferSidebarAliases(source, target, jsx, summary) {
   };
 }
 
-function appendInlineCard(targetText) {
-  const currentRootPattern =
-    /([A-Za-z_$][\w$]*)=\(0,([A-Za-z_$][\w$]*)\.jsxs\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:\[/g;
-  const currentRoots = [...targetText.matchAll(currentRootPattern)];
-  if (currentRoots.length === 1) {
-    const [prefix, resultName, jsx, summary, hideName, showName] = currentRoots[0];
-    const arrayOpen = currentRoots[0].index + prefix.length - 1;
-    const arrayClose = findMatchingDelimiter(targetText, arrayOpen, "[", "]");
-    if (arrayClose === -1 || targetText.slice(arrayClose, arrayClose + 3) !== "]})") {
-      return { reason: "Could not isolate the current inline task summary root" };
-    }
-    const rootEnd = arrayClose + 3;
-    const rootExpression = targetText.slice(
-      currentRoots[0].index + prefix.indexOf("=") + 1,
-      rootEnd,
-    );
-    return {
-      hideName,
-      jsx,
-      showName,
-      summary,
-      text:
-        targetText.slice(0, currentRoots[0].index) +
-        `${resultName}=(0,${jsx}.jsxs)(${jsx}.Fragment,{children:[${rootExpression},` +
-        `(0,${jsx}.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:${hideName},shouldShow:${showName}})]})` +
-        targetText.slice(rootEnd),
-    };
+function inferInlineSummary(targetText) {
+  const rootPattern =
+    /\(0,([A-Za-z_$][\w$]*)\.(?:jsx|jsxs)\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:[A-Za-z_$][\w$]*,shouldShow:[A-Za-z_$][\w$]*,children:/g;
+  const roots = [...targetText.matchAll(rootPattern)];
+  if (roots.length !== 1) {
+    return { reason: `Expected one current inline task summary root, found ${roots.length}` };
   }
-  if (currentRoots.length > 1) {
-    return { reason: `Expected one current inline task summary root, found ${currentRoots.length}` };
-  }
-
-  const directRootPattern = /([A-Za-z_$][\w$]*)=\(0,([A-Za-z_$][\w$]*)\.jsx\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:([A-Za-z_$][\w$]*)\}\)/g;
-  const directRoots = [...targetText.matchAll(directRootPattern)];
-  if (directRoots.length === 1) {
-    const [full, resultName, jsx, summary, hideName, showName, childrenName] =
-      directRoots[0];
-    return {
-      hideName,
-      jsx,
-      showName,
-      summary,
-      text: targetText.replace(
-        full,
-        `${resultName}=(0,${jsx}.jsxs)(${jsx}.Fragment,{children:[` +
-          `(0,${jsx}.jsx)(${summary}.Root,{shouldHideInlineImmediately:${hideName},shouldShow:${showName},children:${childrenName}}),` +
-          `(0,${jsx}.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:${hideName},shouldShow:${showName}})]})`,
-      ),
-    };
-  }
-  if (directRoots.length > 1) {
-    return { reason: `Expected one inline task summary root, found ${directRoots.length}` };
-  }
-
-  const rootCallPattern =
-    /\(0,([A-Za-z_$][\w$]*)\.(?:jsx|jsxs)\)\(([A-Za-z_$][\w$]*)\.Root,\{shouldHideInlineImmediately:([A-Za-z_$][\w$]*),shouldShow:([A-Za-z_$][\w$]*),children:(?:[A-Za-z_$][\w$]*|\[)/g;
-  const rootCalls = [...targetText.matchAll(rootCallPattern)];
-  if (rootCalls.length !== 1) {
-    return { reason: `Expected one current inline task summary root call, found ${rootCalls.length}` };
-  }
-  const [rootCall, jsx, summary, hideName, showName] = rootCalls[0];
-  const fragments = [
-    ...targetText.matchAll(
-      new RegExp(
-        `([A-Za-z_$][\\w$]*)=\\(0,${jsx}\\.jsxs\\)\\(${jsx}\\.Fragment,\\{children:\\[`,
-        "g",
-      ),
-    ),
-  ];
-  const containing = fragments.filter((fragment) => {
-    const arrayOpen = fragment.index + fragment[0].length - 1;
-    const arrayClose = findMatchingDelimiter(targetText, arrayOpen, "[", "]");
-    const resultName = fragment[1];
-    const returnsResult =
-      targetText.includes(`return ${resultName}`) ||
-      new RegExp(`(?:[:,])${resultName}(?:[=,;}])`).test(targetText);
-    return (
-      arrayClose !== -1 &&
-      rootCalls[0].index >= arrayOpen &&
-      rootCalls[0].index + rootCall.length <= arrayClose &&
-      returnsResult
-    );
-  });
-  if (containing.length !== 1) {
-    return { reason: `Expected one composable inline summary fragment, found ${containing.length}` };
-  }
-  const fragment = containing[0];
-  const arrayOpen = fragment.index + fragment[0].length - 1;
-  const arrayClose = findMatchingDelimiter(targetText, arrayOpen, "[", "]");
   return {
-    hideName,
-    jsx,
-    showName,
-    summary,
-    text:
-      targetText.slice(0, arrayClose) +
-      `,(0,${jsx}.jsx)(codexLinuxProjectWorkCard,{shouldHideInlineImmediately:${hideName},shouldShow:${showName}})` +
-      targetText.slice(arrayClose),
+    jsx: roots[0][1],
+    summary: roots[0][2],
   };
 }
 
@@ -638,9 +508,9 @@ function applySidebarPatch(source) {
     return source;
   }
   const target = targets[0];
-  const inline = appendInlineCard(target.text);
-  if (inline.text == null) {
-    warn(inline.reason ?? "Could not extend the inline task summary", "sidebar patch");
+  const inline = inferInlineSummary(target.text);
+  if (inline.jsx == null || inline.summary == null) {
+    warn(inline.reason ?? "Could not infer the inline task summary aliases", "sidebar patch");
     return source;
   }
   const aliases = inferSidebarAliases(source, target, inline.jsx, inline.summary);
@@ -685,9 +555,7 @@ function applySidebarPatch(source) {
     popoverTarget.text.slice(0, contentPropsOpen + 1) +
     popoverReplacement +
     popoverTarget.text.slice(contentPropsClose);
-  const patchedSource = source
-    .replace(target.text, inline.text)
-    .replace(popoverTarget.text, patchedPopoverTarget);
+  const patchedSource = source.replace(popoverTarget.text, patchedPopoverTarget);
   return sidebarRuntimeSource(aliases) + patchedSource;
 }
 
