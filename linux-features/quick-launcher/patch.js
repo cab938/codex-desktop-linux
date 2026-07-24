@@ -133,10 +133,16 @@ function codexLinuxQuickLauncherStateFromPayloadRuntime(payload) {
 }
 
 function codexLinuxQuickLauncherCardRuntime() {
+  const summaryMode = codexLinuxQuickLauncherEnvironmentHook(codexLinuxQuickLauncherSummaryModeAtom);
   const environment = codexLinuxQuickLauncherEnvironmentHook(codexLinuxQuickLauncherEnvironmentAtom);
-  const workspaceRoot = environment.cwd == null
-    ? null
-    : codexLinuxQuickLauncherNormalizePath(environment.cwd);
+  const lastTurnWorkspace = codexLinuxQuickLauncherEnvironmentHook(codexLinuxQuickLauncherLastTurnWorkspaceAtom);
+  const workspaceRoot = summaryMode === "last-turn-only"
+    ? lastTurnWorkspace == null
+      ? null
+      : codexLinuxQuickLauncherNormalizePath(lastTurnWorkspace)
+    : environment.cwd == null
+      ? null
+      : codexLinuxQuickLauncherNormalizePath(environment.cwd);
   const [state, setState] = codexLinuxQuickLauncherReact.useState(null);
   const [error, setError] = codexLinuxQuickLauncherReact.useState(null);
   const [pendingId, setPendingId] = codexLinuxQuickLauncherReact.useState(null);
@@ -340,9 +346,11 @@ function sidebarRuntimeSource(aliases) {
     codexLinuxQuickLauncherEnvironmentAtom: aliases.environmentAtom,
     codexLinuxQuickLauncherEnvironmentHook: aliases.environmentHook,
     codexLinuxQuickLauncherJsx: aliases.jsx,
+    codexLinuxQuickLauncherLastTurnWorkspaceAtom: aliases.lastTurnWorkspaceAtom,
     codexLinuxQuickLauncherNormalizePath: aliases.normalizePath,
     codexLinuxQuickLauncherPlusIcon: aliases.plusIcon,
     codexLinuxQuickLauncherReact: aliases.react,
+    codexLinuxQuickLauncherSummaryModeAtom: aliases.summaryModeAtom,
     codexLinuxQuickLauncherSummary: aliases.summary,
   };
   for (const [placeholder, replacement] of Object.entries(replacements)) {
@@ -401,6 +409,47 @@ function inferSidebarAliases(source, target, jsx, summary) {
     warn("Could not infer the current environment selector aliases", "sidebar patch");
     return null;
   }
+  const summaryModeFunctions = findFunctions(source).filter(({ text }) =>
+    text.includes("last-turn-only") &&
+    text.includes("STEPS_PROSE"),
+  );
+  const summaryMode = summaryModeFunctions.length === 1
+    ? summaryModeFunctions[0].text.match(
+      new RegExp(
+        `\\b([A-Za-z_$][\\w$]*)=${environment[1]}\\(([A-Za-z_$][\\w$]*)\\);` +
+        `[\\s\\S]{0,300}?\\1===\`last-turn-only\``,
+      ),
+    )
+    : null;
+  if (summaryMode == null) {
+    warn(
+      `Expected one current summary mode selector, found ${summaryModeFunctions.length}`,
+      "sidebar patch",
+    );
+    return null;
+  }
+  const lastTurnEnvironmentFunctions = findFunctions(source).filter(({ text }) =>
+    text.includes("registerEnvironmentActionCommands") &&
+    text.includes("projectless") &&
+    text.includes("==null") &&
+    !text.includes(".cwd"),
+  );
+  const lastTurnWorkspace = lastTurnEnvironmentFunctions.length === 1
+    ? lastTurnEnvironmentFunctions[0].text.match(
+      new RegExp(
+        `\\b([A-Za-z_$][\\w$]*)=${environment[1]}\\(([A-Za-z_$][\\w$]*)\\)` +
+        `[\\s\\S]{0,240}?\\1==null\\)return null;` +
+        `[\\s\\S]{0,180}?${workspace[2]}\\(\\1\\)`,
+      ),
+    )
+    : null;
+  if (lastTurnWorkspace == null) {
+    warn(
+      `Expected one current last-turn workspace selector, found ${lastTurnEnvironmentFunctions.length}`,
+      "sidebar patch",
+    );
+    return null;
+  }
   const modulePrefix = source.slice(Math.max(0, target.start - 4000), target.start);
   const reactImports = [
     ...modulePrefix.matchAll(
@@ -435,10 +484,12 @@ function inferSidebarAliases(source, target, jsx, summary) {
     environmentAtom: environment[2],
     environmentHook: environment[1],
     jsx,
+    lastTurnWorkspaceAtom: lastTurnWorkspace[2],
     normalizePath: workspace[2],
     plusIcon: nativePlusMatch[3],
     react: reactImports.at(-1)[1],
     summary,
+    summaryModeAtom: summaryMode[2],
   };
 }
 
