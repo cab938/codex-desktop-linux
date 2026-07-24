@@ -454,9 +454,17 @@ test("patches Project Work only into the right-side section list", () => {
       ].length,
       1,
     );
-    assert.doesNotMatch(
+    assert.equal(
+      [
+        ...patchedSidebar.matchAll(
+          /\(0,tS\.jsx\)\(codexLinuxProjectWorkCard,\{\}\)/g,
+        ),
+      ].length,
+      1,
+    );
+    assert.match(
       patchedSidebar,
-      /\(0,tS\.jsx\)\(codexLinuxProjectWorkCard,\{shouldHideInlineImmediately:/,
+      /Y\.Content,\{children:\(0,tS\.jsxs\)\(tS\.Fragment,\{children:\[\(0,tS\.jsx\)\(codexLinuxProjectWorkCard,\{\}\),/,
     );
     assert.doesNotMatch(patchedSidebar, /Create file/);
     assert.doesNotMatch(patchedSidebar, /Open Markdown|openMarkdown|action:"open"/);

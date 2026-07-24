@@ -533,6 +533,39 @@ function inferInlineSummary(targetText) {
   };
 }
 
+function prependCardToSummaryContent(targetText, jsx, summary, cardExpression, surface) {
+  const contentAnchor = `(0,${jsx}.jsx)(${summary}.Content,{`;
+  const contentStart = targetText.indexOf(contentAnchor);
+  if (
+    contentStart === -1 ||
+    targetText.indexOf(contentAnchor, contentStart + contentAnchor.length) !== -1
+  ) {
+    return {
+      reason: `Could not find one current ${surface} summary content wrapper`,
+    };
+  }
+  const contentPropsOpen = contentStart + contentAnchor.length - 1;
+  const contentPropsClose = findMatchingBrace(targetText, contentPropsOpen);
+  const contentProps = contentPropsClose === -1
+    ? null
+    : targetText.slice(contentPropsOpen + 1, contentPropsClose);
+  if (contentProps == null || !contentProps.startsWith("children:")) {
+    return {
+      reason: `Could not isolate current ${surface} summary content`,
+    };
+  }
+  const contentChild = contentProps.slice("children:".length);
+  const replacement =
+    `children:(0,${jsx}.jsxs)(${jsx}.Fragment,{children:[` +
+    `${cardExpression},${contentChild}]})`;
+  return {
+    source:
+      targetText.slice(0, contentPropsOpen + 1) +
+      replacement +
+      targetText.slice(contentPropsClose),
+  };
+}
+
 function applySidebarPatch(source) {
   if (typeof source !== "string") {
     warn("Webview source is not a string", "sidebar patch");
@@ -568,6 +601,17 @@ function applySidebarPatch(source) {
   if (aliases == null) {
     return source;
   }
+  const patchedInline = prependCardToSummaryContent(
+    target.text,
+    inline.jsx,
+    inline.summary,
+    `(0,${inline.jsx}.jsx)(codexLinuxProjectWorkCard,{})`,
+    "inline",
+  );
+  if (patchedInline.source == null) {
+    warn(patchedInline.reason, "sidebar patch");
+    return source;
+  }
 
   const popoverTargets = findFunctions(source).filter(({ text }) =>
     text.includes("registerEnvironmentActionCommands:!1") &&
@@ -579,34 +623,20 @@ function applySidebarPatch(source) {
     return source;
   }
   const popoverTarget = popoverTargets[0];
-  const contentAnchor = `(0,${inline.jsx}.jsx)(${inline.summary}.Content,{`;
-  const contentStart = popoverTarget.text.indexOf(contentAnchor);
-  if (
-    contentStart === -1 ||
-    popoverTarget.text.indexOf(contentAnchor, contentStart + contentAnchor.length) !== -1
-  ) {
-    warn("Could not find one current compact summary content wrapper", "sidebar patch");
+  const patchedPopover = prependCardToSummaryContent(
+    popoverTarget.text,
+    inline.jsx,
+    inline.summary,
+    `(0,${inline.jsx}.jsx)(codexLinuxProjectWorkCard,{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0})`,
+    "compact",
+  );
+  if (patchedPopover.source == null) {
+    warn(patchedPopover.reason, "sidebar patch");
     return source;
   }
-  const contentPropsOpen = contentStart + contentAnchor.length - 1;
-  const contentPropsClose = findMatchingBrace(popoverTarget.text, contentPropsOpen);
-  const contentProps = contentPropsClose === -1
-    ? null
-    : popoverTarget.text.slice(contentPropsOpen + 1, contentPropsClose);
-  if (contentProps == null || !contentProps.startsWith("children:")) {
-    warn("Could not isolate current compact summary content", "sidebar patch");
-    return source;
-  }
-  const contentChild = contentProps.slice("children:".length);
-  const popoverReplacement =
-    `children:(0,${inline.jsx}.jsxs)(${inline.jsx}.Fragment,{children:[` +
-    `(0,${inline.jsx}.jsx)(codexLinuxProjectWorkCard,{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0}),` +
-    `${contentChild}]})`;
-  const patchedPopoverTarget =
-    popoverTarget.text.slice(0, contentPropsOpen + 1) +
-    popoverReplacement +
-    popoverTarget.text.slice(contentPropsClose);
-  const patchedSource = source.replace(popoverTarget.text, patchedPopoverTarget);
+  const patchedSource = source
+    .replace(target.text, patchedInline.source)
+    .replace(popoverTarget.text, patchedPopover.source);
   return sidebarRuntimeSource(aliases) + patchedSource;
 }
 
