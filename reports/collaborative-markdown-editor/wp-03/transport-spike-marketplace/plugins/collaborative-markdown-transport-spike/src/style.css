@@ -1,0 +1,129 @@
+:root {
+  color-scheme: light dark;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  background: var(--color-background-primary, #f8f8fa);
+  color: var(--color-text-primary, #202126);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+main {
+  display: grid;
+  grid-template-rows: auto auto minmax(260px, 1fr) auto;
+  gap: 12px;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+header,
+footer,
+.facts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+header {
+  justify-content: space-between;
+}
+
+h1,
+.eyebrow {
+  margin: 0;
+}
+
+h1 {
+  font-size: 19px;
+}
+
+.eyebrow {
+  color: var(--color-text-secondary, #676973);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.badge,
+.facts {
+  border: 1px solid var(--color-border-secondary, #d6d7dc);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge {
+  padding: 5px 10px;
+}
+
+.badge.connected {
+  border-color: #2f9e65;
+  color: #207549;
+}
+
+.badge.error {
+  border-color: #d54c4c;
+  color: #b23535;
+}
+
+.facts {
+  padding: 7px 11px;
+}
+
+.facts code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+#editor {
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-primary, #c8c9cf);
+  border-radius: 10px;
+  background: var(--color-background-secondary, #fff);
+}
+
+.cm-editor {
+  height: 100%;
+  min-height: 260px;
+  background: transparent;
+}
+
+.cm-scroller {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  line-height: 1.55;
+}
+
+button {
+  border: 1px solid var(--color-border-primary, #c8c9cf);
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: var(--color-background-secondary, #fff);
+  color: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--color-background-tertiary, #eeeef2);
+}
+
+output {
+  flex: 1 1 240px;
+  color: var(--color-text-secondary, #676973);
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  main {
+    padding: 10px;
+  }
+
+  footer button {
+    flex: 1 1 45%;
+  }
+}

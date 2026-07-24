@@ -1,0 +1,31 @@
+{
+  "name": "collaborative-markdown-transport-spike",
+  "version": "0.3.1",
+  "description": "Disposable CodeMirror, Yjs, and realtime transport spike.",
+  "author": {
+    "name": "Codex Desktop Linux Development"
+  },
+  "license": "MIT",
+  "keywords": [
+    "codex-desktop",
+    "mcp-app",
+    "codemirror",
+    "yjs"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Collaborative Markdown Transport Spike",
+    "shortDescription": "Probe realtime collaborative Markdown",
+    "longDescription": "A disposable local probe for CodeMirror, Yjs, authenticated loopback WebSockets, generation fencing, and shared broker ownership.",
+    "developerName": "Codex Desktop Linux Development",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "Open the collaborative Markdown transport spike"
+    ],
+    "brandColor": "#6557C5",
+    "screenshots": []
+  }
+}

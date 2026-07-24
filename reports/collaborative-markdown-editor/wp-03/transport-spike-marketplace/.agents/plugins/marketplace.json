@@ -1,0 +1,13 @@
+{
+  "name": "collaborative-markdown-transport-spike",
+  "owner": {
+    "name": "Codex Desktop Linux Development"
+  },
+  "plugins": [
+    {
+      "name": "collaborative-markdown-transport-spike",
+      "source": "./plugins/collaborative-markdown-transport-spike",
+      "description": "Disposable CodeMirror, Yjs, and loopback transport spike"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+dbus-daemon[1567191]: [session uid=1000 pid=1567191] Activating service name='org.gtk.vfs.Daemon' requested by ':1.0' (uid=1000 pid=1567192 comm="xfwm4 --replace --compositor=off" label="unconfined")
+dbus-daemon[1567191]: [session uid=1000 pid=1567191] Successfully activated service 'org.gtk.vfs.Daemon'
+dbus-daemon[1567191]: [session uid=1000 pid=1567191] Activating service name='org.xfce.Xfconf' requested by ':1.0' (uid=1000 pid=1567192 comm="xfwm4 --replace --compositor=off" label="unconfined")
+dbus-daemon[1567191]: [session uid=1000 pid=1567191] Successfully activated service 'org.xfce.Xfconf'
+
+(xfwm4:1567192): xfwm4-WARNING **: 19:15:08.986: Failed to connect to session manager: Failed to connect to the session manager: None of the authentication protocols specified are supported
