@@ -1,0 +1,30 @@
+{
+  "name": "collaborative-markdown-host-probe",
+  "version": "0.1.0",
+  "description": "Disposable probe for the Codex Desktop MCP App host contract.",
+  "author": {
+    "name": "Codex Desktop Linux Development"
+  },
+  "license": "MIT",
+  "keywords": [
+    "codex-desktop",
+    "mcp-app",
+    "host-probe"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Collaborative Markdown Host Probe",
+    "shortDescription": "Probe MCP App placement and lifecycle",
+    "longDescription": "A disposable local probe used to verify Codex Desktop right-panel MCP App rendering, presentation modes, process context, and restart behavior.",
+    "developerName": "Codex Desktop Linux Development",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "Open the collaborative Markdown host probe"
+    ],
+    "brandColor": "#6D5BD0",
+    "screenshots": []
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "collaborative-markdown-host-probe": {
+      "command": "node",
+      "args": [
+        "./server.mjs"
+      ],
+      "cwd": ".",
+      "env": {
+        "CODEX_COLLAB_MARKDOWN_PROBE_LOG": "/tmp/codex-collaborative-markdown-host-probe.log"
+      }
+    }
+  }
+}

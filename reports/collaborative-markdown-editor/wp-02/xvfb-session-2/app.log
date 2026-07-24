@@ -1,0 +1,67 @@
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.0' (uid=1000 pid=1421446 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.a11y.Bus' requested by ':1.1' (uid=1000 pid=1422025 comm="busctl --user get-property org.a11y.Bus /org/a11y/" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.a11y.Bus'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gtk.vfs.Daemon' requested by ':1.3' (uid=1000 pid=1422039 comm="/home/brooksch/sandboxes/codex-desktop-linux-dev/c" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gtk.vfs.Daemon'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.5' (uid=1000 pid=1422039 comm="/home/brooksch/sandboxes/codex-desktop-linux-dev/c" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.portal.Documents' requested by ':1.6' (uid=1000 pid=1422207 comm="/usr/libexec/xdg-desktop-portal" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.7' (uid=1000 pid=1422213 comm="/usr/libexec/xdg-document-portal" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.freedesktop.portal.Documents'
+Ignoring invalid max threads value 4294967295 > max (100000).
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.6' (uid=1000 pid=1422207 comm="/usr/libexec/xdg-desktop-portal" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:1422207): xdg-desktop-portal-WARNING **: 18:38:11.115: Failed connect to PipeWire: Couldn't connect to PipeWire
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.secrets' requested by ':1.6' (uid=1000 pid=1422207 comm="/usr/libexec/xdg-desktop-portal" label="unconfined")
+** Message: 18:38:11.119: couldn't access control socket: /run/user/1000/codex-desktop/tmp/native-x11-headless-session.z9OP2P/xdg/runtime/keyring/control: No such file or directory
+discover_other_daemon: 0dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.freedesktop.secrets'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.freedesktop.portal.Desktop'
+dbus-daemon[1422749]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=1000 pid=1422039 comm="/home/brooksch/sandboxes/codex-desktop-linux-dev/c" label="unconfined")
+dbus-daemon[1422749]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.31' (uid=1000 pid=1424806 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+
+(xdg-desktop-portal-gtk:1422235): xdg-desktop-portal-gtk-WARNING **: 18:41:36.382: Unhandled parent window type 
+
+
+(xdg-desktop-portal-gtk:1422235): xdg-desktop-portal-gtk-WARNING **: 18:41:36.382: Failed to associate portal window with parent window 
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gtk.vfs.UDisks2VolumeMonitor' requested by ':1.9' (uid=1000 pid=1422235 comm="/usr/libexec/xdg-desktop-portal-gtk" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gtk.vfs.UDisks2VolumeMonitor'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gtk.vfs.MTPVolumeMonitor' requested by ':1.9' (uid=1000 pid=1422235 comm="/usr/libexec/xdg-desktop-portal-gtk" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gtk.vfs.MTPVolumeMonitor'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gtk.vfs.AfcVolumeMonitor' requested by ':1.9' (uid=1000 pid=1422235 comm="/usr/libexec/xdg-desktop-portal-gtk" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gtk.vfs.AfcVolumeMonitor'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gtk.vfs.GoaVolumeMonitor' requested by ':1.9' (uid=1000 pid=1422235 comm="/usr/libexec/xdg-desktop-portal-gtk" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gnome.OnlineAccounts' requested by ':1.39' (uid=1000 pid=1439999 comm="/usr/libexec/gvfs-goa-volume-monitor" label="unconfined")
+goa-daemon-Message: 18:41:36.616: goa-daemon version 3.50.4 starting
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gnome.Identity' requested by ':1.40' (uid=1000 pid=1440004 comm="/usr/libexec/goa-daemon" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gnome.OnlineAccounts'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gtk.vfs.GoaVolumeMonitor'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gnome.Identity'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.gtk.vfs.GPhoto2VolumeMonitor' requested by ':1.9' (uid=1000 pid=1422235 comm="/usr/libexec/xdg-desktop-portal-gtk" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'org.gtk.vfs.GPhoto2VolumeMonitor'
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='ca.desrt.dconf' requested by ':1.9' (uid=1000 pid=1422235 comm="/usr/libexec/xdg-desktop-portal-gtk" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Successfully activated service 'ca.desrt.dconf'
+
+** (process:1440081): WARNING **: 18:41:36.715: Failed to spawn the wsdd daemon: Failed to execute child process “wsdd” (No such file or directory)
+
+** (process:1440058): WARNING **: 18:41:36.715: Couldn't create directory monitor on wsdd:///. Error: Automount failed: Failed to spawn the underlying wsdd daemon.
+
+** (process:1440058): WARNING **: 18:41:36.834: Couldn't create directory monitor on wsdd:///. Error: Automount failed: mountpoint for org.gtk.vfs.mountpoint_wsdd already running
+
+** (process:1440058): WARNING **: 18:41:36.843: Couldn't create directory monitor on wsdd:///. Error: Automount failed: mountpoint for org.gtk.vfs.mountpoint_wsdd already running
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.67' (uid=1000 pid=1446981 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.69' (uid=1000 pid=1447238 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.75' (uid=1000 pid=1450922 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.78' (uid=1000 pid=1463021 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.94' (uid=1000 pid=1463072 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activating service name='org.freedesktop.systemd1' requested by ':1.98' (uid=1000 pid=1463095 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1421423]: [session uid=1000 pid=1421423] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1

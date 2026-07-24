@@ -1,0 +1,27 @@
+_XSERVTransmkdir: Owner of /tmp/.X11-unix should be set to root
+(EE) 
+(EE) Backtrace:
+(EE) 0: Xvfb (OsLookupColor+0x14c) [0x5b42eb5f7edc]
+(EE) 1: /lib/x86_64-linux-gnu/libc.so.6 (__sigaction+0x50) [0x7afa21845330]
+(EE) unw_get_proc_name failed: no unwind info found [-10]
+(EE) 2: /lib/x86_64-linux-gnu/libnvidia-egl-gbm.so.1 (?+0x0) [0x7afa207ca889]
+(EE) 3: /lib/x86_64-linux-gnu/libEGL_nvidia.so.0 (NvEglwlaf47906in+0x73a59) [0x7afa209bfb69]
+(EE) 4: /lib/x86_64-linux-gnu/libEGL_nvidia.so.0 (NvEglwlaf47906in+0xe3ef) [0x7afa2095a4ff]
+(EE) 5: /lib/x86_64-linux-gnu/libEGL.so.1 (eglGetError+0x425) [0x7afa20a53145]
+(EE) unw_get_proc_name failed: no unwind info found [-10]
+(EE) 6: /usr/lib/x86_64-linux-gnu/dri/swrast_dri.so (?+0x0) [0x7afa220814a8]
+(EE) 7: Xvfb (ht_dump_contents+0x85b3) [0x5b42eb4ea0a3]
+(EE) 8: Xvfb (ht_dump_contents+0x731f) [0x5b42eb4e8e0f]
+(EE) 9: Xvfb (_CallCallbacks+0x3c) [0x5b42eb5a08ac]
+(EE) 10: Xvfb (ht_dump_contents+0x2b12f) [0x5b42eb50cc1f]
+(EE) 11: Xvfb (InitExtensions+0x89) [0x5b42eb4a9c69]
+(EE) 12: Xvfb (InitFonts+0x1e8) [0x5b42eb59f228]
+(EE) 13: /lib/x86_64-linux-gnu/libc.so.6 (__libc_init_first+0x8a) [0x7afa2182a1ca]
+(EE) 14: /lib/x86_64-linux-gnu/libc.so.6 (__libc_start_main+0x8b) [0x7afa2182a28b]
+(EE) 15: Xvfb (_start+0x25) [0x5b42eb4a7d85]
+(EE) 
+(EE) Segmentation fault at address 0x0
+(EE) 
+Fatal server error:
+(EE) Caught signal 11 (Segmentation fault). Server aborting
+(EE) 

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Markdown Host Probe</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Codex Desktop host probe</p>
+        <h1>Right-panel MCP App</h1>
+        <p id="bridge-status" class="status">Connecting to the MCP Apps bridge…</p>
+      </header>
+
+      <section>
+        <h2>Host context</h2>
+        <dl id="host-context"></dl>
+      </section>
+
+      <section>
+        <h2>Presentation requests</h2>
+        <div class="buttons">
+          <button data-mode="inline">Inline</button>
+          <button data-mode="fullscreen">Fullscreen</button>
+          <button data-mode="pip">Picture in picture</button>
+        </div>
+        <pre id="mode-result">No presentation request made.</pre>
+      </section>
+
+      <section>
+        <h2>Server process</h2>
+        <button id="refresh-process">Refresh process context</button>
+        <pre id="process-context">Waiting for the server…</pre>
+      </section>
+    </main>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

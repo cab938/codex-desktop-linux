@@ -1,0 +1,105 @@
+:root {
+  color-scheme: light dark;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: var(--color-background-primary, Canvas);
+  color: var(--color-text-primary, CanvasText);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: grid;
+  gap: 18px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header,
+section {
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 14px;
+  padding: 18px;
+  background: color-mix(in srgb, Canvas 94%, #6d5bd0 6%);
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+h2 {
+  font-size: 15px;
+}
+
+.eyebrow {
+  color: #6d5bd0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status {
+  margin-bottom: 0;
+}
+
+.status[data-connected="true"] {
+  color: #177245;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+
+dt {
+  font-weight: 700;
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, Canvas 90%, #6d5bd0 10%);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+pre {
+  min-height: 52px;
+  margin: 12px 0 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 8px;
+  background: color-mix(in srgb, CanvasText 7%, Canvas);
+  font-size: 12px;
+  white-space: pre-wrap;
+}

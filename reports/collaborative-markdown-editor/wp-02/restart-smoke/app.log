@@ -1,0 +1,26 @@
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.systemd1' requested by ':1.0' (uid=1000 pid=1477794 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.a11y.Bus' requested by ':1.1' (uid=1000 pid=1478386 comm="busctl --user get-property org.a11y.Bus /org/a11y/" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.a11y.Bus'
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.gtk.vfs.Daemon' requested by ':1.3' (uid=1000 pid=1478400 comm="/home/brooksch/sandboxes/codex-desktop-linux-dev/c" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.gtk.vfs.Daemon'
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.5' (uid=1000 pid=1478400 comm="/home/brooksch/sandboxes/codex-desktop-linux-dev/c" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.portal.Documents' requested by ':1.6' (uid=1000 pid=1478527 comm="/usr/libexec/xdg-desktop-portal" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.7' (uid=1000 pid=1478536 comm="/usr/libexec/xdg-document-portal" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.freedesktop.portal.Documents'
+Ignoring invalid max threads value 4294967295 > max (100000).
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.6' (uid=1000 pid=1478527 comm="/usr/libexec/xdg-desktop-portal" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:1478527): xdg-desktop-portal-WARNING **: 18:51:29.114: Failed connect to PipeWire: Couldn't connect to PipeWire
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.secrets' requested by ':1.6' (uid=1000 pid=1478527 comm="/usr/libexec/xdg-desktop-portal" label="unconfined")
+** Message: 18:51:29.118: couldn't access control socket: /run/user/1000/codex-desktop/tmp/native-x11-headless-session.MnhrBq/xdg/runtime/keyring/control: No such file or directory
+discover_other_daemon: 0dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.freedesktop.secrets'
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Successfully activated service 'org.freedesktop.portal.Desktop'
+dbus-daemon[1479130]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=1000 pid=1478400 comm="/home/brooksch/sandboxes/codex-desktop-linux-dev/c" label="unconfined")
+dbus-daemon[1479130]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activating service name='org.freedesktop.systemd1' requested by ':1.34' (uid=1000 pid=1481545 comm="systemctl --user show-environment" label="unconfined")
+dbus-daemon[1477773]: [session uid=1000 pid=1477773] Activated service 'org.freedesktop.systemd1' failed: Process org.freedesktop.systemd1 exited with status 1
+Failed to launch bus: Bus exited with code 0
