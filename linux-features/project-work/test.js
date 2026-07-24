@@ -417,7 +417,7 @@ test("context acknowledges only accepted requests and bounds unusually large sna
   assert.equal(await coordinator.prepare("turn/start", { cwd: "/project", threadId: "remote" }, "remote-host"), null);
 });
 
-test("patches apply once to current semantic shapes", () => {
+test("patches Project Work only into the right-side section list", () => {
   const main = syntheticMainBundle();
   const patchedMain = applyMainProcessBridgePatch(main);
   assert.notEqual(patchedMain, main);
@@ -444,9 +444,17 @@ test("patches apply once to current semantic shapes", () => {
     assert.match(patchedSidebar, /\(0,tS\.jsx\)\(At,\{\}\)/);
     assert.doesNotMatch(patchedSidebar, /inline-flex size-6/);
     assert.match(patchedSidebar, /after: createAction/);
-    assert.match(
+    assert.equal(
+      [
+        ...patchedSidebar.matchAll(
+          /\(0,tS\.jsx\)\(codexLinuxProjectWorkCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}\)/g,
+        ),
+      ].length,
+      1,
+    );
+    assert.doesNotMatch(
       patchedSidebar,
-      /codexLinuxProjectWorkCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}/,
+      /\(0,tS\.jsx\)\(codexLinuxProjectWorkCard,\{shouldHideInlineImmediately:/,
     );
     assert.doesNotMatch(patchedSidebar, /Create file/);
     assert.doesNotMatch(patchedSidebar, /Open Markdown|openMarkdown|action:"open"/);
