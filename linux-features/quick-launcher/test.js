@@ -469,7 +469,7 @@ test("context bounds large YAML and ignores remote hosts", async () => {
   );
 });
 
-test("patches apply once to current semantic shapes and compose after an existing summary card", () => {
+test("patches Quick Launcher only into the right-side section list", () => {
   const main = syntheticMainBundle();
   const patchedMain = applyMainProcessBridgePatch(main);
   assert.notEqual(patchedMain, main);
@@ -499,6 +499,16 @@ test("patches apply once to current semantic shapes and compose after an existin
     assert.match(patchedSidebar, /o\(ss\)/);
     assert.match(patchedSidebar, /ee\(environment\.cwd\)/);
     assert.match(patchedSidebar, /Y\.Section/);
+    assert.equal(
+      [...patchedSidebar.matchAll(
+        /\(0,tS\.jsx\)\(codexLinuxQuickLauncherCard,\{embedded:!0,shouldHideInlineImmediately:!1,shouldShow:!0\}\)/g,
+      )].length,
+      1,
+    );
+    assert.doesNotMatch(
+      patchedSidebar,
+      /\(0,tS\.jsx\)\(codexLinuxQuickLauncherCard,\{shouldHideInlineImmediately:/,
+    );
     assert.equal(applySidebarPatch(patchedSidebar), patchedSidebar);
   }
 });
