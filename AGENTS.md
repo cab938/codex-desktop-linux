@@ -43,6 +43,31 @@ update-builder bundle.
   cross-format changes unless the code explicitly scopes them to one package
   format or desktop target.
 
+## Local Development Build Safety
+
+- Protect the user's stock/default app. For routine feature development in this
+  checkout, do not rebuild, promote into, package-install over, or launch from
+  `codex-app/`, and do not replace any package-managed Codex installation.
+  Commands that target the stock/default app—including bare `./install.sh`,
+  `make build-app`, `make build-app-fresh`, `make rebuild-install`,
+  `make install`, `make install-native`, and `make update-native`—require an
+  explicit user request for that exact action in the current turn.
+- Build the regular combined development app only as the side-by-side identity:
+
+  ```bash
+  make build-dev-app \
+    DEV_APP_ID=codex-desktop-linux-dev \
+    DEV_APP_NAME='Codex Desktop Linux Dev'
+  ```
+
+  Its supported launcher is `./bin/codex-desktop-linux-dev`, which resolves to
+  `codex-desktop-linux-dev-app/start.sh`.
+- Before reporting a development rebuild complete, resolve the requested
+  launcher, verify that its `.codex-linux/build-info.json` records the intended
+  source commit and app identity, and test that exact launcher on the private
+  Xvfb display. A successful rebuild of `codex-app/` does not satisfy a request
+  to rebuild `./bin/codex-desktop-linux-dev`.
+
 ## Feature Branch Workflow
 
 - Give every new Linux feature a stable, descriptive kebab-case feature ID.
