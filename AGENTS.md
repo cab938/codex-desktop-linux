@@ -278,6 +278,15 @@ Side-by-side rebuild candidate: `./scripts/rebuild-candidate.sh` or
 Run the subset that matches the change; see the
 [validation playbook](docs/agents/validation-playbook.md) for expanded checks.
 
+A native GUI smoke that only proves a window opened is not feature acceptance.
+For right-panel or sidebar changes, use the authenticated private-Xvfb workflow
+to open a disposable task rooted at a representative project, inspect rendered
+pixels in both the compact summary and a maximized 1920x1080 wide inline panel,
+and verify upstream section composition without overlap. Isolate `CODEX_HOME`
+from any simultaneously running physical app, retain compact and wide
+screenshots, and confirm that the test profile, X socket, and processes are
+removed before reporting completion.
+
 ```bash
 bash -n install.sh
 bash -n scripts/lib/*.sh

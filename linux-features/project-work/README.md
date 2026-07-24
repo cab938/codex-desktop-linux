@@ -72,6 +72,18 @@ file externally; toggle an item in the card; attempt a stale-revision toggle;
 submit a later turn; confirm no skill was installed; then rebuild with the
 feature disabled and confirm the card, bridge, and context markers are absent.
 
+Visible acceptance must use the authenticated private Xvfb workflow in
+[Testing A Dev App Headlessly](../../docs/headless-dev-app-testing.md). A
+window-open smoke does not count. Open a disposable local task rooted at a
+project whose `.codex/work-packages.md` contains at least one open and one
+completed item. Capture and inspect Project Work inside the compact summary at
+approximately `1280x820`, then maximize the app on a `1920x1080` Xvfb screen
+and confirm it is a normal divided section in the persistent right-hand panel
+alongside Quick Launcher and upstream sections, without overlapping the
+conversation. Isolate `CODEX_HOME` from a concurrently running physical app,
+remove copied credentials after the test, and verify that the X socket and all
+test processes are gone.
+
 Version one intentionally omits inline renaming, reordering, rich Markdown
 editing, subtree toggles, cross-worktree sharing, a global dashboard, and
 multi-machine synchronization beyond ordinary file or Git workflows.

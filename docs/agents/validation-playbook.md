@@ -22,12 +22,31 @@ For launcher behavior changes, rebuild or inspect the generated launcher:
 sed -n '1,160p' codex-app/start.sh
 ```
 
-For side-by-side dev-app UI changes, smoke-test the generated launcher on a
-host-invisible display. See [Testing A Dev App Headlessly](../headless-dev-app-testing.md).
+For side-by-side dev-app UI changes, first smoke-test the generated launcher on
+a host-invisible display. See
+[Testing A Dev App Headlessly](../headless-dev-app-testing.md).
 
 ```bash
 make test-dev-app-headless DEV_APP_ID=codex-desktop-dev
 ```
+
+Do not treat that launch smoke as feature acceptance. For right-panel or
+sidebar changes, the acceptance evidence must also:
+
+- open a disposable local task rooted at a project with representative
+  project-scoped feature files;
+- cover the compact summary around `1280x820` and the maximized wide inline
+  panel on a `1920x1080` Xvfb screen;
+- show the new feature alongside a normal upstream section, using the same
+  section dividers and without overlap;
+- inspect the captured pixels rather than inferring success from source
+  markers, patch reports, or process liveness; and
+- isolate `CODEX_HOME` from a simultaneously running physical app, then remove
+  the credential-bearing test profile and confirm Xvfb teardown.
+
+On the Thelio, use the authenticated
+`testing-native-xwindows-apps-on-thelio` skill for this interactive acceptance
+run. Never automate against the inherited display.
 
 If the change affects webview startup probes, run:
 

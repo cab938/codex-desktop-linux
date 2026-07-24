@@ -122,5 +122,20 @@ bash tests/scripts_smoke.sh
 
 For visible validation on the Thelio, launch the generated app only through the
 authenticated private Xvfb harness documented by the local
-`testing-native-xwindows-apps-on-thelio` skill. Verify the rendered card, `+`
-action, a harmless test command, and deterministic teardown.
+`testing-native-xwindows-apps-on-thelio` skill. A home-screen launch smoke is
+not sufficient. Open a disposable local task rooted at a project containing a
+representative `.codex/quicklaunch.yaml`, then verify both presentation
+surfaces:
+
+- in a non-maximized window around `1280x820`, Quick Launcher is a section
+  inside the compact summary content; and
+- after maximizing on a `1920x1080` Xvfb screen, Quick Launcher is a section in
+  the persistent right-hand panel, separated from Project Work and upstream
+  sections by the normal dividers and without covering the conversation.
+
+Capture and inspect both screenshots. Verify the `+` action and a harmless
+fixture command; do not click this repository's `Rebuild dev` action merely as
+a UI smoke. When a physical Codex app is running, use a temporary private
+`CODEX_HOME` to avoid sharing mutable plugin staging state, delete its copied
+credentials after the test, and confirm deterministic Xvfb teardown. See
+[Testing A Dev App Headlessly](../../docs/headless-dev-app-testing.md).
