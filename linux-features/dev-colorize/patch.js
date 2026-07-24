@@ -17,7 +17,7 @@ const IPC_CHANNEL = "codex_desktop:dev-colorize";
 const STATE_CHANNEL = "codex_desktop:dev-colorize-state";
 const STATE_FILE_NAME = "dev-colorize.json";
 const DEFAULT_COLOR = "#fffdf8";
-const DEFAULT_STRENGTH = 50;
+const DEFAULT_STRENGTH = 40;
 const TITLEBAR_HEIGHT = 30;
 const MAIN_PAGE_ASSET_PATTERN =
   /^app-initial-[A-Za-z0-9_-]+\.js$/;

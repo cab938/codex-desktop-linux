@@ -10,7 +10,7 @@ Colorize is on by default for a newly built app identity. In the light theme it
 colors only the 30-pixel title-bar strip containing the app menu/header and the
 minimize, maximize, and close controls. The sidebar, editor, conversation, and
 other application surfaces keep their normal theme colors. Changing the tint
-or its strength updates the title bar immediately. Strength defaults to 50
+or its strength updates the title bar immediately. Strength defaults to 40
 percent so saturated custom colors remain subtle; 0 percent neutralizes the
 selected tint while 100 percent uses it directly. The dark theme is
 intentionally unchanged. Selecting **Colorize** again restores the normal

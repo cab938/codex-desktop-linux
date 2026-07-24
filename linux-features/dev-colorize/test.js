@@ -137,6 +137,7 @@ test("title bar blends the selected tint toward white", () => {
   assert.equal(validColor("#aBc123"), true);
   assert.equal(validColor("#abc"), false);
   assert.equal(validColor("red"), false);
+  assert.equal(DEFAULT_STRENGTH, 40);
   assert.equal(validStrength(DEFAULT_STRENGTH), true);
   assert.equal(validStrength(0), true);
   assert.equal(validStrength(100), true);
@@ -146,7 +147,7 @@ test("title bar blends the selected tint toward white", () => {
   assert.equal(titlebarColor("#e4f2ff", 100), "#e4f2ff");
   assert.equal(titlebarColor("#e4f2ff", 35), "#f6faff");
   assert.equal(titlebarColor("invalid"), "#fffefc");
-  assert.equal(titlebarColor("#e4f2ff", 101), "#f2f9ff");
+  assert.equal(titlebarColor("#e4f2ff", 101), "#f4faff");
   assert.match(titlebarCss("#e4f2ff", 35), new RegExp(`height: ${TITLEBAR_HEIGHT}px`));
   assert.match(titlebarCss("#e4f2ff", 35), /background: #f6faff/);
   assert.match(titlebarCss("#e4f2ff", 35), /pointer-events: none/);
@@ -246,13 +247,13 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
   assert.equal(context.globalThis.colorizeApi.state().color, "#dff6e8");
   assert.equal(context.globalThis.colorizeApi.state().strength, DEFAULT_STRENGTH);
   assert.deepEqual(JSON.parse(JSON.stringify(overlays.at(-1))), {
-    color: "#effbf4",
+    color: "#f2fbf6",
     symbolColor: "#000000",
     height: 30,
   });
   await Promise.resolve();
   assert.match(inserted.at(-1)[0], /height: 30px/);
-  assert.match(inserted.at(-1)[0], /background: #effbf4/);
+  assert.match(inserted.at(-1)[0], /background: #f2fbf6/);
   assert.equal(published.at(-1).key, SHARED_OBJECT_KEY);
   assert.equal(typeof ipcHandler, "function");
 
@@ -260,12 +261,12 @@ test("runtime defaults on, migrates old state, persists tint strength, and refre
   assert.equal(recolored.ok, true);
   assert.equal(context.globalThis.colorizeApi.state().color, "#e4f2ff");
   assert.deepEqual(JSON.parse(JSON.stringify(overlays.at(-1))), {
-    color: "#f2f9ff",
+    color: "#f4faff",
     symbolColor: "#000000",
     height: 30,
   });
   await Promise.resolve();
-  assert.match(inserted.at(-1)[0], /background: #f2f9ff/);
+  assert.match(inserted.at(-1)[0], /background: #f4faff/);
   assert.deepEqual(removed, ["css-1"]);
 
   const restrained = ipcHandler({}, { action: "set-strength", strength: 35 });
