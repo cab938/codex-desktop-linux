@@ -367,6 +367,7 @@ Full list: [Troubleshooting](docs/troubleshooting.md).
 - [Architecture](docs/architecture.md)
 - [GitHub CLI auth in app-launched shells](docs/github-cli-auth.md)
 - [Linux Features architecture](docs/linux-features-architecture.md)
+- [Headless dev-app testing](docs/headless-dev-app-testing.md)
 - [Wayland input focus investigation](docs/wayland-input-focus-investigation.md)
 - [Webview server evaluation](docs/webview-server-evaluation.md)
 - [Launcher performance notes](docs/launcher-performance.md)
