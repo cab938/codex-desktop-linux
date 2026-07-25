@@ -4128,7 +4128,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "2eb7ae24ce1ace9451e8a76b7d18c9ebe3c784a8b28f8d2e22d6c716bed95819"
+          "content": "bddab8e610b2c096d3532d5450b1c59d7ab127d8a5fa4101d4a1716de9556dc9"
         }
       ],
       "properties": [
@@ -4138,7 +4138,7 @@
         },
         {
           "name": "codex:bytes",
-          "value": "3796652"
+          "value": "3796730"
         },
         {
           "name": "codex:self-contained-bundle",

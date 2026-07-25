@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  MCP_APP_POLL_INTERVAL_MS,
+  MCP_APP_PULL_WAIT_MS,
   decodeBase64,
   encodeBase64,
   isFenceError,
@@ -71,6 +73,11 @@ describe('MCP App state helpers', () => {
   })
 
   it('maps durability and conflict states to honest UI labels', () => {
+    expect(presentStatus('local_queued')).toEqual({
+      label: 'Edit queued…',
+      tone: 'pending',
+      readOnly: false,
+    })
     expect(presentStatus('file_durable')).toEqual({
       label: 'Saved to Markdown',
       tone: 'ok',
@@ -83,6 +90,11 @@ describe('MCP App state helpers', () => {
     expect(presentStatus('file_durable', 'deleted').label).toBe(
       'File deleted',
     )
+  })
+
+  it('keeps host-bridged pulls nonblocking so pushes cannot be starved', () => {
+    expect(MCP_APP_PULL_WAIT_MS).toBe(0)
+    expect(MCP_APP_POLL_INTERVAL_MS).toBeGreaterThanOrEqual(250)
   })
 
   it('recognizes only session-fencing failures as reconnectable', () => {

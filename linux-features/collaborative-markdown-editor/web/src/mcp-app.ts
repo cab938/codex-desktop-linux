@@ -16,6 +16,8 @@ import {
   encodeBase64,
   isFenceError,
   loadPreferences,
+  MCP_APP_POLL_INTERVAL_MS,
+  MCP_APP_PULL_WAIT_MS,
   parseBootstrap,
   presentStatus,
   safeExternalUrl,
@@ -294,7 +296,7 @@ function onDocumentUpdate(update: Uint8Array, origin: unknown): void {
   if (origin === REMOTE_ORIGIN || shuttingDown) return
   pendingUpdates.push(update)
   pendingBytes += update.byteLength
-  updateStatus('recovery_log_durable', 'clean', false, currentRevision())
+  updateStatus('local_queued', 'clean', false, currentRevision())
   setMessage('Local edits are queued for the shared document…')
   if (pendingBytes >= MAX_BATCH_BYTES) {
     void flushPending()
@@ -379,7 +381,7 @@ async function pollLoop(generation: number, signal: AbortSignal): Promise<void> 
           after_revision: active.revision,
           state_vector_base64: encodeBase64(Y.encodeStateVector(ydoc)),
           awareness_clock: awarenessClock,
-          wait_ms: 20_000,
+          wait_ms: MCP_APP_PULL_WAIT_MS,
         },
         signal,
       )
@@ -399,6 +401,7 @@ async function pollLoop(generation: number, signal: AbortSignal): Promise<void> 
       setConnection('connected', 'Connected')
       updateStatus(active.flush_state, externalState, readOnly, active.revision)
       renderPresence(parsePresence(content.awareness))
+      await delay(MCP_APP_POLL_INTERVAL_MS, signal)
     } catch (error) {
       if (signal.aborted || generation !== pollGeneration || shuttingDown) return
       if (isFenceError(toolError(error)?.code)) {

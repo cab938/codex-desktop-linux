@@ -25,6 +25,7 @@ export interface AuthorizationBootstrap {
 
 export type AppBootstrap = ReadyBootstrap | AuthorizationBootstrap
 export type FlushState =
+  | 'local_queued'
   | 'file_durable'
   | 'recovery_log_durable'
   | 'flushing'
@@ -44,6 +45,11 @@ export interface StatusPresentation {
   tone: 'ok' | 'pending' | 'warning' | 'error'
   readOnly: boolean
 }
+
+// Codex currently serializes MCP App tool calls for a rendered component.
+// Keep pulls nonblocking so a local edit can immediately use the same bridge.
+export const MCP_APP_PULL_WAIT_MS = 0
+export const MCP_APP_POLL_INTERVAL_MS = 300
 
 const DEFAULT_PREFERENCES: UiPreferences = {
   livePreview: true,
@@ -182,6 +188,9 @@ export function presentStatus(
   }
   if (flushState === 'flushing') {
     return { label: 'Saving…', tone: 'pending', readOnly: false }
+  }
+  if (flushState === 'local_queued') {
+    return { label: 'Edit queued…', tone: 'pending', readOnly: false }
   }
   return {
     label: 'Saved to recovery log',
