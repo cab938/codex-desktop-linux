@@ -133,3 +133,57 @@ test('directory locks reject live owners and recover incomplete and dead owners'
   const recoveredDead = await acquireDirectoryLock(lockPath)
   await recoveredDead.release()
 })
+
+test('accepted edit and create idempotency receipts survive broker restart', async (t) => {
+  const { stateRoot, workspaceRoot } = await makeFixture(t)
+  await fs.writeFile(path.join(workspaceRoot, 'notes.md'), 'hello\n')
+  const workspaceRegistry = await approveWorkspace(stateRoot, workspaceRoot)
+  const first = new DocumentRegistry({ stateRoot, workspaceRegistry })
+  const opened = await first.open(
+    { workspaceRoot, path: 'notes.md' },
+    ADAPTER_ONE,
+  )
+  const editInput = {
+    documentId: opened.documentId,
+    expectedRevision: '0',
+    idempotencyKey: 'restart-edit-idempotency-01',
+    edits: [{ start: 5, end: 5, replacement: ' persisted' }],
+  }
+  assert.equal(
+    (await first.applyTextEdits(editInput, ADAPTER_ONE)).revision,
+    '1',
+  )
+  const created = await first.create({
+    workspaceRoot,
+    path: 'created.md',
+    initialText: '# Created',
+    idempotencyKey: 'restart-create-idempotency-1',
+  }, ADAPTER_ONE)
+  await first.shutdown()
+
+  const restarted = new DocumentRegistry({ stateRoot, workspaceRegistry })
+  await restarted.open({ workspaceRoot, path: 'notes.md' }, ADAPTER_ONE)
+  assert.equal(
+    (await restarted.applyTextEdits(editInput, ADAPTER_ONE)).revision,
+    '1',
+  )
+  await assert.rejects(
+    restarted.applyTextEdits({
+      ...editInput,
+      edits: [{ start: 0, end: 0, replacement: 'different' }],
+    }, ADAPTER_ONE),
+    { code: 'IDEMPOTENCY_REUSE' },
+  )
+  const createdReplay = await restarted.create({
+    workspaceRoot,
+    path: 'created.md',
+    initialText: '# Created',
+    idempotencyKey: 'restart-create-idempotency-1',
+  }, ADAPTER_ONE)
+  assert.equal(createdReplay.documentId, created.documentId)
+  assert.equal(await fs.readFile(
+    path.join(workspaceRoot, 'created.md'),
+    'utf8',
+  ), '# Created\n')
+  await restarted.shutdown()
+})

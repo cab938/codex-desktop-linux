@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import * as Y from 'yjs'
 import { Awareness } from 'y-protocols/awareness'
@@ -8,6 +9,7 @@ import {
   MAX_ADAPTER_LEASES,
   MAX_FILE_BYTES,
   MAX_OPEN_DOCUMENTS,
+  MAX_UI_SESSIONS_PER_DOCUMENT,
 } from './config.mjs'
 import { BrokerError, assertBroker } from './errors.mjs'
 import { FilePersistence } from './file-persistence.mjs'
@@ -19,6 +21,7 @@ import {
 } from './merge.mjs'
 import { DocumentStateStore } from './state-store.mjs'
 import {
+  createMarkdownFile,
   documentIdentity,
   readMarkdownFile,
   resolveMarkdownFile,
@@ -27,6 +30,10 @@ import {
 const UINT64_MAX = 18_446_744_073_709_551_615n
 const MAX_EDITS = 256
 const MAX_REPLACEMENT_BYTES = 512 * 1024
+const IDEMPOTENCY_TTL_MS = 24 * 60 * 60_000
+const MAX_IDEMPOTENCY_RECORDS = 4_096
+const UI_SESSION_TTL_MS = 60_000
+const MAX_UI_SEQUENCE_RECORDS = 256
 
 export class DocumentRegistry {
   constructor(options) {
@@ -40,6 +47,12 @@ export class DocumentRegistry {
     this.idleMs = options.idleMs ?? DOCUMENT_IDLE_MS
     this.filePersistenceOptions = options.filePersistenceOptions ?? {}
     this.documents = new Map()
+    this.createIdempotency = new Map()
+    this.createReceiptsLoaded = false
+    this.createReceiptsPath = path.join(
+      this.stateRoot,
+      'create-idempotency-v1.json',
+    )
     this.closed = false
   }
 
@@ -49,6 +62,7 @@ export class DocumentRegistry {
     const approval = await this.workspaceRegistry.requireApproved(
       input?.workspaceRoot,
     )
+    await this.loadCreateReceipts()
     const resolved = await resolveMarkdownFile(
       approval.canonicalRoot,
       input?.path,
@@ -116,6 +130,134 @@ export class DocumentRegistry {
     }
   }
 
+  async create(input, adapterId) {
+    this.assertRunning()
+    validateAdapterId(adapterId)
+    validateIdempotencyKey(input?.idempotencyKey)
+    const approval = await this.workspaceRegistry.requireApproved(
+      input?.workspaceRoot,
+    )
+    await this.loadCreateReceipts()
+    const requestHash = stableRequestHash({
+      operation: 'create',
+      canonicalRoot: approval.canonicalRoot,
+      path: input?.path,
+      initialText: input?.initialText,
+    })
+    const key = `${approval.workspaceId}\0${input?.path}\0${input.idempotencyKey}`
+    const cutoff = this.clock() - IDEMPOTENCY_TTL_MS
+    for (const [cachedKey, record] of this.createIdempotency) {
+      if (record.createdAt < cutoff) this.createIdempotency.delete(cachedKey)
+    }
+    const existing = this.createIdempotency.get(key)
+    if (existing) {
+      assertBroker(
+        existing.requestHash === requestHash,
+        'IDEMPOTENCY_REUSE',
+        'This create idempotency key was reused with different content.',
+      )
+      const document = existing.promise
+        ? await existing.promise
+        : await this.open({
+          workspaceRoot: approval.canonicalRoot,
+          path: input.path,
+        }, adapterId)
+      const session = this.documents.get(document.documentId)
+      session?.acquireAdapter(adapterId)
+      return document
+    }
+    assertBroker(
+      this.createIdempotency.size < MAX_IDEMPOTENCY_RECORDS,
+      'RESOURCE_LIMIT',
+      'The create idempotency cache is full.',
+      { retryable: true },
+    )
+    const promise = (async () => {
+      await createMarkdownFile(
+        approval.canonicalRoot,
+        input?.path,
+        input?.initialText,
+      )
+      return this.open({
+        workspaceRoot: approval.canonicalRoot,
+        path: input.path,
+      }, adapterId)
+    })()
+    const record = {
+      key,
+      requestHash,
+      createdAt: this.clock(),
+      promise,
+    }
+    this.createIdempotency.set(key, record)
+    try {
+      const result = await promise
+      record.result = {
+        documentId: result.documentId,
+        canonicalRoot: approval.canonicalRoot,
+        path: input.path,
+      }
+      delete record.promise
+      await this.persistCreateReceipts()
+      return result
+    } catch (error) {
+      if (this.createIdempotency.get(key) === record) {
+        this.createIdempotency.delete(key)
+      }
+      throw error
+    }
+  }
+
+  async loadCreateReceipts() {
+    if (this.createReceiptsLoaded) return
+    this.createReceiptsLoaded = true
+    let records
+    try {
+      records = JSON.parse(await fs.readFile(this.createReceiptsPath, 'utf8'))
+    } catch (error) {
+      if (error?.code === 'ENOENT') return
+      if (error instanceof SyntaxError) {
+        throw new BrokerError(
+          'STATE_CORRUPT',
+          'The create idempotency journal is not valid JSON.',
+          { cause: error },
+        )
+      }
+      throw error
+    }
+    assertBroker(
+      Array.isArray(records),
+      'STATE_CORRUPT',
+      'The create idempotency journal is invalid.',
+    )
+    const cutoff = this.clock() - IDEMPOTENCY_TTL_MS
+    for (const record of records.slice(-MAX_IDEMPOTENCY_RECORDS)) {
+      if (
+        typeof record?.key === 'string' &&
+        typeof record?.requestHash === 'string' &&
+        Number.isFinite(record?.createdAt) &&
+        record.createdAt >= cutoff &&
+        record.result &&
+        typeof record.result.path === 'string'
+      ) {
+        this.createIdempotency.set(record.key, record)
+      }
+    }
+  }
+
+  async persistCreateReceipts() {
+    const records = [...this.createIdempotency.values()]
+      .filter((record) => record.result)
+      .map(({ key, requestHash, createdAt, result }) => ({
+        key,
+        requestHash,
+        createdAt,
+        result,
+      }))
+      .slice(-MAX_IDEMPOTENCY_RECORDS)
+    await writePrivateJson(this.createReceiptsPath, records)
+  }
+
   require(documentId, adapterId) {
     this.assertRunning()
     const session = this.documents.get(documentId)
@@ -130,7 +272,31 @@ export class DocumentRegistry {
   }
 
   async applyTextEdits(input, adapterId) {
-    return this.require(input?.documentId, adapterId).applyTextEdits(input)
+    const session = this.require(input?.documentId, adapterId)
+    const operation = async () => {
+      const result = await session.applyTextEdits(input)
+      if (input?.durability === 'file') {
+        const flushed = await session.flush(result.revision)
+        return {
+          ...result,
+          durability: 'file',
+          flushState: flushed.flushState,
+          fileDurableRevision: flushed.fileDurableRevision,
+        }
+      }
+      return result
+    }
+    if (input?.idempotencyKey === undefined) return operation()
+    return session.withIdempotency(
+      input.idempotencyKey,
+      stableRequestHash({
+        operation: 'applyText',
+        expectedRevision: input?.expectedRevision,
+        edits: input?.edits,
+        durability: input?.durability ?? 'recovery_log',
+      }),
+      operation,
+    )
   }
 
   async applyYUpdate(input, adapterId) {
@@ -146,20 +312,70 @@ export class DocumentRegistry {
   }
 
   async close(input, adapterId) {
-    const session = this.require(input?.documentId, adapterId)
-    if (input?.expectedRevision !== undefined) {
-      session.assertExpectedRevision(input.expectedRevision)
+    this.assertRunning()
+    const session = this.documents.get(input?.documentId)
+    assertBroker(
+      session,
+      'DOCUMENT_NOT_OPEN',
+      'The requested Markdown document is not open in this broker.',
+      { retryable: true },
+    )
+    const operation = async () => {
+      session.requireAdapter(adapterId)
+      session.assertExpectedRevision(input?.expectedRevision)
+      return session.releaseAdapter(adapterId)
     }
-    return session.releaseAdapter(adapterId)
+    if (input?.idempotencyKey === undefined) return operation()
+    return session.withIdempotency(
+      input.idempotencyKey,
+      stableRequestHash({
+        operation: 'close',
+        adapterId,
+        expectedRevision: input?.expectedRevision,
+      }),
+      operation,
+    )
   }
 
   async flush(input, adapterId) {
-    return this.require(input?.documentId, adapterId)
-      .flush(input?.expectedRevision)
+    const session = this.require(input?.documentId, adapterId)
+    if (input?.idempotencyKey === undefined) {
+      return session.flush(input?.expectedRevision)
+    }
+    return session.withIdempotency(
+      input.idempotencyKey,
+      stableRequestHash({
+        operation: 'flush',
+        expectedRevision: input?.expectedRevision,
+      }),
+      () => session.flush(input?.expectedRevision),
+    )
   }
 
   async reconcile(documentId, adapterId) {
     return this.require(documentId, adapterId).reconcileExternal()
+  }
+
+  createUiSession(documentId, adapterId) {
+    return this.require(documentId, adapterId).createUiSession()
+  }
+
+  async applyUiUpdate(input, adapterId) {
+    return this.require(input?.documentId, adapterId).applyUiUpdate(input)
+  }
+
+  async pullUiUpdate(input, adapterId, options = {}) {
+    return this.require(input?.documentId, adapterId)
+      .pullUiUpdate(input, options)
+  }
+
+  updateUiAwareness(input, adapterId) {
+    return this.require(input?.documentId, adapterId)
+      .updateUiAwareness(input)
+  }
+
+  refreshUiSession(input, adapterId) {
+    return this.require(input?.documentId, adapterId).refreshUiSession(input)
   }
 
   async revokeWorkspace(inputRoot) {
@@ -246,6 +462,17 @@ export class DocumentSession {
       fileSnapshot: options.fileSnapshot,
       ...options.filePersistenceOptions,
     })
+    this.idempotency = new Map()
+    for (const record of options.state.idempotencyRecords ?? []) {
+      if (record.createdAt >= this.clock() - IDEMPOTENCY_TTL_MS) {
+        this.idempotency.set(record.key, {
+          requestHash: record.requestHash,
+          createdAt: record.createdAt,
+          promise: Promise.resolve(record.result),
+        })
+      }
+    }
+    this.revisionWaiters = new Set()
   }
 
   async initialize() {
@@ -389,6 +616,7 @@ export class DocumentSession {
     this.state.revision = nextRevision
     this.state.metadata.revision = nextRevision.toString()
     this.touch()
+    this.notifyRevisionWaiters()
     if (this.stateStore.shouldCompact(this.state)) {
       try {
         await this.stateStore.compact(this.state)
@@ -451,6 +679,7 @@ export class DocumentSession {
 
   status() {
     this.pruneAdapterLeases()
+    this.pruneUiSessions()
     return {
       documentId: this.documentId,
       revision: this.revision.toString(),
@@ -636,6 +865,322 @@ export class DocumentSession {
     return conflictId
   }
 
+  async withIdempotency(key, requestHash, operation) {
+    validateIdempotencyKey(key)
+    this.pruneIdempotency()
+    const existing = this.idempotency.get(key)
+    if (existing) {
+      assertBroker(
+        existing.requestHash === requestHash,
+        'IDEMPOTENCY_REUSE',
+        'This idempotency key was already used for a different request.',
+      )
+      return existing.promise
+    }
+    assertBroker(
+      this.idempotency.size < MAX_IDEMPOTENCY_RECORDS,
+      'RESOURCE_LIMIT',
+      'The document idempotency cache is full.',
+      { retryable: true },
+    )
+    const createdAt = this.clock()
+    const promise = Promise.resolve()
+      .then(operation)
+      .then(async (result) => {
+        try {
+          await this.stateStore.saveIdempotency(this.state, {
+            key,
+            requestHash,
+            createdAt,
+            result,
+          })
+        } catch (error) {
+          this.readOnly = true
+          this.recoveryRequired = true
+          throw new BrokerError(
+            'RECOVERY_REQUIRED',
+            'The mutation completed, but its idempotency receipt could not be checkpointed.',
+            { cause: error },
+          )
+        }
+        return result
+      })
+    const record = {
+      requestHash,
+      createdAt,
+      promise,
+    }
+    this.idempotency.set(key, record)
+    try {
+      return await promise
+    } catch (error) {
+      if (this.idempotency.get(key) === record) this.idempotency.delete(key)
+      throw error
+    }
+  }
+
+  pruneIdempotency() {
+    const cutoff = this.clock() - IDEMPOTENCY_TTL_MS
+    for (const [key, record] of this.idempotency) {
+      if (record.createdAt < cutoff) this.idempotency.delete(key)
+    }
+  }
+
+  createUiSession() {
+    this.pruneUiSessions()
+    assertBroker(
+      this.uiSessions.size < MAX_UI_SESSIONS_PER_DOCUMENT,
+      'RESOURCE_LIMIT',
+      `At most ${MAX_UI_SESSIONS_PER_DOCUMENT} UI sessions may attach to one document.`,
+      { retryable: true },
+    )
+    const uiSessionId = crypto.randomUUID()
+    const sessionCapability = crypto.randomBytes(32).toString('base64url')
+    this.uiSessions.set(uiSessionId, {
+      capability: sessionCapability,
+      expiresAt: this.clock() + UI_SESSION_TTL_MS,
+      awarenessClock: 0,
+      awareness: null,
+      sequences: new Map(),
+      pullPending: false,
+    })
+    this.touch()
+    return this.uiBootstrap(uiSessionId, sessionCapability)
+  }
+
+  refreshUiSession(input) {
+    const record = this.requireUiSession(input)
+    const capability = crypto.randomBytes(32).toString('base64url')
+    record.capability = capability
+    record.expiresAt = this.clock() + UI_SESSION_TTL_MS
+    record.sequences.clear()
+    return this.uiBootstrap(input.uiSessionId, capability)
+  }
+
+  async applyUiUpdate(input) {
+    const uiSession = this.requireUiSession(input)
+    assertBroker(
+      typeof input.clientSequence === 'string' &&
+        /^(0|[1-9][0-9]{0,19})$/.test(input.clientSequence),
+      'INVALID_ARGUMENT',
+      'client_sequence must be an unsigned decimal string.',
+    )
+    const update = Buffer.from(input.updateBase64 ?? '', 'base64')
+    assertBroker(
+      update.length > 0 && update.length <= MAX_REPLACEMENT_BYTES,
+      'INVALID_ARGUMENT',
+      `A UI update must contain at most ${MAX_REPLACEMENT_BYTES} bytes.`,
+    )
+    const updateHash = hashBuffer(update)
+    assertBroker(
+      updateHash === input.updateSha256,
+      'INVALID_ARGUMENT',
+      'The UI update hash does not match its decoded bytes.',
+    )
+    const prior = uiSession.sequences.get(input.clientSequence)
+    if (prior) {
+      assertBroker(
+        prior.updateHash === updateHash,
+        'IDEMPOTENCY_REUSE',
+        'This UI client sequence was reused with different update bytes.',
+      )
+      return prior.result
+    }
+    const result = await this.enqueueMutation('ui', () => {
+      validateYUpdateResult(this.doc, update)
+      Y.applyUpdate(this.doc, update, 'ui')
+    })
+    const response = {
+      revision: result.revision,
+      acceptedSequence: input.clientSequence,
+      durability: result.changed ? 'recovery_log' : undefined,
+      flushState: result.flushState,
+      fileDurableRevision: result.fileDurableRevision,
+    }
+    uiSession.sequences.set(input.clientSequence, {
+      updateHash,
+      result: response,
+    })
+    while (uiSession.sequences.size > MAX_UI_SEQUENCE_RECORDS) {
+      uiSession.sequences.delete(uiSession.sequences.keys().next().value)
+    }
+    return response
+  }
+
+  async pullUiUpdate(input, options = {}) {
+    const uiSession = this.requireUiSession(input)
+    assertBroker(
+      !uiSession.pullPending,
+      'RESOURCE_LIMIT',
+      'This UI session already has an outstanding synchronization poll.',
+      { retryable: true },
+    )
+    assertBroker(
+      typeof input.afterRevision === 'string' &&
+        /^(0|[1-9][0-9]{0,19})$/.test(input.afterRevision),
+      'INVALID_ARGUMENT',
+      'after_revision must be an unsigned decimal string.',
+    )
+    assertBroker(
+      Number.isSafeInteger(input.waitMs) &&
+        input.waitMs >= 0 &&
+        input.waitMs <= 20_000,
+      'INVALID_ARGUMENT',
+      'wait_ms must be between 0 and 20,000.',
+    )
+    const afterRevision = BigInt(input.afterRevision)
+    assertBroker(
+      afterRevision <= this.revision,
+      'STALE_REVISION',
+      'The UI revision is ahead of the broker revision.',
+      { retryable: true },
+    )
+    if (afterRevision === this.revision && input.waitMs > 0) {
+      uiSession.pullPending = true
+      try {
+        await this.waitForRevision(
+          afterRevision,
+          input.waitMs,
+          options.signal,
+        )
+      } finally {
+        uiSession.pullPending = false
+      }
+    }
+    const vector = Buffer.from(input.stateVectorBase64 ?? '', 'base64')
+    let update
+    try {
+      update = Y.encodeStateAsUpdate(this.doc, vector)
+    } catch (cause) {
+      throw new BrokerError(
+        'INVALID_ARGUMENT',
+        'The UI state vector is not valid Yjs state.',
+        { cause },
+      )
+    }
+    uiSession.expiresAt = this.clock() + UI_SESSION_TTL_MS
+    return {
+      revision: this.revision.toString(),
+      updateBase64: Buffer.from(update).toString('base64'),
+      updateSha256: hashBuffer(update),
+      awareness: this.awarenessSnapshot(),
+      awarenessClock: Math.max(
+        0,
+        ...[...this.uiSessions.values()].map((entry) =>
+          entry.awarenessClock),
+      ),
+      flushState: this.flushState(),
+      fileDurableRevision: this.fileDurableRevision.toString(),
+    }
+  }
+
+  updateUiAwareness(input) {
+    const uiSession = this.requireUiSession(input)
+    assertBroker(
+      Number.isSafeInteger(input.awarenessClock) &&
+        input.awarenessClock > uiSession.awarenessClock,
+      'STALE_AWARENESS',
+      'Awareness clocks must increase monotonically.',
+      { retryable: true },
+    )
+    uiSession.awarenessClock = input.awarenessClock
+    uiSession.awareness = sanitizeAwareness(input.awareness)
+    return { awarenessClock: uiSession.awarenessClock }
+  }
+
+  requireUiSession(input) {
+    this.pruneUiSessions()
+    assertBroker(
+      input?.generation === this.generation,
+      'GENERATION_STALE',
+      'The UI belongs to a stale broker generation.',
+      { retryable: true },
+    )
+    assertBroker(
+      input?.documentEpoch === this.documentEpoch,
+      'DOCUMENT_EPOCH_STALE',
+      'The UI belongs to a stale document epoch.',
+      { retryable: true },
+    )
+    const record = this.uiSessions.get(input?.uiSessionId)
+    assertBroker(
+      record && safeEqual(record.capability, input?.sessionCapability),
+      'PERMISSION_DENIED',
+      'The scoped UI session capability is invalid or expired.',
+    )
+    record.expiresAt = this.clock() + UI_SESSION_TTL_MS
+    this.touch()
+    return record
+  }
+
+  pruneUiSessions() {
+    const now = this.clock()
+    for (const [id, record] of this.uiSessions) {
+      if (record.expiresAt <= now) this.uiSessions.delete(id)
+    }
+  }
+
+  uiBootstrap(uiSessionId, sessionCapability) {
+    const snapshot = Y.encodeStateAsUpdate(this.doc)
+    const stateVector = Y.encodeStateVector(this.doc)
+    return {
+      documentId: this.documentId,
+      generation: this.generation,
+      documentEpoch: this.documentEpoch,
+      uiSessionId,
+      sessionCapability,
+      revision: this.revision.toString(),
+      snapshotBase64: Buffer.from(snapshot).toString('base64'),
+      snapshotSha256: hashBuffer(snapshot),
+      stateVectorBase64: Buffer.from(stateVector).toString('base64'),
+      flushState: this.flushState(),
+      fileDurableRevision: this.fileDurableRevision.toString(),
+    }
+  }
+
+  awarenessSnapshot() {
+    return [...this.uiSessions.entries()]
+      .filter(([_id, record]) => record.awareness !== null)
+      .map(([uiSessionId, record]) => ({
+        uiSessionId,
+        awarenessClock: record.awarenessClock,
+        ...record.awareness,
+      }))
+  }
+
+  waitForRevision(afterRevision, waitMs, signal) {
+    if (this.revision > afterRevision || waitMs === 0) return Promise.resolve()
+    return new Promise((resolve) => {
+      const finish = () => {
+        clearTimeout(waiter.timer)
+        signal?.removeEventListener('abort', abort)
+        this.revisionWaiters.delete(waiter)
+        resolve()
+      }
+      const abort = () => {
+        finish()
+      }
+      const waiter = { afterRevision, resolve: finish, timer: null }
+      waiter.timer = setTimeout(() => {
+        finish()
+      }, waitMs)
+      waiter.timer.unref?.()
+      this.revisionWaiters.add(waiter)
+      if (signal?.aborted) abort()
+      else signal?.addEventListener('abort', abort, { once: true })
+    })
+  }
+
+  notifyRevisionWaiters() {
+    for (const waiter of this.revisionWaiters) {
+      if (this.revision > waiter.afterRevision) {
+        clearTimeout(waiter.timer)
+        this.revisionWaiters.delete(waiter)
+        waiter.resolve()
+      }
+    }
+  }
+
   async enterFileError(error) {
     this.readOnly = true
     this.externalState = 'changed'
@@ -694,6 +1239,11 @@ export class DocumentSession {
       this.destroyed = true
       await this.filePersistence.close()
       this.registry.remove(this.documentId, this)
+      for (const waiter of this.revisionWaiters) {
+        clearTimeout(waiter.timer)
+        waiter.resolve()
+      }
+      this.revisionWaiters.clear()
       this.awareness.destroy()
       this.doc.destroy()
       await this.lock.release()
@@ -707,6 +1257,82 @@ function validateAdapterId(adapterId) {
     'INVALID_ARGUMENT',
     'adapter_id must be a 16–128 character opaque identifier.',
   )
+}
+
+function validateIdempotencyKey(key) {
+  assertBroker(
+    typeof key === 'string' &&
+      key.length >= 16 &&
+      key.length <= 128 &&
+      /^[\x20-\x7e]+$/.test(key),
+    'INVALID_ARGUMENT',
+    'idempotency_key must contain 16–128 printable ASCII characters.',
+  )
+}
+
+function stableRequestHash(value) {
+  return `sha256:${crypto
+    .createHash('sha256')
+    .update(JSON.stringify(value))
+    .digest('hex')}`
+}
+
+function hashBuffer(value) {
+  return `sha256:${crypto
+    .createHash('sha256')
+    .update(value)
+    .digest('hex')}`
+}
+
+function safeEqual(left, right) {
+  if (typeof left !== 'string' || typeof right !== 'string') return false
+  const leftBytes = Buffer.from(left)
+  const rightBytes = Buffer.from(right)
+  return leftBytes.length === rightBytes.length &&
+    crypto.timingSafeEqual(leftBytes, rightBytes)
+}
+
+function sanitizeAwareness(value) {
+  assertBroker(
+    value && typeof value === 'object' && !Array.isArray(value),
+    'INVALID_ARGUMENT',
+    'awareness must be an object.',
+  )
+  const allowed = new Set([
+    'displayName',
+    'color',
+    'selectionAnchor',
+    'selectionHead',
+    'originClass',
+  ])
+  assertBroker(
+    Object.keys(value).every((key) => allowed.has(key)),
+    'INVALID_ARGUMENT',
+    'awareness contains an unsupported field.',
+  )
+  assertBroker(
+    typeof value.displayName === 'string' &&
+      value.displayName.length >= 1 &&
+      value.displayName.length <= 80 &&
+      typeof value.color === 'string' &&
+      /^#[0-9a-fA-F]{6}$/.test(value.color) &&
+      Number.isSafeInteger(value.selectionAnchor) &&
+      Number.isSafeInteger(value.selectionHead) &&
+      value.selectionAnchor >= 0 &&
+      value.selectionHead >= 0 &&
+      value.selectionAnchor <= 2_097_152 &&
+      value.selectionHead <= 2_097_152 &&
+      ['human', 'agent'].includes(value.originClass),
+    'INVALID_ARGUMENT',
+    'awareness fields are invalid or out of bounds.',
+  )
+  return {
+    displayName: value.displayName,
+    color: value.color.toLowerCase(),
+    selectionAnchor: value.selectionAnchor,
+    selectionHead: value.selectionHead,
+    originClass: value.originClass,
+  }
 }
 
 function validateEdits(edits, documentLength) {
@@ -807,4 +1433,18 @@ function validateYUpdateResult(currentDoc, update) {
   } finally {
     probe.destroy()
   }
+}
+
+async function writePrivateJson(target, value) {
+  await fs.mkdir(path.dirname(target), { recursive: true, mode: 0o700 })
+  const temporary = `${target}.tmp-${process.pid}-${crypto.randomUUID()}`
+  const handle = await fs.open(temporary, 'wx', 0o600)
+  try {
+    await handle.writeFile(`${JSON.stringify(value, null, 2)}\n`, 'utf8')
+    await handle.sync()
+  } finally {
+    await handle.close()
+  }
+  await fs.rename(temporary, target)
+  if (process.platform !== 'win32') await fs.chmod(target, 0o600)
 }

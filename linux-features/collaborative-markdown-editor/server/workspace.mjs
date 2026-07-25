@@ -118,6 +118,67 @@ export async function resolveMarkdownFile(workspaceRoot, relativePath) {
   }
 }
 
+export async function createMarkdownFile(
+  workspaceRoot,
+  relativePath,
+  initialText,
+) {
+  const canonicalRoot = await canonicalizeWorkspaceRoot(workspaceRoot)
+  const segments = validateRelativeMarkdownPath(relativePath)
+  const candidate = path.join(canonicalRoot, ...segments)
+  assertContained(canonicalRoot, candidate)
+  const parent = path.dirname(candidate)
+  await assertNoSymlinkComponents(parent, canonicalRoot)
+  const parentStat = await safeLstat(parent, 'FILE_NOT_FOUND')
+  assertBroker(
+    parentStat.isDirectory() && !parentStat.isSymbolicLink(),
+    'FILE_TYPE_UNSUPPORTED',
+    'The Markdown parent path is not a regular directory.',
+  )
+  const text = normalizeInitialMarkdown(initialText)
+  const bytes = Buffer.from(text, 'utf8')
+  assertBroker(
+    bytes.length <= MAX_FILE_BYTES,
+    'FILE_TOO_LARGE',
+    `Markdown files may not exceed ${MAX_FILE_BYTES} bytes.`,
+  )
+  const mode =
+    process.platform === 'win32' ? undefined : 0o666 & ~process.umask()
+  let handle
+  try {
+    handle = await fs.open(candidate, 'wx', mode)
+    await handle.writeFile(bytes)
+    await handle.sync()
+  } catch (cause) {
+    if (cause?.code === 'EEXIST') {
+      throw new BrokerError(
+        'FILE_EXISTS',
+        'The requested Markdown file already exists.',
+        { cause },
+      )
+    }
+    throw cause
+  } finally {
+    await handle?.close().catch(() => {})
+  }
+  await syncDirectory(parent)
+  return readMarkdownFile(
+    await resolveMarkdownFile(canonicalRoot, segments.join('/')),
+  )
+}
+
+export function normalizeInitialMarkdown(value) {
+  assertBroker(
+    typeof value === 'string' &&
+      !value.includes('\0') &&
+      !value.includes('\r') &&
+      !hasIsolatedSurrogate(value),
+    'INVALID_ARGUMENT',
+    'initial_text must be valid Unicode with normalized LF endings.',
+  )
+  return value.endsWith('\n') ? value : `${value}\n`
+}
+
 export async function readMarkdownFile(resolvedFile, options = {}) {
   const maxBytes = options.maxBytes ?? MAX_FILE_BYTES
   assertBroker(
@@ -265,5 +326,32 @@ async function safeLstat(target, missingCode) {
       )
     }
     throw cause
+  }
+}
+
+function hasIsolatedSurrogate(value) {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index)
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(index + 1)
+      if (next < 0xdc00 || next > 0xdfff) return true
+      index += 1
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      return true
+    }
+  }
+  return false
+}
+
+async function syncDirectory(directory) {
+  if (process.platform === 'win32') return
+  let handle
+  try {
+    handle = await fs.open(directory, 'r')
+    await handle.sync()
+  } catch (error) {
+    if (!['EINVAL', 'ENOTSUP', 'EISDIR'].includes(error?.code)) throw error
+  } finally {
+    await handle?.close().catch(() => {})
   }
 }

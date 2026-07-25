@@ -67,6 +67,26 @@ changes become read-only conflicts with current, baseline, and external
 candidates retained under private state. A deleted or renamed project file is
 never silently recreated.
 
+## MCP boundary
+
+`mcp/main.mjs` is the stdio entrypoint. It registers eight model-visible
+document/render tools, five app-only synchronization/authorization tools, and
+the versioned `ui://collaborative-markdown-editor/v1/index.html` resource.
+All input and output schemas are closed-world, tool annotations distinguish
+reads from destructive text edits, and only `markdown_render` attaches the UI
+resource.
+
+Model-visible results contain bounded text or redacted status. Broker bearers,
+workspace-confirmation capabilities, UI session capabilities, snapshots, and
+Yjs updates stay in app-only calls or hidden tool-result metadata. Mutations
+require expected revisions and printable idempotency keys. Accepted edit and
+create receipts persist for 24 hours across broker restart.
+
+The resource currently contains the protocol shell used to validate resource
+registration. The production CodeMirror bridge and interaction states replace
+that shell in the next work package without changing the frozen document-tool
+contract.
+
 ## Lifecycle commands
 
 The shell has dependency-free, deterministic lifecycle commands:
@@ -109,7 +129,7 @@ The committed `linux-features/features.example.json` must remain empty.
 ## Current risks and gates
 
 - The production MCP schemas and user-only workspace authorization flow need
-  wiring into the host-facing adapter and MCP App.
+  their final CodeMirror application and exact-app acceptance run.
 - Linux filesystem behavior is verified; macOS and Windows remain candidates
   until their atomic-replace, watcher, and host-runtime matrices pass.
 

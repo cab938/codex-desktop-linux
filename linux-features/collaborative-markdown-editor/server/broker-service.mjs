@@ -114,14 +114,20 @@ export class BrokerService {
       })
     }
     const body = await readJsonBody(request)
-    const result = await this.dispatch(body)
+    const cancellation = new AbortController()
+    response.once('close', () => {
+      if (!response.writableEnded) cancellation.abort()
+    })
+    const result = await this.dispatch(body, {
+      signal: cancellation.signal,
+    })
     respondJson(response, 200, { ok: true, result })
     if (body.kind === 'admin' && body.method === 'broker.shutdown') {
       setImmediate(() => this.stop().catch(() => {}))
     }
   }
 
-  async dispatch(body) {
+  async dispatch(body, context = {}) {
     assertBroker(
       body && typeof body === 'object' && !Array.isArray(body),
       'INVALID_ARGUMENT',
@@ -138,6 +144,29 @@ export class BrokerService {
           return this.documentRegistry.revokeWorkspace(params.workspaceRoot)
         case 'document.applyYUpdate':
           return this.documentRegistry.applyYUpdate(params, body.adapterId)
+        case 'document.createUiSession':
+          return this.documentRegistry.createUiSession(
+            params.documentId,
+            body.adapterId,
+          )
+        case 'document.uiPush':
+          return this.documentRegistry.applyUiUpdate(params, body.adapterId)
+        case 'document.uiPull':
+          return this.documentRegistry.pullUiUpdate(
+            params,
+            body.adapterId,
+            context,
+          )
+        case 'document.uiAwareness':
+          return this.documentRegistry.updateUiAwareness(
+            params,
+            body.adapterId,
+          )
+        case 'document.uiRefresh':
+          return this.documentRegistry.refreshUiSession(
+            params,
+            body.adapterId,
+          )
         default:
           break
       }
@@ -145,13 +174,18 @@ export class BrokerService {
       switch (body.method) {
         case 'document.open':
           return this.documentRegistry.open(params, body.adapterId)
+        case 'document.create':
+          requireIdempotencyKey(params.idempotencyKey)
+          return this.documentRegistry.create(params, body.adapterId)
         case 'document.read':
           return this.documentRegistry.read(params, body.adapterId)
         case 'document.applyText':
+          requireIdempotencyKey(params.idempotencyKey)
           return this.documentRegistry.applyTextEdits(params, body.adapterId)
         case 'document.status':
           return this.documentRegistry.status(params.documentId, body.adapterId)
         case 'document.flush':
+          requireIdempotencyKey(params.idempotencyKey)
           return this.documentRegistry.flush(params, body.adapterId)
         case 'document.reconcile':
           return this.documentRegistry.reconcile(
@@ -159,6 +193,7 @@ export class BrokerService {
             body.adapterId,
           )
         case 'document.close':
+          requireIdempotencyKey(params.idempotencyKey)
           return this.documentRegistry.close(params, body.adapterId)
         default:
           break
@@ -273,4 +308,15 @@ async function removeDescriptorIfOwned(descriptorPath, bearer) {
   } catch (error) {
     if (error?.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error
   }
+}
+
+function requireIdempotencyKey(value) {
+  assertBroker(
+    typeof value === 'string' &&
+      value.length >= 16 &&
+      value.length <= 128 &&
+      /^[\x20-\x7e]+$/.test(value),
+    'INVALID_ARGUMENT',
+    'Mutating RPC methods require a 16–128 character idempotency key.',
+  )
 }

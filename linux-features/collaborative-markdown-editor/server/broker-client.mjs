@@ -87,14 +87,14 @@ export class BrokerClient {
     }
   }
 
-  async rpc(kind, method, params = {}) {
+  async rpc(kind, method, params = {}, options = {}) {
     const descriptor = this.descriptor ?? await this.ensure()
     const response = await request(descriptor, 'POST', '/rpc', {
       kind,
       method,
       adapterId: this.adapterId,
       params,
-    })
+    }, options)
     if (!response.ok) {
       throw new BrokerError(
         response.error?.code ?? 'BROKER_UNAVAILABLE',
@@ -122,7 +122,7 @@ function defaultSpawnBroker(stateRoot) {
   child.unref()
 }
 
-async function request(descriptor, method, route, body) {
+async function request(descriptor, method, route, body, options = {}) {
   let response
   try {
     response = await fetch(
@@ -134,7 +134,10 @@ async function request(descriptor, method, route, body) {
           ...(body ? { 'content-type': 'application/json' } : {}),
         },
         body: body ? JSON.stringify(body) : undefined,
-        signal: AbortSignal.timeout(1_000),
+        signal: combinedSignal(
+          options.signal,
+          options.timeoutMs ?? 1_000,
+        ),
       },
     )
   } catch (cause) {
@@ -155,6 +158,11 @@ async function request(descriptor, method, route, body) {
     )
   }
   return payload
+}
+
+function combinedSignal(signal, timeoutMs) {
+  const timeout = AbortSignal.timeout(timeoutMs)
+  return signal ? AbortSignal.any([signal, timeout]) : timeout
 }
 
 function delay(milliseconds) {

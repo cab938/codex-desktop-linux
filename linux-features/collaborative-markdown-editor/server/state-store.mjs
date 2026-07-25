@@ -55,6 +55,7 @@ export class DocumentStateStore {
       metadata,
       fileSnapshot,
     )
+    const idempotencyRecords = await this.readIdempotency(paths)
 
     return {
       doc,
@@ -71,6 +72,7 @@ export class DocumentStateStore {
       externalState,
       dirty,
       fileBaselineText,
+      idempotencyRecords,
       paths,
     }
   }
@@ -113,6 +115,10 @@ export class DocumentStateStore {
       paths.fileBaseline,
       Buffer.from(fileSnapshot.text, 'utf8'),
     )
+    await writePrivateAtomic(
+      paths.idempotency,
+      Buffer.from('[]\n'),
+    )
     return {
       doc,
       ytext,
@@ -124,6 +130,7 @@ export class DocumentStateStore {
       externalState: 'clean',
       dirty: false,
       fileBaselineText: fileSnapshot.text,
+      idempotencyRecords: [],
       paths,
     }
   }
@@ -256,6 +263,20 @@ export class DocumentStateStore {
     return directory
   }
 
+  async saveIdempotency(state, record) {
+    const cutoff = this.clock() - 24 * 60 * 60_000
+    state.idempotencyRecords = [
+      ...state.idempotencyRecords.filter(
+        (entry) => entry.createdAt >= cutoff && entry.key !== record.key,
+      ),
+      record,
+    ].slice(-4_096)
+    await writePrivateAtomic(
+      state.paths.idempotency,
+      Buffer.from(`${JSON.stringify(state.idempotencyRecords, null, 2)}\n`),
+    )
+  }
+
   async compact(state) {
     const nextMetadata = {
       ...state.metadata,
@@ -288,6 +309,7 @@ export class DocumentStateStore {
       snapshot: path.join(directory, 'snapshot.yjs'),
       log: path.join(directory, 'updates.log'),
       fileBaseline: path.join(directory, 'file-baseline.utf8'),
+      idempotency: path.join(directory, 'idempotency.json'),
       recovery: path.join(directory, 'recovery'),
     }
   }
@@ -308,6 +330,38 @@ export class DocumentStateStore {
       )
       return fileSnapshot.text
     }
+  }
+
+  async readIdempotency(paths) {
+    let value
+    try {
+      value = JSON.parse(await fs.readFile(paths.idempotency, 'utf8'))
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        await writePrivateAtomic(paths.idempotency, Buffer.from('[]\n'))
+        return []
+      }
+      if (error instanceof SyntaxError) {
+        throw new BrokerError(
+          'STATE_CORRUPT',
+          'The document idempotency journal is not valid JSON.',
+          { cause: error },
+        )
+      }
+      throw error
+    }
+    assertBroker(
+      Array.isArray(value) &&
+        value.every((entry) =>
+          typeof entry?.key === 'string' &&
+          typeof entry?.requestHash === 'string' &&
+          Number.isFinite(entry?.createdAt) &&
+          entry?.result &&
+          typeof entry.result === 'object'),
+      'STATE_CORRUPT',
+      'The document idempotency journal is invalid.',
+    )
+    return value.slice(-4_096)
   }
 
   async readMetadata(metadataPath) {

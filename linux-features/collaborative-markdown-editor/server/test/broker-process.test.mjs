@@ -59,6 +59,7 @@ test('independent clients attach to one broker and one document authority', asyn
   const edited = await first.rpc('public', 'document.applyText', {
     documentId: openedFirst.documentId,
     expectedRevision: '0',
+    idempotencyKey: 'broker-process-edit-0001',
     edits: [{ start: 5, end: 5, replacement: ' shared' }],
   })
   assert.equal(edited.revision, '1')
