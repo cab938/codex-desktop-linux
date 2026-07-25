@@ -45,8 +45,8 @@ The source builds three production files:
 | File | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `dist/mcp/mcp-app.html` | 3,796,652 | `2eb7ae24ce1ace9451e8a76b7d18c9ebe3c784a8b28f8d2e22d6c716bed95819` |
-| `dist/plugin/server.mjs` | 372,679 | `2ddaf6d695ccb89852ee0c35d1fa9402af900bc1df199c7c77d4cb7e3878b7f6` |
-| `dist/plugin/broker.mjs` | 156,540 | `c2522027e8833868a87cde7198efe012e289706ee54ffb70d1eaf8e6dc252d2b` |
+| `dist/plugin/server.mjs` | 373,073 | `e0cb98957dca49d3d5e321d678b0d82577efe38003dca31320a553ce039dbb52` |
+| `dist/plugin/broker.mjs` | 157,303 | `987f5e7b5ab5cdd7f637ac7811999226dba29895848ac3d17699d9f251abe283` |
 
 Two consecutive builds produced the same hashes. The existing independent
 editor preview remains in the lifecycle manifest as non-plugin development
@@ -114,7 +114,7 @@ Environment: Node.js 20.19.0.
 - Strict typecheck: passed.
 - Editor/component suite: 411 tests passed.
 - Feature/stage/cleanup suite: 5 tests passed.
-- Broker/file/multi-process suite: 27 tests passed.
+- Broker/file/multi-process/concurrency suite: 30 tests passed.
 - Official SDK source and self-contained staged-plugin suite: 3 tests passed.
 - Plugin validator: passed.
 - Skill validator: passed.

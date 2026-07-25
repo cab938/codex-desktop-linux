@@ -274,7 +274,11 @@ export class DocumentRegistry {
   async applyTextEdits(input, adapterId) {
     const session = this.require(input?.documentId, adapterId)
     const operation = async () => {
-      const result = await session.applyTextEdits(input)
+      const result = await session.applyTextEdits({
+        ...input,
+        agentAttribution:
+          input?.agentAttribution ?? fallbackAgentAttribution(adapterId),
+      })
       if (input?.durability === 'file') {
         const flushed = await session.flush(result.revision)
         return {
@@ -522,6 +526,7 @@ export class DocumentSession {
     }
     this.revisionWaiters = new Set()
     this.recentAgentActivityUntil = 0
+    this.recentAgentAttribution = null
   }
 
   async initialize() {
@@ -578,6 +583,7 @@ export class DocumentSession {
 
   async applyTextEdits(input) {
     const edits = validateEdits(input?.edits, this.ytext.length)
+    const agentAttribution = validateAgentAttribution(input?.agentAttribution)
     return this.enqueueMutation('agent', () => {
       const projected = applyEditsToText(this.ytext.toString(), edits)
       assertBroker(
@@ -597,7 +603,7 @@ export class DocumentSession {
       expectedRevision: input?.expectedRevision,
       changedFrom: Math.min(...edits.map((edit) => edit.start)),
       changedTo: Math.max(...edits.map((edit) => edit.end)),
-    })
+    }, agentAttribution)
   }
 
   async applyYUpdate(input) {
@@ -615,12 +621,22 @@ export class DocumentSession {
     }, { expectedRevision: input?.expectedRevision })
   }
 
-  async enqueueMutation(originClass, mutate, resultFields = {}) {
+  async enqueueMutation(
+    originClass,
+    mutate,
+    resultFields = {},
+    attribution = null,
+  ) {
     return this.enqueueFileOperation(() =>
-      this.performMutation(originClass, mutate, resultFields))
+      this.performMutation(originClass, mutate, resultFields, attribution))
   }
 
-  async performMutation(originClass, mutate, resultFields = {}) {
+  async performMutation(
+    originClass,
+    mutate,
+    resultFields = {},
+    attribution = null,
+  ) {
     this.assertWritable()
     if (resultFields.expectedRevision !== undefined) {
       this.assertExpectedRevision(resultFields.expectedRevision)
@@ -655,6 +671,7 @@ export class DocumentSession {
         update,
         nextRevision,
         originClass,
+        attribution,
       )
     } catch (error) {
       this.readOnly = true
@@ -667,6 +684,7 @@ export class DocumentSession {
     this.touch()
     if (originClass === 'agent') {
       this.recentAgentActivityUntil = this.clock() + 5_000
+      this.recentAgentAttribution = attribution
     }
     this.notifyRevisionWaiters()
     if (this.stateStore.shouldCompact(this.state)) {
@@ -1225,7 +1243,8 @@ export class DocumentSession {
             ? BigInt(Number.MAX_SAFE_INTEGER)
             : this.revision,
         ),
-        displayName: 'Codex agent',
+        displayName:
+          this.recentAgentAttribution?.displayName ?? 'Codex agent',
         color: '#7c3aed',
         selectionAnchor: this.ytext.length,
         selectionHead: this.ytext.length,
@@ -1343,6 +1362,33 @@ export class DocumentSession {
       this.doc.destroy()
       await this.lock.release()
     }
+  }
+}
+
+function validateAgentAttribution(value) {
+  assertBroker(
+    value &&
+      ['host-related-task', 'mcp-adapter'].includes(value.identitySource) &&
+      /^sha256:[0-9a-f]{64}$/.test(value.identityHash) &&
+      ['Codex task', 'Codex agent'].includes(value.displayName),
+    'INVALID_ARGUMENT',
+    'Agent attribution is missing or invalid.',
+  )
+  return {
+    identitySource: value.identitySource,
+    identityHash: value.identityHash,
+    displayName: value.displayName,
+  }
+}
+
+function fallbackAgentAttribution(adapterId) {
+  return {
+    identitySource: 'mcp-adapter',
+    identityHash: `sha256:${crypto
+      .createHash('sha256')
+      .update(`collaborative-markdown-editor:agent:${adapterId}`)
+      .digest('hex')}`,
+    displayName: 'Codex agent',
   }
 }
 

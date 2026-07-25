@@ -135,7 +135,13 @@ export class DocumentStateStore {
     }
   }
 
-  async appendUpdate(state, update, nextRevision, originClass) {
+  async appendUpdate(
+    state,
+    update,
+    nextRevision,
+    originClass,
+    attribution = null,
+  ) {
     assertBroker(
       update instanceof Uint8Array && update.byteLength > 0,
       'INVALID_ARGUMENT',
@@ -146,6 +152,7 @@ export class DocumentStateStore {
       schemaVersion: 1,
       revision: nextRevision.toString(),
       originClass,
+      ...(attribution ? { attribution } : {}),
       updateBase64: updateBuffer.toString('base64'),
       updateSha256: hashBytes(updateBuffer),
       yTextContentHash: hashText(state.ytext.toString()),

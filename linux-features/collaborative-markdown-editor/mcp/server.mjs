@@ -186,13 +186,14 @@ export function createCollaborativeMarkdownMcpServer(options = {}) {
       file_durable_revision: revisionSchema(),
     },
     annotations: EDIT_ANNOTATIONS,
-  }, async (input) => {
+  }, async (input, extra) => {
     const result = await broker.rpc('public', 'document.applyText', {
       documentId: input.document_id,
       expectedRevision: input.expected_revision,
       idempotencyKey: input.idempotency_key,
       edits: input.edits,
       durability: input.durability ?? 'recovery_log',
+      agentAttribution: createAgentAttribution(extra, broker.adapterId),
     }, { timeoutMs: input.durability === 'file' ? 10_000 : 2_000 })
     return success(
       `Applied ${input.edits.length} edit(s); revision is now ${result.revision}.`,
@@ -659,6 +660,27 @@ function safeHandler(handler) {
         structuredContent: { ok: false, error: safe },
       }
     }
+  }
+}
+
+function createAgentAttribution(extra, adapterId) {
+  const hostTaskId =
+    extra?._meta?.['io.modelcontextprotocol/related-task']?.taskId
+  const identitySource =
+    typeof hostTaskId === 'string' && hostTaskId.length > 0
+      ? 'host-related-task'
+      : 'mcp-adapter'
+  const opaqueIdentity =
+    identitySource === 'host-related-task' ? hostTaskId : adapterId
+  const identityHash = crypto
+    .createHash('sha256')
+    .update(`${MCP_SERVER_NAME}:agent:${opaqueIdentity}`)
+    .digest('hex')
+  return {
+    identitySource,
+    identityHash: `sha256:${identityHash}`,
+    displayName:
+      identitySource === 'host-related-task' ? 'Codex task' : 'Codex agent',
   }
 }
 

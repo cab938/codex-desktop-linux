@@ -176,9 +176,46 @@ test('MCP tools enforce schemas, authorization, revisions, idempotency, and UI i
     idempotency_key: 'mcp-edit-idempotency-0001',
     edits: [{ start: 5, end: 5, replacement: ' agent' }],
   }
-  const edited = await call(client, 'markdown_apply_edits', editArguments)
+  const hostTaskId = 'task-private-identity-0001'
+  const edited = await call(
+    client,
+    'markdown_apply_edits',
+    editArguments,
+    {
+      'io.modelcontextprotocol/related-task': { taskId: hostTaskId },
+    },
+  )
   assert.equal(edited.structuredContent.revision, '1')
-  const replayed = await call(client, 'markdown_apply_edits', editArguments)
+  const updateLogPath = path.join(
+    fixture.stateRoot,
+    'documents-v1',
+    documentId,
+    'updates.log',
+  )
+  const attributedRecords = (await fs.readFile(updateLogPath, 'utf8'))
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line))
+  assert.equal(
+    attributedRecords[0].attribution.identitySource,
+    'host-related-task',
+  )
+  assert.match(
+    attributedRecords[0].attribution.identityHash,
+    /^sha256:[0-9a-f]{64}$/,
+  )
+  assert.equal(
+    JSON.stringify(attributedRecords[0]).includes(hostTaskId),
+    false,
+  )
+  const replayed = await call(
+    client,
+    'markdown_apply_edits',
+    editArguments,
+    {
+      'io.modelcontextprotocol/related-task': { taskId: hostTaskId },
+    },
+  )
   assert.deepEqual(replayed.structuredContent, edited.structuredContent)
   const reused = await call(client, 'markdown_apply_edits', {
     ...editArguments,
@@ -212,6 +249,15 @@ test('MCP tools enforce schemas, authorization, revisions, idempotency, and UI i
       .structuredContent.revision,
     '2',
   )
+  const allAttributedRecords = (await fs.readFile(updateLogPath, 'utf8'))
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line))
+  assert.ok(allAttributedRecords.some(
+    (record) =>
+      record.attribution?.identitySource === 'mcp-adapter' &&
+      /^sha256:[0-9a-f]{64}$/.test(record.attribution.identityHash),
+  ))
 
   const read = await call(client, 'markdown_read', {
     document_id: documentId,
@@ -475,8 +521,12 @@ test('stdio protocol process lists tools, reads the resource, and exits on trans
   await waitFor(() => !processIsAlive(pid))
 })
 
-async function call(client, name, arguments_) {
-  return client.callTool({ name, arguments: arguments_ })
+async function call(client, name, arguments_, meta) {
+  return client.callTool({
+    name,
+    arguments: arguments_,
+    ...(meta ? { _meta: meta } : {}),
+  })
 }
 
 function assertError(result, code) {
