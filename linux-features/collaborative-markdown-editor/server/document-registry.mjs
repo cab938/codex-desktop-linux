@@ -374,8 +374,33 @@ export class DocumentRegistry {
       .updateUiAwareness(input)
   }
 
-  refreshUiSession(input, adapterId) {
-    return this.require(input?.documentId, adapterId).refreshUiSession(input)
+  async refreshUiSession(input, adapterId) {
+    this.assertRunning()
+    validateAdapterId(adapterId)
+    let session = this.documents.get(input?.documentId)
+    if (!session) {
+      const identity = await this.stateStore.readIdentity(input?.documentId)
+      await this.open({
+        workspaceRoot: identity.canonicalRoot,
+        path: identity.relativePath,
+      }, adapterId)
+      session = this.documents.get(input.documentId)
+    } else {
+      session.acquireAdapter(adapterId)
+    }
+    assertBroker(
+      session,
+      'DOCUMENT_NOT_OPEN',
+      'The requested Markdown document could not be reopened.',
+      { retryable: true },
+    )
+    if (
+      input?.generation !== session.generation ||
+      input?.documentEpoch !== session.documentEpoch
+    ) {
+      return session.createUiSession()
+    }
+    return session.refreshUiSession(input)
   }
 
   async revokeWorkspace(inputRoot) {
@@ -473,6 +498,7 @@ export class DocumentSession {
       }
     }
     this.revisionWaiters = new Set()
+    this.recentAgentActivityUntil = 0
   }
 
   async initialize() {
@@ -616,6 +642,9 @@ export class DocumentSession {
     this.state.revision = nextRevision
     this.state.metadata.revision = nextRevision.toString()
     this.touch()
+    if (originClass === 'agent') {
+      this.recentAgentActivityUntil = this.clock() + 5_000
+    }
     this.notifyRevisionWaiters()
     if (this.stateStore.shouldCompact(this.state)) {
       try {
@@ -638,6 +667,9 @@ export class DocumentSession {
       durability: 'recovery_log',
       flushState: this.flushState(),
       fileDurableRevision: this.fileDurableRevision.toString(),
+      readOnly: this.readOnly,
+      externalState: this.externalState,
+      conflictId: this.conflictId,
       ...publicResultFields,
     }
   }
@@ -949,7 +981,13 @@ export class DocumentSession {
   }
 
   refreshUiSession(input) {
-    const record = this.requireUiSession(input)
+    let record
+    try {
+      record = this.requireUiSession(input)
+    } catch (error) {
+      if (error?.code === 'PERMISSION_DENIED') return this.createUiSession()
+      throw error
+    }
     const capability = crypto.randomBytes(32).toString('base64url')
     record.capability = capability
     record.expiresAt = this.clock() + UI_SESSION_TTL_MS
@@ -1071,6 +1109,9 @@ export class DocumentSession {
       ),
       flushState: this.flushState(),
       fileDurableRevision: this.fileDurableRevision.toString(),
+      readOnly: this.readOnly,
+      externalState: this.externalState,
+      conflictId: this.conflictId,
     }
   }
 
@@ -1135,17 +1176,35 @@ export class DocumentSession {
       stateVectorBase64: Buffer.from(stateVector).toString('base64'),
       flushState: this.flushState(),
       fileDurableRevision: this.fileDurableRevision.toString(),
+      path: this.relativePath,
+      workspaceRoot: this.canonicalRoot,
     }
   }
 
   awarenessSnapshot() {
-    return [...this.uiSessions.entries()]
+    const sessions = [...this.uiSessions.entries()]
       .filter(([_id, record]) => record.awareness !== null)
       .map(([uiSessionId, record]) => ({
         uiSessionId,
         awarenessClock: record.awarenessClock,
         ...record.awareness,
       }))
+    if (this.recentAgentActivityUntil > this.clock()) {
+      sessions.push({
+        uiSessionId: 'agent',
+        awarenessClock: Number(
+          this.revision > BigInt(Number.MAX_SAFE_INTEGER)
+            ? BigInt(Number.MAX_SAFE_INTEGER)
+            : this.revision,
+        ),
+        displayName: 'Codex agent',
+        color: '#7c3aed',
+        selectionAnchor: this.ytext.length,
+        selectionHead: this.ytext.length,
+        originClass: 'agent',
+      })
+    }
+    return sessions
   }
 
   waitForRevision(afterRevision, waitMs, signal) {

@@ -289,7 +289,13 @@ test('MCP tools enforce schemas, authorization, revisions, idempotency, and UI i
   })
   assert.equal(pulled.structuredContent.revision, '3')
   assert.ok(pulled.structuredContent.update_base64.length > 0)
-  assert.equal(pulled.structuredContent.awareness.length, 1)
+  assert.equal(pulled.structuredContent.awareness.length, 2)
+  assert.deepEqual(
+    pulled.structuredContent.awareness
+      .map((entry) => entry.originClass)
+      .sort(),
+    ['agent', 'human'],
+  )
 
   const refreshed = await call(client, 'markdown_ui_refresh', uiBase)
   const refreshedBootstrap = refreshed._meta[UI_META_KEY]
@@ -363,6 +369,23 @@ test('MCP tools enforce schemas, authorization, revisions, idempotency, and UI i
   })
   assert.equal(timedPoll.structuredContent.revision, currentRevision)
   assert.ok(Date.now() - started < 500)
+
+  const priorGeneration = refreshedBootstrap.generation
+  await broker.rpc('admin', 'broker.shutdown')
+  const restarted = await call(client, 'markdown_ui_refresh', {
+    document_id: refreshedBootstrap.document_id,
+    generation: refreshedBootstrap.generation,
+    document_epoch: refreshedBootstrap.document_epoch,
+    ui_session_id: refreshedBootstrap.ui_session_id,
+    session_capability: refreshedBootstrap.session_capability,
+  })
+  assert.notEqual(restarted.isError, true, JSON.stringify(restarted))
+  const restartedBootstrap = restarted._meta[UI_META_KEY]
+  assert.notEqual(restartedBootstrap.generation, priorGeneration)
+  assert.equal(restartedBootstrap.document_id, documentId)
+  assert.equal(restartedBootstrap.revision, currentRevision)
+  assert.equal(restartedBootstrap.path, 'notes.md')
+  assert.equal(restartedBootstrap.workspace_root, fixture.workspaceRoot)
 
   const flushed = await call(client, 'markdown_flush', {
     document_id: documentId,

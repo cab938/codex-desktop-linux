@@ -6,6 +6,7 @@ export default defineConfig({
     include: [
       'web/vendor/glyphdown/**/test/**/*.test.ts',
       'web/test/**/*.test.ts',
+      'web/src/**/*.test.ts',
     ],
   },
 })

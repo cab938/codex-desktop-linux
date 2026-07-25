@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Collaborative Markdown Editor</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="toolbar">
+        <div class="document-heading">
+          <span class="eyebrow">Workspace Markdown</span>
+          <strong id="document-title">Collaborative editor</strong>
+          <span id="document-path">Waiting for a document…</span>
+        </div>
+        <div class="toolbar-actions" id="editor-actions" hidden>
+          <button id="preview" type="button" aria-pressed="true">
+            Live preview
+          </button>
+          <button id="undo" type="button" aria-keyshortcuts="Control+Z Meta+Z">
+            Undo
+          </button>
+          <button id="redo" type="button" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z">
+            Redo
+          </button>
+          <button id="retry" type="button">Reconnect</button>
+        </div>
+      </header>
+
+      <section id="authorization" class="authorization-card" hidden>
+        <span class="eyebrow">Permission required</span>
+        <h1>Open this workspace Markdown file?</h1>
+        <p>
+          The editor can read and write only the exact workspace shown below.
+          This approval is stored locally and can be revoked.
+        </p>
+        <dl>
+          <div>
+            <dt>Workspace</dt>
+            <dd><code id="authorization-root"></code></dd>
+          </div>
+          <div>
+            <dt>File</dt>
+            <dd><code id="authorization-path"></code></dd>
+          </div>
+        </dl>
+        <div class="authorization-actions">
+          <button id="authorize" class="primary" type="button">
+            Allow workspace
+          </button>
+          <button id="deny" type="button">Not now</button>
+        </div>
+      </section>
+
+      <section id="workspace" class="workspace" hidden>
+        <div class="status-strip">
+          <span id="connection-status" class="status-badge pending">
+            Connecting…
+          </span>
+          <span id="revision-status">Revision 0</span>
+          <ul id="presence" class="presence" aria-label="Active collaborators"></ul>
+        </div>
+        <aside id="conflict" class="conflict-banner" hidden>
+          <strong>Editing paused to protect both versions.</strong>
+          <span id="conflict-message">
+            Inspect the external file and the preserved conflict before choosing
+            a version.
+          </span>
+        </aside>
+        <section
+          id="editor"
+          aria-label="Collaborative Markdown document"
+        ></section>
+      </section>
+
+      <footer>
+        <output id="message" aria-live="polite">
+          Connecting to the Codex MCP Apps bridge…
+        </output>
+      </footer>
+    </main>
+    <script type="module" src="/src/mcp-app.ts"></script>
+  </body>
+</html>

@@ -15,7 +15,7 @@ import { BrokerError, toSafeError } from '../server/errors.mjs'
 export const MCP_SERVER_NAME = 'collaborative-markdown-editor'
 export const MCP_SERVER_VERSION = '0.1.0'
 export const RESOURCE_URI =
-  'ui://collaborative-markdown-editor/v1/index.html'
+  'ui://collaborative-markdown-editor/v2/index.html'
 export const UI_META_KEY = 'collaborativeMarkdownEditor'
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url))
@@ -488,6 +488,15 @@ export function createCollaborativeMarkdownMcpServer(options = {}) {
       awareness_clock: z.number().int(),
       flush_state: flushStateSchema(),
       file_durable_revision: revisionSchema(),
+      read_only: z.boolean(),
+      external_state: z.enum([
+        'clean',
+        'changed',
+        'deleted',
+        'renamed',
+        'conflict',
+      ]),
+      conflict_id: z.string().regex(UUID).nullable(),
     },
     annotations: READ_ANNOTATIONS,
   }, async (input, extra) => {
@@ -509,6 +518,9 @@ export function createCollaborativeMarkdownMcpServer(options = {}) {
       awareness_clock: result.awarenessClock,
       flush_state: result.flushState,
       file_durable_revision: result.fileDurableRevision,
+      read_only: result.readOnly,
+      external_state: result.externalState,
+      conflict_id: result.conflictId,
     })
   })
 
@@ -576,7 +588,7 @@ export function createCollaborativeMarkdownMcpServer(options = {}) {
 
   registerAppResource(
     server,
-    'Collaborative Markdown Editor v1',
+    'Collaborative Markdown Editor v2',
     RESOURCE_URI,
     {
       title: 'Collaborative Markdown Editor',
@@ -596,7 +608,7 @@ export function createCollaborativeMarkdownMcpServer(options = {}) {
         uri: RESOURCE_URI,
         mimeType: RESOURCE_MIME_TYPE,
         text: await fs.readFile(
-          path.join(ROOT_DIR, 'resource-v1.html'),
+          path.join(ROOT_DIR, '..', 'dist', 'mcp', 'mcp-app.html'),
           'utf8',
         ),
         _meta: {
@@ -687,7 +699,15 @@ function readyRender(document, bootstrap) {
       generation: document.generation,
       document_epoch: document.documentEpoch,
     },
-    { [UI_META_KEY]: { kind: 'ready', ...snakeBootstrap(bootstrap) } },
+    {
+      [UI_META_KEY]: {
+        kind: 'ready',
+        ...snakeBootstrap(bootstrap),
+        path: document.path ?? bootstrap.path ?? null,
+        workspace_root:
+          document.workspaceRoot ?? bootstrap.workspaceRoot ?? null,
+      },
+    },
   )
 }
 
@@ -704,6 +724,8 @@ function snakeBootstrap(value) {
     state_vector_base64: value.stateVectorBase64,
     flush_state: value.flushState,
     file_durable_revision: value.fileDurableRevision,
+    path: value.path ?? null,
+    workspace_root: value.workspaceRoot ?? null,
   }
 }
 

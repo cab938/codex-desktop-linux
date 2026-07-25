@@ -24,13 +24,21 @@ export class BrokerClient {
   async ensure(options = {}) {
     await ensurePrivateStateRoot(this.stateRoot)
     const deadline = Date.now() + (options.timeoutMs ?? 5_000)
-    const existing = await this.tryAttach()
-    if (existing) return existing
-    this.spawnBroker(this.stateRoot)
+    const excludedGeneration = options.excludeGeneration
+    let spawned = false
     while (Date.now() < deadline) {
-      await delay(25)
       const descriptor = await this.tryAttach()
-      if (descriptor) return descriptor
+      if (
+        descriptor &&
+        descriptor.generation !== excludedGeneration
+      ) {
+        return descriptor
+      }
+      if (!descriptor && !spawned) {
+        this.spawnBroker(this.stateRoot)
+        spawned = true
+      }
+      await delay(25)
     }
     throw new BrokerError(
       'BROKER_UNAVAILABLE',
@@ -88,13 +96,38 @@ export class BrokerClient {
   }
 
   async rpc(kind, method, params = {}, options = {}) {
-    const descriptor = this.descriptor ?? await this.ensure()
-    const response = await request(descriptor, 'POST', '/rpc', {
+    let descriptor = this.descriptor ?? await this.ensure()
+    const body = {
       kind,
       method,
       adapterId: this.adapterId,
       params,
-    }, options)
+    }
+    let response
+    try {
+      response = await request(descriptor, 'POST', '/rpc', body, options)
+    } catch (error) {
+      if (error?.code !== 'BROKER_UNAVAILABLE' || options.signal?.aborted) {
+        throw error
+      }
+      this.descriptor = null
+      descriptor = await this.ensure({
+        excludeGeneration: descriptor.generation,
+      })
+      response = await request(descriptor, 'POST', '/rpc', body, options)
+    }
+    if (
+      !response.ok &&
+      response.error?.code === 'BROKER_UNAVAILABLE' &&
+      response.error?.retryable &&
+      !options.signal?.aborted
+    ) {
+      this.descriptor = null
+      descriptor = await this.ensure({
+        excludeGeneration: descriptor.generation,
+      })
+      response = await request(descriptor, 'POST', '/rpc', body, options)
+    }
     if (!response.ok) {
       throw new BrokerError(
         response.error?.code ?? 'BROKER_UNAVAILABLE',

@@ -314,6 +314,27 @@ export class DocumentStateStore {
     }
   }
 
+  async readIdentity(documentId) {
+    assertBroker(
+      /^doc_v1_[A-Za-z0-9_-]{43}$/.test(documentId ?? ''),
+      'INVALID_ARGUMENT',
+      'The document identity is invalid.',
+    )
+    const metadata = await this.readMetadata(this.paths(documentId).metadata)
+    assertBroker(
+      metadata.documentId === documentId &&
+        typeof metadata.canonicalRoot === 'string' &&
+        typeof metadata.relativePath === 'string',
+      'STATE_CORRUPT',
+      'The persisted document identity is incomplete.',
+    )
+    return {
+      documentId,
+      canonicalRoot: metadata.canonicalRoot,
+      relativePath: metadata.relativePath,
+    }
+  }
+
   async readFileBaseline(paths, metadata, fileSnapshot) {
     try {
       return await fs.readFile(paths.fileBaseline, 'utf8')

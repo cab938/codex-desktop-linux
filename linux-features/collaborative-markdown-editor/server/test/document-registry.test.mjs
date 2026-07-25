@@ -112,6 +112,44 @@ test('adapter leases expire and idle documents are checkpointed and evicted', as
   await registry.shutdown()
 })
 
+test('a stale UI generation refresh reopens persisted state and issues a new session', async (t) => {
+  const { stateRoot, workspaceRoot } = await makeFixture(t)
+  await fs.writeFile(path.join(workspaceRoot, 'notes.md'), 'hello\n')
+  const workspaceRegistry = await approveWorkspace(stateRoot, workspaceRoot)
+  const first = new DocumentRegistry({
+    stateRoot,
+    workspaceRegistry,
+    generation: '11111111-1111-4111-8111-111111111111',
+  })
+  const opened = await first.open(
+    { workspaceRoot, path: 'notes.md' },
+    ADAPTER_ONE,
+  )
+  const stale = first.createUiSession(opened.documentId, ADAPTER_ONE)
+  await first.shutdown()
+
+  const restarted = new DocumentRegistry({
+    stateRoot,
+    workspaceRegistry,
+    generation: '22222222-2222-4222-8222-222222222222',
+  })
+  const refreshed = await restarted.refreshUiSession({
+    documentId: stale.documentId,
+    generation: stale.generation,
+    documentEpoch: stale.documentEpoch,
+    uiSessionId: stale.uiSessionId,
+    sessionCapability: stale.sessionCapability,
+  }, ADAPTER_TWO)
+  assert.equal(refreshed.documentId, opened.documentId)
+  assert.equal(refreshed.generation, '22222222-2222-4222-8222-222222222222')
+  assert.notEqual(refreshed.uiSessionId, stale.uiSessionId)
+  assert.equal(
+    restarted.read({ documentId: opened.documentId }, ADAPTER_TWO).text,
+    'hello\n',
+  )
+  await restarted.shutdown()
+})
+
 test('directory locks reject live owners and recover incomplete and dead owners', async (t) => {
   const { parent } = await makeFixture(t)
   const lockPath = path.join(parent, 'locks', 'document.lock')

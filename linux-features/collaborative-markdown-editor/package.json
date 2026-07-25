@@ -6,14 +6,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "build:web": "vite build",
+    "build:web:preview": "vite build",
+    "build:web:mcp": "vite build --config vite.mcp.config.ts",
+    "build:web": "npm run build:web:preview && npm run build:web:mcp",
     "build": "npm run build:web && node ./scripts/lifecycle.mjs build",
     "stage": "npm run build:web && node ./scripts/lifecycle.mjs stage",
     "typecheck": "tsc -p ./tsconfig.json",
     "test:unit": "vitest run",
     "test:feature": "node --test ./test.js",
     "test:server": "node --test ./server/test/*.test.mjs",
-    "test:mcp": "node --test ./mcp/test.mjs",
+    "test:mcp": "npm run build:web:mcp && node --test ./mcp/test.mjs",
     "test": "npm run typecheck && npm run test:unit && npm run test:feature && npm run test:server && npm run test:mcp",
     "clean": "node ./scripts/lifecycle.mjs clean"
   },
