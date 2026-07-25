@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "collaborative-markdown-transport-spike": {
+      "command": "node",
+      "args": [
+        "./server.mjs"
+      ],
+      "cwd": "."
+    }
+  }
+}

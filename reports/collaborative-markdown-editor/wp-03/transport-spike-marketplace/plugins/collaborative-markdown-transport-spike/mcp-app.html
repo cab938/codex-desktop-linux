@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collaborative Markdown transport spike</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">WP-03 transport spike</p>
+          <h1>Collaborative Markdown</h1>
+        </div>
+        <span id="connection" class="badge pending">waiting for tool result</span>
+      </header>
+      <section class="facts" aria-label="Connection facts">
+        <span>instance <code id="instance">—</code></span>
+        <span>generation <code id="generation">—</code></span>
+        <span>revision <code id="revision">0</code></span>
+        <span>updates sent/received <code id="counters">0 / 0</code></span>
+        <span>capability <code id="capability">not received</code></span>
+      </section>
+      <div id="editor" aria-label="Collaborative Markdown editor"></div>
+      <footer>
+        <button id="insert" type="button">Insert from server</button>
+        <button id="reconnect" type="button">Reconnect socket</button>
+        <button id="restart" type="button">Change broker generation</button>
+        <button id="panel" type="button">Open right panel</button>
+        <output id="message" aria-live="polite">Initializing MCP Apps bridge…</output>
+      </footer>
+    </main>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

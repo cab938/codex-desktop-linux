@@ -1,0 +1,20 @@
+{
+  "name": "collaborative-markdown-host-probe",
+  "interface": {
+    "displayName": "Collaborative Markdown Host Probe"
+  },
+  "plugins": [
+    {
+      "name": "collaborative-markdown-host-probe",
+      "source": {
+        "source": "local",
+        "path": "./plugins/collaborative-markdown-host-probe"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

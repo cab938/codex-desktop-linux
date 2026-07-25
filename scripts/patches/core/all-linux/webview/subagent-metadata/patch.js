@@ -15,7 +15,7 @@ module.exports = [
     ciPolicy: "required-upstream",
     // The current upstream app keeps the thread_spawn metadata decoder in the
     // app-initial bundle.
-    pattern: /^app-initial-.*\.js$/,
+    pattern: /^app-initial-[^.]+\.js$/,
     missingDescription: "subagent metadata webview bundle",
     skipDescription: "subagent nickname metadata shape patch",
     apply: applySubagentNicknameMetadataPatch,

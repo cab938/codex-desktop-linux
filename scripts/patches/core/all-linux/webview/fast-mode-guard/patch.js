@@ -11,10 +11,10 @@ module.exports = [
     phase: "webview-asset",
     order: 1040,
     ciPolicy: "required-upstream",
-    // The current upstream app keeps the service-tier helpers in app-initial.
-    // They are already optional-chain guarded, so a byte-identical match is
-    // the expected result unless an unsafe lookup reappears.
-    pattern: /^app-initial-.*\.js$/,
+    // The current app keeps service-tier availability in the consolidated
+    // app-initial bundle. Its current lookup no longer dereferences
+    // serviceTiers, so applying the guard is intentionally a no-op.
+    pattern: /^app-initial-[^.]+\.js$/,
     missingDescription: "fast-mode/service-tier availability bundle",
     skipDescription: "fast-mode model guard patch",
     apply: applyLinuxFastModeModelGuardPatch,

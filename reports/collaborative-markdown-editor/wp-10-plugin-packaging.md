@@ -1,0 +1,143 @@
+# WP-10 plugin packaging
+
+Date: 2026-07-24
+
+Status: complete for Linux v1, including exact Codex Desktop install,
+uninstall, and reinstall acceptance.
+
+## Package shape
+
+The tracked source marketplace is:
+
+```text
+linux-features/collaborative-markdown-editor/plugin-marketplace/
+├── .agents/plugins/marketplace.json
+└── plugins/collaborative-markdown-editor/
+    ├── .codex-plugin/plugin.json
+    ├── .mcp.json
+    ├── assets/icon.svg
+    └── skills/collaborative-markdown-editor/
+        ├── SKILL.md
+        └── agents/openai.yaml
+```
+
+The manifest has the stable plugin name
+`collaborative-markdown-editor`, valid semantic version `0.1.0`, accurate local
+file and interactive-write capabilities, and a single companion MCP
+configuration. The configuration runs:
+
+```text
+node ./runtime/server.mjs
+```
+
+with `cwd: "."`. It uses no shell, `/usr/bin/env`, Python, native add-on, or
+user-selected runtime. WP-02 proved that the Codex Desktop plugin host resolves
+this direct `node` command to its app-managed Node runtime.
+
+The plugin-creator validator passed. The companion skill also passed the
+skill-creator validator and has matching `agents/openai.yaml` metadata.
+
+## Deterministic build and staged payload
+
+The source builds three production files:
+
+| File | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `dist/mcp/mcp-app.html` | 3,796,652 | `2eb7ae24ce1ace9451e8a76b7d18c9ebe3c784a8b28f8d2e22d6c716bed95819` |
+| `dist/plugin/server.mjs` | 373,094 | `cdf11a08d485bf8581077a91a8b25aa7858ef0aea2de8ef790f2540c589b8b08` |
+| `dist/plugin/broker.mjs` | 158,589 | `511717eff9d44dcaf8e0c0c3ba3868e090547913c7b2e52e27cb0ded27fb2ce1` |
+
+Two consecutive builds produced the same hashes. The existing independent
+editor preview remains in the lifecycle manifest as non-plugin development
+evidence, but it is not copied into the plugin.
+
+The plugin has no staged `node_modules`. Vite/Rolldown bundles only reachable
+ESM dependencies while leaving Node built-ins external. A runtime inspection
+and staged-plugin test prove that `@hono/node-server`, `serveStatic`, and
+`express-rate-limit` are absent.
+
+`npm audit --omit=dev` still reports three moderate entries for the current
+MCP SDK's transitive `@hono/node-server <2.0.5` Windows path-traversal advisory,
+with no fix available. This is a lockfile/development-graph finding, not a
+shipped reachable path: the staged runtime excludes that package and provides
+no Hono or HTTP static-file server.
+
+## Linux feature staging
+
+The feature remains disabled by default and adds one narrowly scoped
+required-upstream patch descriptor, no runtime hook, and no package hook. The
+descriptor adds this disabled bundled plugin to the current host eligibility
+list; it does not install or enable the plugin.
+
+- One declarative resource copies the tracked plugin source into the app's
+  existing `openai-bundled` plugin tree.
+- `stage.sh` installs locked build dependencies only when absent, runs the
+  deterministic production build, copies the three generated files plus the
+  repository MIT license and third-party notices, and appends an `AVAILABLE`
+  / `ON_INSTALL` marketplace entry.
+- `cleanup.sh` removes only this plugin and its marketplace entry.
+- Both hooks pass `bash -n`.
+- A temporary-install test preserves an unrelated marketplace entry while
+  staging and cleaning every owned payload file.
+- `features.example.json` remains empty and no local enablement is committed.
+
+No generic Codex or launcher touchpoint was required.
+
+## Process and uninstall lifecycle
+
+Every MCP stdio process has an opaque adapter identity. UI sessions now record
+their owning adapter. When stdin closes or the process receives SIGTERM/SIGINT,
+the adapter sends an authenticated release to the shared broker.
+
+The broker then:
+
+1. removes that adapter's leases and UI sessions from every document;
+2. flushes and checkpoints documents with no remaining clients;
+3. preserves other live adapters and their documents; and
+4. when the last adapter leaves, removes its private descriptor, releases
+   document and broker locks, closes the loopback listener, and exits.
+
+The multi-process test proves the first adapter does not stop a two-adapter
+broker and the second does. The self-contained staged-plugin test starts the
+bundled server and broker, reads the production UI resource, triggers a real
+authorization render, closes stdio, waits for the broker descriptor to
+disappear, deletes the plugin, and confirms the workspace Markdown bytes are
+unchanged.
+
+Plugin-private recovery state intentionally remains in the platform-native
+state root. It is not required to read the Markdown and is not deleted during
+uninstall.
+
+The exact Codex Desktop run established one host limitation: uninstall
+immediately removed the installed-plugin registry entry, but the host retained
+an already-started stdio adapter and broker until Codex Desktop exited. App
+exit stopped the listener and process generation. The feature README and user
+guide therefore require a Codex Desktop restart after uninstall to guarantee
+process shutdown. The isolated staged lifecycle test continues to prove that
+closing stdio directly removes the broker descriptor, listener, and locks.
+Project Markdown remained intact through uninstall, exit, reinstall, and
+restart.
+
+## Automated evidence
+
+Environment: Node.js 20.19.0.
+
+- Strict typecheck: passed.
+- Editor/component suite: 411 tests passed.
+- Feature/stage/cleanup suite: 5 tests passed.
+- Broker/file/multi-process/concurrency/security/platform suite: 38 tests passed.
+- Official SDK source and self-contained staged-plugin suite: 3 tests passed.
+- Plugin validator: passed.
+- Skill validator: passed.
+- Stage and cleanup shell syntax checks: passed.
+- Deterministic hashes: passed across two builds.
+
+## Exact-app acceptance
+
+The side-by-side app at source commit
+`1281ef158e3fc7574ff35facd615b4a9a6ebb18c` listed, installed, started,
+uninstalled, and reinstalled the plugin through the actual Plugins UI in a
+disposable authenticated Codex home. The right-side production MCP App edited
+a disposable project file and restored its state after restart. Retained
+screenshots and the full build identity are in `wp-14-acceptance.md`. The stock
+application remained untouched.
