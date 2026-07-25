@@ -107,8 +107,9 @@ dist/
 
 The server bundle contains only the imported stdio MCP/Yjs graph. The current
 SDK's unused Hono/HTTP server path is absent from the staged runtime. The
-feature stage hook places the bundles, MIT license, and third-party notices
-beside the tracked plugin manifest, icon, and narrowly scoped agent skill.
+feature stage hook places the bundles, MIT license, third-party notices, and
+deterministic CycloneDX SBOM beside the tracked plugin manifest, icon, and
+narrowly scoped agent skill.
 
 When the last stdio adapter exits, it releases all of its document and UI
 leases. The last adapter causes the shared broker to flush/checkpoint open
@@ -170,8 +171,13 @@ normal plugin inventory. Run the plugin-creator validator against
 
 - The production plugin and CodeMirror application still need their final
   exact-app acceptance run after the owning feature branch is built.
-- Linux filesystem behavior is verified; macOS and Windows remain candidates
-  until their atomic-replace, watcher, and host-runtime matrices pass.
+- Linux is the only v1 support target and is verified under Node 20.19.0 and
+  24.15.0; exact side-by-side app acceptance is the remaining Linux gate.
+- macOS is an unpublished candidate. Its Node 20/24 CI jobs and official Codex
+  Desktop `26.721.31836` scenario run must pass before support is claimed.
+- Windows is build-only and fails fast with `PLATFORM_UNSUPPORTED`. V1 cannot
+  meet the atomic replacement invariant there without a reviewed
+  platform-specific replacement primitive.
 
 The durable requirements and acceptance matrix live in
 `.codex/work-packages.md`.

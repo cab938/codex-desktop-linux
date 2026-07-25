@@ -4153,7 +4153,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e0cb98957dca49d3d5e321d678b0d82577efe38003dca31320a553ce039dbb52"
+          "content": "cdf11a08d485bf8581077a91a8b25aa7858ef0aea2de8ef790f2540c589b8b08"
         }
       ],
       "properties": [
@@ -4163,7 +4163,7 @@
         },
         {
           "name": "codex:bytes",
-          "value": "373073"
+          "value": "373094"
         },
         {
           "name": "codex:self-contained-bundle",
@@ -4178,7 +4178,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ff28aa91bd194802ef629257ab9d88f9601781c443d7df573865b9824a0c999b"
+          "content": "511717eff9d44dcaf8e0c0c3ba3868e090547913c7b2e52e27cb0ded27fb2ce1"
         }
       ],
       "properties": [
@@ -4188,7 +4188,7 @@
         },
         {
           "name": "codex:bytes",
-          "value": "158174"
+          "value": "158589"
         },
         {
           "name": "codex:self-contained-bundle",

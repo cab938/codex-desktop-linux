@@ -14,25 +14,39 @@ export const UPDATE_LOG_BYTE_LIMIT = 8 * 1024 * 1024
 export const ADAPTER_LEASE_TTL_MS = 30_000
 export const DOCUMENT_IDLE_MS = 60_000
 
+export function assertSupportedRuntimePlatform(
+  platform = process.platform,
+) {
+  if (!['linux', 'darwin'].includes(platform)) {
+    throw new BrokerError(
+      'PLATFORM_UNSUPPORTED',
+      'Collaborative Markdown v1 supports Linux; macOS remains a candidate. ' +
+        'Windows atomic replacement is not supported.',
+    )
+  }
+  return platform
+}
+
 export function resolveStateRoot(options = {}) {
   const platform = options.platform ?? process.platform
   const environment = options.environment ?? process.env
   const userHome = options.userHome ?? os.homedir()
+  const pathApi = options.pathApi ?? path
   const override =
     options.override ??
     environment.CODEX_COLLABORATIVE_MARKDOWN_STATE_ROOT
 
-  if (override) return requireAbsoluteRoot(override, 'state override')
+  if (override) return requireAbsoluteRoot(override, 'state override', pathApi)
 
   if (platform === 'linux') {
     const xdg = environment.XDG_STATE_HOME
-    const base = xdg && path.isAbsolute(xdg)
+    const base = xdg && pathApi.isAbsolute(xdg)
       ? xdg
-      : path.join(userHome, '.local', 'state')
-    return path.join(base, 'codex', 'collaborative-markdown-editor')
+      : pathApi.join(userHome, '.local', 'state')
+    return pathApi.join(base, 'codex', 'collaborative-markdown-editor')
   }
   if (platform === 'darwin') {
-    return path.join(
+    return pathApi.join(
       userHome,
       'Library',
       'Application Support',
@@ -41,10 +55,12 @@ export function resolveStateRoot(options = {}) {
     )
   }
   if (platform === 'win32') {
-    const base = environment.LOCALAPPDATA && path.isAbsolute(environment.LOCALAPPDATA)
+    const base =
+      environment.LOCALAPPDATA &&
+      pathApi.isAbsolute(environment.LOCALAPPDATA)
       ? environment.LOCALAPPDATA
-      : path.join(userHome, 'AppData', 'Local')
-    return path.join(base, 'Codex', 'collaborative-markdown-editor')
+      : pathApi.join(userHome, 'AppData', 'Local')
+    return pathApi.join(base, 'Codex', 'collaborative-markdown-editor')
   }
   throw new BrokerError(
     'BROKER_UNAVAILABLE',
@@ -52,14 +68,14 @@ export function resolveStateRoot(options = {}) {
   )
 }
 
-function requireAbsoluteRoot(value, label) {
-  if (!path.isAbsolute(value)) {
+function requireAbsoluteRoot(value, label, pathApi = path) {
+  if (!pathApi.isAbsolute(value)) {
     throw new BrokerError(
       'BROKER_UNAVAILABLE',
       `The ${label} must be an absolute path.`,
     )
   }
-  return path.resolve(value)
+  return pathApi.resolve(value)
 }
 
 export async function ensurePrivateStateRoot(stateRoot) {

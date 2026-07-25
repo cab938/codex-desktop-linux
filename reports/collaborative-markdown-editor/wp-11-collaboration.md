@@ -95,7 +95,7 @@ Environment: Node.js 20.19.0.
 - Strict typecheck: passed.
 - Editor/component suite: 411 tests passed.
 - Feature/stage/cleanup suite: 5 tests passed.
-- Broker/file/concurrency suite: 30 tests passed.
+- Broker/file/concurrency/security/platform suite: 38 tests passed.
 - Official SDK source and self-contained staged-plugin suite: 3 tests passed.
 - Full `npm test`: passed.
 - `git diff --check`: passed.
@@ -105,8 +105,8 @@ The rebuilt production artifacts are:
 | File | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `dist/mcp/mcp-app.html` | 3,796,652 | `2eb7ae24ce1ace9451e8a76b7d18c9ebe3c784a8b28f8d2e22d6c716bed95819` |
-| `dist/plugin/server.mjs` | 373,073 | `e0cb98957dca49d3d5e321d678b0d82577efe38003dca31320a553ce039dbb52` |
-| `dist/plugin/broker.mjs` | 158,174 | `ff28aa91bd194802ef629257ab9d88f9601781c443d7df573865b9824a0c999b` |
+| `dist/plugin/server.mjs` | 373,094 | `cdf11a08d485bf8581077a91a8b25aa7858ef0aea2de8ef790f2540c589b8b08` |
+| `dist/plugin/broker.mjs` | 158,589 | `511717eff9d44dcaf8e0c0c3ba3868e090547913c7b2e52e27cb0ded27fb2ce1` |
 
 ## Remaining acceptance gate
 

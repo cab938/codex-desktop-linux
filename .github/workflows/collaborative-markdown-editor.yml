@@ -1,0 +1,85 @@
+name: Collaborative Markdown Editor Portability
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/collaborative-markdown-editor.yml"
+      - "linux-features/collaborative-markdown-editor/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/collaborative-markdown-editor.yml"
+      - "linux-features/collaborative-markdown-editor/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    name: ${{ matrix.label }} / Node ${{ matrix.node }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node: 20
+            script: test
+            label: Linux full acceptance
+          - os: ubuntu-latest
+            node: 24
+            script: test
+            label: Linux current runtime
+          - os: macos-latest
+            node: 20
+            script: test:portable
+            label: macOS plugin candidate
+          - os: macos-latest
+            node: 24
+            script: test:portable
+            label: macOS current runtime candidate
+          - os: windows-latest
+            node: 20
+            script: test:build-contract
+            label: Windows build-only
+          - os: windows-latest
+            node: 24
+            script: test:build-contract
+            label: Windows current runtime build-only
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: linux-features/collaborative-markdown-editor
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: >-
+            linux-features/collaborative-markdown-editor/package-lock.json
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run ${{ matrix.label }}
+        run: npm run ${{ matrix.script }}
+
+      - name: Record support tier
+        shell: bash
+        run: |
+          {
+            echo "## Collaborative Markdown Editor"
+            echo ""
+            echo "- Host: \`${{ matrix.os }}\`"
+            echo "- Node: \`${{ matrix.node }}\`"
+            echo "- Contract: \`${{ matrix.script }}\`"
+            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+              echo "- Windows is build-only: v1 does not claim atomic Markdown persistence."
+            else
+              echo "- This validates the plugin process, not installation in an official Codex Desktop build."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

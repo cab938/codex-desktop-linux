@@ -247,9 +247,13 @@ export async function readMarkdownFile(resolvedFile, options = {}) {
   }
 }
 
-export function documentIdentity(canonicalRoot, canonicalPath) {
-  const normalizedRoot = normalizeIdentityPath(canonicalRoot)
-  const normalizedPath = normalizeIdentityPath(canonicalPath)
+export function documentIdentity(
+  canonicalRoot,
+  canonicalPath,
+  platform = process.platform,
+) {
+  const normalizedRoot = normalizeIdentityPath(canonicalRoot, platform)
+  const normalizedPath = normalizeIdentityPath(canonicalPath, platform)
   const digest = crypto
     .createHash('sha256')
     .update(normalizedRoot)
@@ -259,10 +263,10 @@ export function documentIdentity(canonicalRoot, canonicalPath) {
   return `doc_v1_${digest}`
 }
 
-export function workspaceIdentity(canonicalRoot) {
+export function workspaceIdentity(canonicalRoot, platform = process.platform) {
   return `ws_v1_${crypto
     .createHash('sha256')
-    .update(normalizeIdentityPath(canonicalRoot))
+    .update(normalizeIdentityPath(canonicalRoot, platform))
     .digest('base64url')}`
 }
 
@@ -274,9 +278,11 @@ export function hashText(value) {
   return hashBytes(Buffer.from(value, 'utf8'))
 }
 
-function normalizeIdentityPath(value) {
+function normalizeIdentityPath(value, platform = process.platform) {
   const normalized = value.normalize('NFC')
-  return process.platform === 'win32' ? normalized.toLocaleLowerCase('en-US') : normalized
+  return platform === 'win32'
+    ? normalized.toLocaleLowerCase('en-US')
+    : normalized
 }
 
 function comparablePath(value) {

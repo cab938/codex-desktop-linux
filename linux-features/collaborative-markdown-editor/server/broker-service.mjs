@@ -4,6 +4,7 @@ import http from 'node:http'
 import path from 'node:path'
 import {
   BROKER_PROTOCOL_VERSION,
+  assertSupportedRuntimePlatform,
   ensurePrivateStateRoot,
 } from './config.mjs'
 import { DocumentRegistry } from './document-registry.mjs'
@@ -15,6 +16,7 @@ const REQUEST_BYTES_LIMIT = 1024 * 1024
 
 export class BrokerService {
   constructor(options) {
+    assertSupportedRuntimePlatform(options.platform ?? process.platform)
     this.stateRoot = options.stateRoot
     this.host = options.host ?? '127.0.0.1'
     assertBroker(

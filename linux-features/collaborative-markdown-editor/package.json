@@ -20,6 +20,8 @@
     "test:server": "node --test ./server/test/*.test.mjs",
     "test:mcp": "npm run build:plugin && node --test ./mcp/test.mjs ./mcp/*.test.mjs",
     "test:sbom": "npm run build:plugin && npm run sbom && node --test ./scripts/sbom.test.mjs",
+    "test:portable": "npm run typecheck && npm run test:unit && npm run test:server && npm run test:mcp && npm run test:sbom",
+    "test:build-contract": "npm run typecheck && npm run test:unit && npm run build:plugin && npm run sbom && node --test ./server/test/platform.test.mjs ./scripts/sbom.test.mjs",
     "test": "npm run typecheck && npm run test:unit && npm run test:feature && npm run test:server && npm run test:mcp && npm run test:sbom",
     "clean": "node ./scripts/lifecycle.mjs clean"
   },

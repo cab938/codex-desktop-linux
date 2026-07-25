@@ -1583,9 +1583,10 @@ function validateYUpdateResult(currentDoc, update) {
       `Markdown content may not exceed ${MAX_FILE_BYTES} UTF-8 bytes.`,
     )
     assertBroker(
-      !probe.getText('content').toString().includes('\r'),
+      !probe.getText('content').toString().includes('\r') &&
+        !hasIsolatedSurrogate(probe.getText('content').toString()),
       'INVALID_ARGUMENT',
-      'A UI update must use normalized LF line endings.',
+      'A UI update must contain valid Unicode with normalized LF line endings.',
     )
   } catch (error) {
     if (error instanceof BrokerError) throw error
