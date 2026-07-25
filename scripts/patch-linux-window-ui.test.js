@@ -7045,6 +7045,7 @@ test("trusts a private resources boundary only for side-by-side development iden
     "collaborative-markdown-editor",
   );
   const sourceManifest = path.join(sourcePlugin, ".codex-plugin", "plugin.json");
+  const codexHome = path.join(checkoutRoot, "codex-home");
   const defaultTarget = path.join(root, "default-target");
   const developmentTarget = path.join(root, "development-target");
 
@@ -7062,6 +7063,7 @@ test("trusts a private resources boundary only for side-by-side development iden
       if (candidate === resourcesPath) break;
     }
     fs.chmodSync(checkoutRoot, 0o775);
+    fs.mkdirSync(codexHome, { mode: 0o700 });
 
     const defaultCopyPlugin = new Function(
       "process",
@@ -7092,6 +7094,7 @@ test("trusts a private resources boundary only for side-by-side development iden
         env: {
           ...process.env,
           CODEX_LINUX_APP_ID: "codex-desktop-linux-dev",
+          CODEX_HOME: codexHome,
         },
         platform: "linux",
         resourcesPath,
@@ -7102,6 +7105,47 @@ test("trusts a private resources boundary only for side-by-side development iden
     assert.equal(
       fs.readFileSync(
         path.join(developmentTarget, ".codex-plugin", "plugin.json"),
+        "utf8",
+      ),
+      '{"name":"collaborative-markdown-editor"}\n',
+    );
+
+    const materializePlugin = new Function(
+      "process",
+      "require",
+      `${patched};return Ac;`,
+    )(
+      {
+        ...process,
+        env: {
+          ...process.env,
+          CODEX_LINUX_APP_ID: "codex-desktop-linux-dev",
+          CODEX_HOME: codexHome,
+        },
+        platform: "linux",
+        resourcesPath,
+      },
+      require,
+    );
+    const stagingRoot = await materializePlugin({
+      sourcePlugin,
+      targetMarketplaceRoot: path.join(
+        codexHome,
+        ".tmp",
+        "bundled-marketplaces",
+        "openai-bundled",
+      ),
+    });
+    assert.equal(fs.statSync(stagingRoot).mode & 0o777, 0o700);
+    assert.equal(
+      fs.readFileSync(
+        path.join(
+          stagingRoot,
+          "plugins",
+          "chrome",
+          ".codex-plugin",
+          "plugin.json",
+        ),
         "utf8",
       ),
       '{"name":"collaborative-markdown-editor"}\n',
