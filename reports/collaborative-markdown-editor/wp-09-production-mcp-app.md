@@ -2,9 +2,7 @@
 
 Date: 2026-07-24
 
-Status: implementation and automated component acceptance complete; the
-package-installed Codex Desktop inspection remains intentionally gated on
-WP-10.
+Status: complete, including package-installed Codex Desktop inspection.
 
 ## Outcome
 
@@ -122,11 +120,12 @@ Environment: Node.js 20.19.0.
 The jsdom environment emits its known `HTMLCanvasElement.getContext` warning
 for CodeMirror measurement. It does not fail or skip any test.
 
-## Remaining acceptance gate
+## Exact-app acceptance
 
-WP-09 stays open until WP-10 creates the final staged plugin and the exact
-side-by-side Codex Desktop development application renders this production
-resource. That inspection must cover both compact and maximized layouts,
-keyboard interaction, human edits reaching the file, agent edits reaching the
-open UI without remounting, and a visible broker-generation recovery. The
-stock Codex installation remains out of scope.
+The final staged resource rendered in compact and maximized right-side tabs in
+the exact side-by-side app. A keyboard-driven human edit reached **Saved to
+Markdown**, accepted agent transactions appeared without remounting, an
+external file write appeared live, two UI instances converged with awareness,
+and restart restored the current document generation. Inspected screenshots
+and the full scenario map are retained in `wp-14-acceptance.md`. The stock
+Codex installation remained untouched.

@@ -2,9 +2,8 @@
 
 Date: 2026-07-24
 
-Status: implementation and deterministic concurrency acceptance complete; the
-exact Codex Desktop multi-task demonstration remains gated on the side-by-side
-development rebuild.
+Status: complete for Linux v1, including exact Codex Desktop two-UI and
+two-task convergence.
 
 ## Agent workflow contract
 
@@ -108,10 +107,13 @@ The rebuilt production artifacts are:
 | `dist/plugin/server.mjs` | 373,094 | `cdf11a08d485bf8581077a91a8b25aa7858ef0aea2de8ef790f2540c589b8b08` |
 | `dist/plugin/broker.mjs` | 158,589 | `511717eff9d44dcaf8e0c0c3ba3868e090547913c7b2e52e27cb0ded27fb2ce1` |
 
-## Remaining acceptance gate
+## Exact-app acceptance
 
-The WP-11 parent remains open until the exact side-by-side development app
-demonstrates two rendered UI instances and two Codex tasks against the staged
-production plugin. That retained actual-app run must show convergence and
-attributed agent presence on private Xvfb. The automated concurrency contract
-is complete.
+The side-by-side app rendered two production editor tabs against the same
+document. Both displayed two awareness entries and converged on revision 7
+after an edit from the second instance. A distinct Codex task then submitted
+and durably flushed revision 8; the maximized editor showed both task-authored
+lines exactly once without remounting the document. Evidence is retained in
+`wp-14/screenshots/07-two-ui-convergence-compact.png`,
+`wp-14/screenshots/08-second-agent-task.png`, and
+`wp-14/screenshots/09-two-task-convergence-maximized.png`.

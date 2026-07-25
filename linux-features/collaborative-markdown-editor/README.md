@@ -129,6 +129,15 @@ Removing the plugin does not remove any workspace Markdown file. Plugin-private
 recovery state remains in the platform-native state directory unless the user
 chooses to remove it separately.
 
+The current Codex Desktop host unregisters an uninstalled plugin immediately
+but may keep an already-started stdio server alive until the desktop
+application exits. After uninstalling, close and restart Codex Desktop to
+guarantee that the old adapter and broker generation have stopped. This is a
+host lifecycle limitation rather than a file-retention dependency: the
+Markdown file remains ordinary project data throughout. Automated staged
+plugin tests additionally prove that closing stdio directly stops the last
+adapter, broker, listener, and document locks.
+
 ## Lifecycle commands
 
 The shell has dependency-free, deterministic lifecycle commands:
@@ -178,12 +187,63 @@ disposable `CODEX_HOME` during development so tests do not modify the user's
 normal plugin inventory. Run the plugin-creator validator against
 `plugin-marketplace/plugins/collaborative-markdown-editor` before testing.
 
-## Current risks and gates
+## Using the editor
 
-- The production plugin and CodeMirror application still need their final
-  exact-app acceptance run after the owning feature branch is built.
-- Linux is the only v1 support target and is verified under Node 20.19.0 and
-  24.15.0; exact side-by-side app acceptance is the remaining Linux gate.
+1. Open **Plugins**, search for **Collaborative Markdown Editor**, and install
+   it. Start a new task if the task predates installation.
+2. Ask Codex to open an explicit project-relative Markdown path with the
+   collaborative editor. The `markdown_render` call opens the editor as a
+   persistent right-side tab.
+3. For a workspace root that has not been used before, approve the exact
+   canonical root in the editor. Model-facing tools cannot grant this access.
+4. Edit normally. **Saved to Markdown** means the displayed revision has
+   reached the project file. Codex can use `markdown_read`,
+   `markdown_apply_edits`, and `markdown_flush` against the same document.
+5. External editors and Git safe-write replacements remain supported. A safe
+   change appears in the open editor; an ambiguous overlap becomes a visible
+   read-only conflict instead of overwriting either candidate.
+
+`markdown_create` creates a new `.md` or `.markdown` file under an already
+approved root. The remaining model-facing operations are `markdown_open`,
+`markdown_read`, `markdown_apply_edits`, `markdown_status`, `markdown_flush`,
+`markdown_close`, and `markdown_render`. The five `markdown_ui_*` operations
+are app-only synchronization and authorization calls and should not be invoked
+as ordinary agent workflow.
+
+The tested maximum is 2 MiB of UTF-8 Markdown. Files larger than that are
+rejected before mutation. The editor preserves the source Markdown rather than
+converting it to a proprietary document format.
+
+## Conflicts and recovery
+
+- **Stale revision:** read the current revision, deliberately rebase the
+  intended edit, and submit it with a new idempotency key.
+- **External conflict:** stop editing, retain the conflict candidates in the
+  private state directory, resolve the ordinary Markdown file deliberately,
+  then reconnect. The broker never silently chooses an ambiguous rewrite.
+- **Disconnected or stale generation:** use **Reconnect**. A broker-generation
+  change rebuilds the client `Y.Doc` from the authoritative server state.
+- **Deleted or renamed file:** restore or deliberately recreate the project
+  path before reopening it. An open session does not silently resurrect it.
+- **Plugin does not appear in an old task:** install it, then create a new task
+  or restart Codex Desktop so the task receives the current plugin inventory.
+- **Uninstall still has an old process:** close and restart Codex Desktop. The
+  current host can retain an already-started stdio server until app exit.
+
+## Maintainer verification
+
+From this feature directory, run `npm ci` and `npm test`. The owning branch
+must then be built only as the side-by-side identity documented in the
+repository `AGENTS.md`, and the exact launcher must be inspected on the private
+Xvfb display. Detailed architecture, protocol, security, license, portability,
+and acceptance evidence is retained under
+`reports/collaborative-markdown-editor/`; `UPSTREAM.md` is the donor update
+guide and `THIRD_PARTY_NOTICES.md` is the shipped notice source.
+
+## Support scope
+
+- Linux is the only v1 support target. It is verified under Node 20.19.0 and
+  24.15.0 and in the side-by-side Codex Desktop Linux development app.
 - macOS is an unpublished candidate. Its Node 20/24 CI jobs and official Codex
   Desktop `26.721.31836` scenario run must pass before support is claimed.
 - Windows is build-only and fails fast with `PLATFORM_UNSUPPORTED`. V1 cannot

@@ -2,9 +2,8 @@
 
 Date: 2026-07-24
 
-Status: package implementation and isolated lifecycle acceptance complete; the
-exact Codex Desktop install remains gated on the side-by-side development
-rebuild.
+Status: complete for Linux v1, including exact Codex Desktop install,
+uninstall, and reinstall acceptance.
 
 ## Package shape
 
@@ -65,8 +64,10 @@ no Hono or HTTP static-file server.
 
 ## Linux feature staging
 
-The feature remains disabled by default and adds no ASAR patch, runtime hook,
-or package hook.
+The feature remains disabled by default and adds one narrowly scoped
+required-upstream patch descriptor, no runtime hook, and no package hook. The
+descriptor adds this disabled bundled plugin to the current host eligibility
+list; it does not install or enable the plugin.
 
 - One declarative resource copies the tracked plugin source into the app's
   existing `openai-bundled` plugin tree.
@@ -107,6 +108,16 @@ Plugin-private recovery state intentionally remains in the platform-native
 state root. It is not required to read the Markdown and is not deleted during
 uninstall.
 
+The exact Codex Desktop run established one host limitation: uninstall
+immediately removed the installed-plugin registry entry, but the host retained
+an already-started stdio adapter and broker until Codex Desktop exited. App
+exit stopped the listener and process generation. The feature README and user
+guide therefore require a Codex Desktop restart after uninstall to guarantee
+process shutdown. The isolated staged lifecycle test continues to prove that
+closing stdio directly removes the broker descriptor, listener, and locks.
+Project Markdown remained intact through uninstall, exit, reinstall, and
+restart.
+
 ## Automated evidence
 
 Environment: Node.js 20.19.0.
@@ -121,11 +132,12 @@ Environment: Node.js 20.19.0.
 - Stage and cleanup shell syntax checks: passed.
 - Deterministic hashes: passed across two builds.
 
-## Remaining acceptance gate
+## Exact-app acceptance
 
-The WP-10 parent remains open until the exact side-by-side development app is
-rebuilt with the feature enabled, its `build-info.json` is verified, and a
-disposable Codex home installs/starts the staged plugin through the real
-marketplace UI or CLI. That run also closes the remaining WP-08 and WP-09 host
-gates. It must use the authenticated private Xvfb harness and must not touch the
-stock application.
+The side-by-side app at source commit
+`1281ef158e3fc7574ff35facd615b4a9a6ebb18c` listed, installed, started,
+uninstalled, and reinstalled the plugin through the actual Plugins UI in a
+disposable authenticated Codex home. The right-side production MCP App edited
+a disposable project file and restored its state after restart. Retained
+screenshots and the full build identity are in `wp-14-acceptance.md`. The stock
+application remained untouched.

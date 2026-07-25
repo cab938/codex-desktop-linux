@@ -1,8 +1,7 @@
 # WP-08 — MCP document tools and UI resource
 
-Status: implementation and equivalent protocol-harness verification complete
-on 2026-07-24; exact Codex Desktop acceptance remains open until the production
-WP-09 UI and WP-10 staged plugin exist.
+Status: complete on 2026-07-24, including official-SDK protocol verification
+and exact Codex Desktop production-plugin acceptance.
 
 ## Registered contract
 
@@ -120,13 +119,14 @@ bundle only the reachable stdio graph and prove the vulnerable package/code is
 absent from the staged runtime before release; a source-tree audit result is
 not being mislabeled as zero vulnerabilities.
 
-## Remaining acceptance
+## Exact-app acceptance
 
-WP-02 and WP-03 already prove that this exact Codex Desktop host starts an
-installed stdio plugin, reads a versioned resource, invokes app-only bridge
-tools, and maps an app `fullscreen` request to the desired right-side tab.
-They do not prove this new production server binary. The WP-08 parent remains
-open until WP-09 replaces the protocol shell with the production CodeMirror
-client, WP-10 stages the installable plugin, and the exact side-by-side Codex
-app invokes every applicable production path through the private Xvfb
-harness. This is one named acceptance gate, not an implementation gap.
+The production server binary was installed and started through the actual
+Plugins UI in the side-by-side Codex Desktop app. A Codex task invoked
+`markdown_render`, `markdown_read`, `markdown_apply_edits`, and
+`markdown_flush`; a second task repeated the revision-aware edit path. The
+right-side resource, human synchronization, external-file import, restart,
+uninstall, and reinstall paths all passed on private Xvfb. The remaining tool
+schemas and negative paths are covered by the official-SDK source and staged
+plugin harness. The exact build identity, performance measurements, and
+retained screenshots are in `wp-14-acceptance.md`.
