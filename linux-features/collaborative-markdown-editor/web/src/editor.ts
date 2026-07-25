@@ -58,6 +58,7 @@ export function createMarkdownEditor(options: MarkdownEditorOptions): MarkdownEd
   const undoManager = options.undoManager ?? new Y.UndoManager(options.ytext)
   const ownsUndoManager = options.undoManager === undefined
   let previewEnabled = options.livePreview ?? true
+  let readOnlyEnabled = options.readOnly ?? false
   let destroyed = false
 
   const previewExtension = (): Extension =>
@@ -76,7 +77,7 @@ export function createMarkdownEditor(options: MarkdownEditorOptions): MarkdownEd
         markdownTab(),
         previewCompartment.of(previewExtension()),
         readOnlyCompartment.of(
-          EditorState.readOnly.of(options.readOnly ?? false),
+          EditorState.readOnly.of(readOnlyEnabled),
         ),
         glyphdownCollab(
           options.ytext,
@@ -102,7 +103,8 @@ export function createMarkdownEditor(options: MarkdownEditorOptions): MarkdownEd
       })
     },
     setReadOnly(enabled: boolean) {
-      if (destroyed) return
+      if (destroyed || readOnlyEnabled === enabled) return
+      readOnlyEnabled = enabled
       view.dispatch({
         effects: readOnlyCompartment.reconfigure(
           EditorState.readOnly.of(enabled),

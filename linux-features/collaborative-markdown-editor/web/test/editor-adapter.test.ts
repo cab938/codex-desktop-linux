@@ -62,6 +62,22 @@ describe('one-Y.Text editor adapter', () => {
     editor.destroy()
   })
 
+  it('keeps Yjs collaboration active when a document observer refreshes unchanged UI state', () => {
+    const { ydoc, ytext, editor } = mount('hello')
+    ydoc.on('update', () => editor.setReadOnly(false))
+    editor.view.dispatch({
+      changes: { from: 5, insert: ' human' },
+      userEvent: 'input.type',
+    })
+    editor.view.dispatch({
+      changes: { from: 11, insert: '!' },
+      userEvent: 'input.type',
+    })
+    expect(ytext.toString()).toBe('hello human!')
+    expect(editor.view.state.doc.toString()).toBe('hello human!')
+    editor.destroy()
+  })
+
   it('renders remote Yjs transactions without a second view model', () => {
     const { ydoc, ytext, editor } = mount('hello')
     ydoc.transact(() => ytext.insert(0, 'agent: '), 'test-agent')
