@@ -20,6 +20,7 @@ const featureId = "collaborative-markdown-editor";
 const lifecycleScript = path.join(featureRoot, "scripts", "lifecycle.mjs");
 const stageScript = path.join(featureRoot, "stage.sh");
 const cleanupScript = path.join(featureRoot, "cleanup.sh");
+const patchModule = require("./patch.js");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -61,7 +62,13 @@ function makeIsolatedFeaturesRoot() {
     `${JSON.stringify({ enabled: [featureId] }, null, 2)}\n`,
   );
   fs.mkdirSync(path.join(root, featureId), { recursive: true });
-  for (const fileName of ["feature.json", "README.md", "stage.sh", "cleanup.sh"]) {
+  for (const fileName of [
+    "feature.json",
+    "README.md",
+    "patch.js",
+    "stage.sh",
+    "cleanup.sh",
+  ]) {
     fs.copyFileSync(path.join(featureRoot, fileName), path.join(root, featureId, fileName));
   }
   fs.cpSync(
@@ -79,7 +86,7 @@ test("manifest remains disabled and stages only the packaged plugin", () => {
   assert.deepEqual(manifest.requires, []);
   assert.deepEqual(manifest.conflicts, []);
 
-  assert.equal(manifest.entrypoints.patchDescriptors, undefined);
+  assert.equal(manifest.entrypoints.patchDescriptors, "./patch.js");
   assert.equal(manifest.entrypoints.stageHook, "./stage.sh");
   assert.equal(manifest.entrypoints.cleanupHook, "./cleanup.sh");
   assert.deepEqual(manifest.resources, [{
@@ -104,7 +111,7 @@ test("repository feature discovery finds the shell and required README", () => {
   assert.equal(fs.existsSync(feature.readmePath), true);
 });
 
-test("enabled feature has one declarative plugin resource and no patch plan", () => {
+test("enabled feature has one plugin resource and one required gate patch", () => {
   const root = makeIsolatedFeaturesRoot();
   try {
     const installPlan = enabledLinuxFeatureInstallPlan({ featuresRoot: root });
@@ -116,10 +123,49 @@ test("enabled feature has one declarative plugin resource and no patch plan", ()
     assert.deepEqual(installPlan.runtimeHooks, []);
     assert.equal(enabledLinuxFeatureStageHooks({ featuresRoot: root }).length, 1);
     assert.deepEqual(enabledLinuxFeaturePackageHooks({ featuresRoot: root }), []);
-    assert.deepEqual(loadLinuxFeaturePatchDescriptors({ featuresRoot: root }), []);
+    const descriptors = loadLinuxFeaturePatchDescriptors({
+      featuresRoot: root,
+    });
+    assert.equal(descriptors.length, 1);
+    assert.equal(
+      descriptors[0].id,
+      "feature:collaborative-markdown-editor:" +
+        "collaborative-markdown-editor-plugin-gate",
+    );
+    assert.equal(descriptors[0].ciPolicy, "required-upstream");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("plugin gate makes the editor available on Linux without auto-installing it", () => {
+  const source = [
+    "var n={bc:e=>e,_c:`sites`,lc:`browser`,uc:`chrome-internal`,fc:`computer-use`,gc:`record-and-replay`,mc:`latex-tectonic`,hc:`plugin-eval`,pc:`deep-research`,vc:`visualize`};",
+    "var Xo=[{autoInstallOptOutKey:n.bc(n._c),installWhenMissing:!0,name:n._c,isAvailable:({features:e})=>e.sites},{autoInstallOptOutKey:n.bc(n.lc),installWhenMissing:!0,name:n.lc,isAvailable:({features:e})=>e.inAppBrowserUseAllowed},{autoInstallOptOutKey:n.bc(n.fc),installWhenMissing:!0,name:n.fc,isAvailable:({features:e,platform:t})=>t===`linux`||t===`darwin`&&e.computerUse},{name:n.gc,isAvailable:({features:e,platform:t})=>t===`darwin`&&e.recordAndReplay},{name:n.mc,isAvailable:()=>!0},{installWhenMissing:!0,name:n.pc,isAvailable:({features:e})=>e.deepResearch},{installWhenMissing:!0,name:n.vc,isAvailable:({features:e})=>e.visualize}];",
+  ].join("");
+  const patched = patchModule.applyCollaborativeMarkdownPluginGate(source);
+  assert.match(
+    patched,
+    /\{name:`collaborative-markdown-editor`,isAvailable:\(\{platform:e\}\)=>e===`linux`\},\{name:n\.mc,isAvailable:\(\)=>!0\}/,
+  );
+  assert.doesNotMatch(
+    patched,
+    /installWhenMissing:!0,name:`collaborative-markdown-editor`/,
+  );
+  assert.equal(
+    patchModule.applyCollaborativeMarkdownPluginGate(patched),
+    patched,
+  );
+});
+
+test("plugin gate fails required-upstream when a recognizable bundle drifts", () => {
+  assert.throws(
+    () =>
+      patchModule.applyCollaborativeMarkdownPluginGate(
+        "function drift(e){return e.computerUse}",
+      ),
+    /could not find bundled plugin descriptor array/,
+  );
 });
 
 test("build and stage are deterministic and clean is feature-scoped", () => {

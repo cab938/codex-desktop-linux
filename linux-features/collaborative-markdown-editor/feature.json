@@ -6,6 +6,7 @@
   "requires": [],
   "conflicts": [],
   "entrypoints": {
+    "patchDescriptors": "./patch.js",
     "stageHook": "./stage.sh",
     "cleanupHook": "./cleanup.sh"
   },

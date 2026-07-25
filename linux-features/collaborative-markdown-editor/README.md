@@ -6,10 +6,13 @@ workspace Markdown file through a shared Yjs document.
 
 The Codex host and transport gates have passed. The feature packages a
 production MCP App, pure-JavaScript MCP adapter, and attachable per-user
-document broker as an installable Codex plugin. It needs no ASAR patch or
-platform-specific native module. The feature uses one declarative plugin
-resource plus small stage/cleanup hooks for deterministic generated bundles
-and the existing bundled marketplace catalog.
+document broker as an installable Codex plugin. It needs no platform-specific
+native module. The feature uses one narrow, required-upstream ASAR descriptor
+to add its disabled-by-default plugin to the host's bundled-plugin eligibility
+list, one declarative plugin resource, and small stage/cleanup hooks for
+deterministic generated bundles and the existing bundled marketplace catalog.
+The descriptor makes the plugin available on Linux but deliberately does not
+auto-install it.
 
 ## Scope
 
