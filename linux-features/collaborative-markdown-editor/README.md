@@ -46,6 +46,14 @@ recovery log, and document lock. Independent adapter processes discover it
 through a mode-0600 descriptor and authenticate with its private bearer.
 Iframe code never receives that endpoint or bearer.
 
+The broker prefers the platform-native user state directory. If the Codex
+sandbox denies that default directory, and only when no explicit state-root
+override was supplied, it falls back to the deterministic mode-0700
+`/tmp/codex-collaborative-markdown-editor-<uid>` runtime directory. That
+fallback preserves recovery across app and broker restarts in the same boot
+but is not a reboot-persistent store. An explicit, unsafe, or malformed state
+root always fails closed instead of falling back.
+
 Workspace roots are persisted only after an app-only proposal and explicit
 confirmation exchange. Model-facing document calls cannot approve a root.
 Every Markdown path is root-relative and is checked for canonical containment,

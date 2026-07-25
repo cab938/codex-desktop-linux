@@ -5,7 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   BROKER_PROTOCOL_VERSION,
-  ensurePrivateStateRoot,
+  ensureBrokerStateRoot,
   resolveStateRoot,
 } from './config.mjs'
 import { BrokerError, assertBroker } from './errors.mjs'
@@ -20,6 +20,9 @@ const MAIN_PATH = fileURLToPath(
 export class BrokerClient {
   constructor(options = {}) {
     this.stateRoot = resolveStateRoot({ override: options.stateRoot })
+    this.stateRootExplicit = options.stateRoot != null
+    this.statePersistence = 'platform_state'
+    this.stateRootReady = false
     this.adapterId =
       options.adapterId ?? crypto.randomBytes(24).toString('base64url')
     this.spawnBroker = options.spawnBroker ?? defaultSpawnBroker
@@ -27,7 +30,15 @@ export class BrokerClient {
   }
 
   async ensure(options = {}) {
-    await ensurePrivateStateRoot(this.stateRoot)
+    if (!this.stateRootReady) {
+      const resolved = await ensureBrokerStateRoot({
+        preferredRoot: this.stateRoot,
+        allowRuntimeFallback: !this.stateRootExplicit,
+      })
+      this.stateRoot = resolved.path
+      this.statePersistence = resolved.persistence
+      this.stateRootReady = true
+    }
     const deadline = Date.now() + (options.timeoutMs ?? 5_000)
     const excludedGeneration = options.excludeGeneration
     let spawned = false

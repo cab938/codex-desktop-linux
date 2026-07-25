@@ -6986,7 +6986,10 @@ test("materializes trusted Linux bundled plugins through a private staging root"
       "process",
       "require",
       `${patched};return Ac;`,
-    )({ ...process, platform: "linux" }, require);
+    )(
+      { ...process, platform: "linux" },
+      linuxBundledPluginTestRequire,
+    );
     const stagingRoot = await materializePlugin({ sourcePlugin, targetMarketplaceRoot });
     const targetPlugin = path.join(stagingRoot, "plugins", "chrome");
     const targetManifest = path.join(targetPlugin, ".codex-plugin", "plugin.json");
@@ -7025,6 +7028,123 @@ test("applies the Linux bundled plugin trust patch atomically", () => {
     withoutPluginParentMkdir,
   );
 });
+
+test("trusts a private resources boundary only for side-by-side development identities", async () => {
+  const patched = applyPatchTwice(
+    applyLinuxBundledPluginCopyPermissionsPatch,
+    currentBundledPluginCopyBundleFixture(),
+  );
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "codex-bundled-plugin-dev-boundary-"));
+  const checkoutRoot = path.join(root, "group-writable-checkout");
+  const resourcesPath = path.join(checkoutRoot, "app", "resources");
+  const sourcePlugin = path.join(
+    resourcesPath,
+    "plugins",
+    "openai-bundled",
+    "plugins",
+    "collaborative-markdown-editor",
+  );
+  const sourceManifest = path.join(sourcePlugin, ".codex-plugin", "plugin.json");
+  const defaultTarget = path.join(root, "default-target");
+  const developmentTarget = path.join(root, "development-target");
+
+  try {
+    fs.mkdirSync(path.dirname(sourceManifest), { recursive: true });
+    fs.writeFileSync(sourceManifest, '{"name":"collaborative-markdown-editor"}\n');
+    fs.chmodSync(sourceManifest, 0o644);
+    fs.chmodSync(path.dirname(sourceManifest), 0o755);
+    for (
+      let candidate = sourcePlugin;
+      ;
+      candidate = path.dirname(candidate)
+    ) {
+      fs.chmodSync(candidate, 0o755);
+      if (candidate === resourcesPath) break;
+    }
+    fs.chmodSync(checkoutRoot, 0o775);
+
+    const defaultCopyPlugin = new Function(
+      "process",
+      "require",
+      `${patched};return fl;`,
+    )(
+      {
+        ...process,
+        env: { ...process.env, CODEX_LINUX_APP_ID: "codex-desktop" },
+        platform: "linux",
+        resourcesPath,
+      },
+      require,
+    );
+    await assert.rejects(
+      defaultCopyPlugin(sourcePlugin, defaultTarget),
+      /not trusted/,
+    );
+    assert.equal(fs.existsSync(defaultTarget), false);
+
+    const developmentCopyPlugin = new Function(
+      "process",
+      "require",
+      `${patched};return fl;`,
+    )(
+      {
+        ...process,
+        env: {
+          ...process.env,
+          CODEX_LINUX_APP_ID: "codex-desktop-linux-dev",
+        },
+        platform: "linux",
+        resourcesPath,
+      },
+      require,
+    );
+    await developmentCopyPlugin(sourcePlugin, developmentTarget);
+    assert.equal(
+      fs.readFileSync(
+        path.join(developmentTarget, ".codex-plugin", "plugin.json"),
+        "utf8",
+      ),
+      '{"name":"collaborative-markdown-editor"}\n',
+    );
+
+    fs.chmodSync(sourceManifest, 0o664);
+    await assert.rejects(
+      developmentCopyPlugin(sourcePlugin, path.join(root, "tampered-target")),
+      /not trusted/,
+    );
+  } finally {
+    fs.chmodSync(checkoutRoot, 0o755);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+function linuxBundledPluginTestRequire(moduleName) {
+  if (
+    moduleName !== "node:fs/promises" ||
+    fs.lstatSync(path.parse(process.cwd()).root).uid !== 65534
+  ) {
+    return require(moduleName);
+  }
+  const fsPromises = require(moduleName);
+  return new Proxy(fsPromises, {
+    get(target, property) {
+      if (property !== "lstat") return Reflect.get(target, property);
+      return async (candidate, ...args) => {
+        const stats = await target.lstat(candidate, ...args);
+        if (stats.uid !== 65534) return stats;
+        return new Proxy(stats, {
+          get(statTarget, statProperty) {
+            if (statProperty === "uid") return 0;
+            const value = Reflect.get(statTarget, statProperty);
+            return typeof value === "function"
+              ? value.bind(statTarget)
+              : value;
+          },
+        });
+      };
+    },
+  });
+}
 
 test("rejects an untrusted Linux bundled plugin before copying it", async () => {
   const patched = applyPatchTwice(

@@ -68,6 +68,41 @@ export function resolveStateRoot(options = {}) {
   )
 }
 
+export async function ensureBrokerStateRoot(options = {}) {
+  const preferredRoot =
+    options.preferredRoot ?? resolveStateRoot(options)
+  const ensureRoot = options.ensureRoot ?? ensurePrivateStateRoot
+  try {
+    await ensureRoot(preferredRoot)
+    return {
+      path: preferredRoot,
+      persistence: 'platform_state',
+    }
+  } catch (error) {
+    if (
+      options.allowRuntimeFallback === false ||
+      !['EACCES', 'ENOENT', 'EPERM', 'EROFS'].includes(error?.code)
+    ) {
+      throw error
+    }
+  }
+
+  const temporaryRoot =
+    options.temporaryRoot ?? os.tmpdir()
+  const userId =
+    options.userId ??
+    (typeof process.getuid === 'function' ? process.getuid() : 'user')
+  const runtimeRoot = path.join(
+    temporaryRoot,
+    `codex-collaborative-markdown-editor-${userId}`,
+  )
+  await ensureRoot(runtimeRoot)
+  return {
+    path: runtimeRoot,
+    persistence: 'runtime',
+  }
+}
+
 function requireAbsoluteRoot(value, label, pathApi = path) {
   if (!pathApi.isAbsolute(value)) {
     throw new BrokerError(
@@ -81,7 +116,28 @@ function requireAbsoluteRoot(value, label, pathApi = path) {
 export async function ensurePrivateStateRoot(stateRoot) {
   await fs.mkdir(stateRoot, { recursive: true, mode: 0o700 })
   if (process.platform !== 'win32') {
+    const initial = await fs.lstat(stateRoot)
+    if (
+      initial.isSymbolicLink() ||
+      !initial.isDirectory() ||
+      (
+        typeof process.geteuid === 'function' &&
+        initial.uid !== process.geteuid()
+      )
+    ) {
+      throw new BrokerError(
+        'BROKER_UNAVAILABLE',
+        'The collaborative Markdown state root is not private.',
+      )
+    }
     await fs.chmod(stateRoot, 0o700)
+    const hardened = await fs.lstat(stateRoot)
+    if ((hardened.mode & 0o777) !== 0o700) {
+      throw new BrokerError(
+        'BROKER_UNAVAILABLE',
+        'The collaborative Markdown state root is not private.',
+      )
+    }
   }
   return stateRoot
 }

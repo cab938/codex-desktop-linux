@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import {
   assertSupportedRuntimePlatform,
+  ensureBrokerStateRoot,
+  ensurePrivateStateRoot,
   resolveStateRoot,
 } from '../config.mjs'
 import {
@@ -51,6 +55,73 @@ test('runtime support fails closed outside verified atomic-replace families', ()
   assert.throws(
     () => assertSupportedRuntimePlatform('win32'),
     { code: 'PLATFORM_UNSUPPORTED' },
+  )
+})
+
+test('sandboxed runtimes fall back to a deterministic user-private runtime root', async () => {
+  const calls = []
+  const resolved = await ensureBrokerStateRoot({
+    preferredRoot: '/state/codex/collaborative-markdown-editor',
+    temporaryRoot: '/tmp',
+    userId: 1234,
+    ensureRoot: async (candidate) => {
+      calls.push(candidate)
+      if (calls.length === 1) {
+        const error = new Error('read-only platform state')
+        error.code = 'EROFS'
+        throw error
+      }
+    },
+  })
+  assert.deepEqual(resolved, {
+    path: '/tmp/codex-collaborative-markdown-editor-1234',
+    persistence: 'runtime',
+  })
+  assert.deepEqual(calls, [
+    '/state/codex/collaborative-markdown-editor',
+    '/tmp/codex-collaborative-markdown-editor-1234',
+  ])
+})
+
+test('explicit or unsafe state roots fail closed instead of falling back', async () => {
+  await assert.rejects(
+    ensureBrokerStateRoot({
+      preferredRoot: '/state/explicit',
+      allowRuntimeFallback: false,
+      ensureRoot: async () => {
+        const error = new Error('read-only explicit root')
+        error.code = 'EROFS'
+        throw error
+      },
+    }),
+    { code: 'EROFS' },
+  )
+  await assert.rejects(
+    ensureBrokerStateRoot({
+      preferredRoot: '/state/unsafe',
+      ensureRoot: async () => {
+        const error = new Error('unsafe root')
+        error.code = 'BROKER_UNAVAILABLE'
+        throw error
+      },
+    }),
+    { code: 'BROKER_UNAVAILABLE' },
+  )
+})
+
+test('private state roots reject symbolic links', async (t) => {
+  if (process.platform === 'win32') return
+  const parent = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'collaborative-markdown-state-root-'),
+  )
+  t.after(() => fs.rm(parent, { recursive: true, force: true }))
+  const target = path.join(parent, 'target')
+  const link = path.join(parent, 'state')
+  await fs.mkdir(target)
+  await fs.symlink(target, link)
+  await assert.rejects(
+    ensurePrivateStateRoot(link),
+    { code: 'BROKER_UNAVAILABLE' },
   )
 })
 
