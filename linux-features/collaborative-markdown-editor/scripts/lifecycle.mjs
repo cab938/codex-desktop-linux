@@ -11,13 +11,12 @@ const buildRoot = process.env.CODEX_COLLABORATIVE_MARKDOWN_BUILD_ROOT
   : path.join(featureRoot, "dist");
 const buildArtifact = path.join(buildRoot, "feature-shell.json");
 const stageArtifact = path.join(buildRoot, "stage", "feature-shell.json");
-const webBundle = path.join(buildRoot, "web", "editor-preview.html");
-const stagedWebBundle = path.join(
-  buildRoot,
-  "stage",
-  "web",
-  "editor-preview.html",
-);
+const runtimeFiles = [
+  "web/editor-preview.html",
+  "mcp/mcp-app.html",
+  "plugin/server.mjs",
+  "plugin/broker.mjs",
+];
 
 function writeIfChanged(filePath, contents) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -32,22 +31,25 @@ function sha256(contents) {
 }
 
 function buildManifest() {
-  if (!fs.existsSync(webBundle)) {
-    throw new Error(`Missing built editor bundle: ${webBundle}`);
+  for (const relativePath of runtimeFiles) {
+    const source = path.join(buildRoot, relativePath);
+    if (!fs.existsSync(source)) {
+      throw new Error(`Missing built runtime file: ${source}`);
+    }
   }
-  const bundle = fs.readFileSync(webBundle);
   return `${JSON.stringify(
     {
       schemaVersion: 1,
       featureId: "collaborative-markdown-editor",
-      status: "editor-integrated",
-      runtimeFiles: [
-        {
-          path: "web/editor-preview.html",
-          bytes: bundle.length,
-          sha256: sha256(bundle),
-        },
-      ],
+      status: "plugin-packaged",
+      runtimeFiles: runtimeFiles.map((relativePath) => {
+        const contents = fs.readFileSync(path.join(buildRoot, relativePath));
+        return {
+          path: relativePath,
+          bytes: contents.length,
+          sha256: sha256(contents),
+        };
+      }),
     },
     null,
     2,
@@ -61,7 +63,12 @@ function build() {
 function stage() {
   build();
   writeIfChanged(stageArtifact, fs.readFileSync(buildArtifact, "utf8"));
-  writeIfChanged(stagedWebBundle, fs.readFileSync(webBundle));
+  for (const relativePath of runtimeFiles) {
+    writeIfChanged(
+      path.join(buildRoot, "stage", relativePath),
+      fs.readFileSync(path.join(buildRoot, relativePath)),
+    );
+  }
 }
 
 function clean() {

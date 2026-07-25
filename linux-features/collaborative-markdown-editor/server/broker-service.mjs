@@ -33,6 +33,7 @@ export class BrokerService {
     this.server = null
     this.ownerLock = null
     this.stopping = false
+    this.adapters = new Set()
     this.descriptorPath = path.join(
       this.stateRoot,
       'broker-v1',
@@ -122,7 +123,13 @@ export class BrokerService {
       signal: cancellation.signal,
     })
     respondJson(response, 200, { ok: true, result })
-    if (body.kind === 'admin' && body.method === 'broker.shutdown') {
+    if (
+      body.kind === 'admin' &&
+      (
+        body.method === 'broker.shutdown' ||
+        (body.method === 'adapter.release' && result.stopping)
+      )
+    ) {
       setImmediate(() => this.stop().catch(() => {}))
     }
   }
@@ -134,6 +141,15 @@ export class BrokerService {
       'The RPC body must be an object.',
     )
     const params = body.params ?? {}
+    if (body.kind === 'app' || body.kind === 'public') {
+      assertBroker(
+        typeof body.adapterId === 'string' &&
+          /^[A-Za-z0-9_-]{16,128}$/.test(body.adapterId),
+        'INVALID_ARGUMENT',
+        'adapter_id must be a 16–128 character opaque identifier.',
+      )
+      this.adapters.add(body.adapterId)
+    }
     if (body.kind === 'app') {
       switch (body.method) {
         case 'workspace.propose':
@@ -201,6 +217,17 @@ export class BrokerService {
     } else if (body.kind === 'admin') {
       if (body.method === 'broker.shutdown') {
         return { stopping: true, pid: process.pid }
+      }
+      if (body.method === 'adapter.release') {
+        const released = await this.documentRegistry
+          .releaseAdapterEverywhere(body.adapterId)
+        this.adapters.delete(body.adapterId)
+        return {
+          ...released,
+          stopping: this.adapters.size === 0,
+          remainingAdapters: this.adapters.size,
+          pid: process.pid,
+        }
       }
     }
     throw new BrokerError(

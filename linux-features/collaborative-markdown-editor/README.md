@@ -4,13 +4,12 @@ This disabled-by-default Linux feature is the repository integration boundary
 for a Codex Desktop plugin that lets a person and Codex agents edit the same
 workspace Markdown file through a shared Yjs document.
 
-The Codex host and transport gates have passed. The current implementation
-contains the pinned, audited Glyphdown editor/core extraction and an
-independently buildable one-Y.Text editor preview. It also contains the
-workspace authorization, document registry, recovery state, and attachable
-per-user broker core. It deliberately has no ASAR patch, install resource,
-runtime hook, package hook, or production MCP adapter yet; those arrive after
-the MCP/App surfaces pass their work packages.
+The Codex host and transport gates have passed. The feature packages a
+production MCP App, pure-JavaScript MCP adapter, and attachable per-user
+document broker as an installable Codex plugin. It needs no ASAR patch or
+platform-specific native module. The feature uses one declarative plugin
+resource plus small stage/cleanup hooks for deterministic generated bundles
+and the existing bundled marketplace catalog.
 
 ## Scope
 
@@ -69,9 +68,9 @@ never silently recreated.
 
 ## MCP boundary
 
-`mcp/main.mjs` is the stdio entrypoint. It registers eight model-visible
+`mcp/main.mjs` is the source stdio entrypoint. It registers eight model-visible
 document/render tools, five app-only synchronization/authorization tools, and
-the versioned `ui://collaborative-markdown-editor/v1/index.html` resource.
+the versioned `ui://collaborative-markdown-editor/v2/index.html` resource.
 All input and output schemas are closed-world, tool annotations distinguish
 reads from destructive text edits, and only `markdown_render` attaches the UI
 resource.
@@ -82,10 +81,41 @@ Yjs updates stay in app-only calls or hidden tool-result metadata. Mutations
 require expected revisions and printable idempotency keys. Accepted edit and
 create receipts persist for 24 hours across broker restart.
 
-The resource currently contains the protocol shell used to validate resource
-registration. The production CodeMirror bridge and interaction states replace
-that shell in the next work package without changing the frozen document-tool
-contract.
+The production app requests the host's `fullscreen` mode, which the verified
+Codex Desktop build presents as a persistent right-side tab. Human updates are
+batched for up to 75 ms or 256 KiB through app-only MCP calls; bounded
+state-vector pulls carry broker and agent changes back to the one client
+`Y.Doc`. Selection, scroll, and preview state survive ordinary remounts.
+
+## Plugin package
+
+The tracked plugin source and local test marketplace live under
+`plugin-marketplace/`. The plugin starts `node ./runtime/server.mjs` with the
+plugin root as its working directory. Codex resolves `node` to its managed
+runtime; no shell, `/usr/bin/env`, Python, native add-on, or user `PATH`
+lookup is part of the plugin contract.
+
+The deterministic production build emits:
+
+```text
+dist/
+├── mcp/mcp-app.html
+└── plugin/
+    ├── server.mjs
+    └── broker.mjs
+```
+
+The server bundle contains only the imported stdio MCP/Yjs graph. The current
+SDK's unused Hono/HTTP server path is absent from the staged runtime. The
+feature stage hook places the bundles, MIT license, and third-party notices
+beside the tracked plugin manifest, icon, and narrowly scoped agent skill.
+
+When the last stdio adapter exits, it releases all of its document and UI
+leases. The last adapter causes the shared broker to flush/checkpoint open
+documents, remove its descriptor, release its single-writer locks, and exit.
+Removing the plugin does not remove any workspace Markdown file. Plugin-private
+recovery state remains in the platform-native state directory unless the user
+chooses to remove it separately.
 
 ## Lifecycle commands
 
@@ -98,18 +128,15 @@ npm test
 npm run clean
 ```
 
-Run `npm ci` once, then run the commands from this directory. `build` emits a
-deterministic single-file editor preview plus a hash-bearing manifest under
-the ignored `dist/` directory. `stage` copies those artifacts into an isolated
-`dist/stage/` tree; it does not write into a generated application. `test`
-typechecks the source, runs retained donor/local component tests, and validates
-the disabled-default feature, deterministic lifecycle, broker security,
-multi-process convergence, locking, and restart recovery. `clean` removes only
-this feature's `dist/`. The server suite also fault-tests atomic persistence
-with real child-process exits before and after replacement.
-
-The eventual production build and declarative staging contract will replace
-the preview artifact after the broker and MCP App are implemented.
+Run `npm ci` once, then run the commands from this directory. `build` emits the
+preview, production MCP App, bundled server, bundled broker, and a hash-bearing
+manifest under the ignored `dist/` directory. `stage` copies those artifacts
+into an isolated `dist/stage/` tree; it does not write into a generated
+application. `test` typechecks the source, runs retained donor/local component
+tests, validates feature staging and cleanup, exercises the source protocol,
+starts the self-contained staged plugin, verifies broker exit on adapter
+shutdown, and runs the persistence/security suites. `clean` removes only this
+feature's `dist/`.
 
 ## Local enablement
 
@@ -126,10 +153,23 @@ add its ID only to the ignored `linux-features/features.json`:
 
 The committed `linux-features/features.example.json` must remain empty.
 
+After a side-by-side development rebuild, the plugin is listed in the app's
+`openai-bundled` marketplace as available, not installed by default. Install
+it from the Plugins UI or with the matching Codex plugin command inside a
+disposable development home. Disabling this Linux feature and rebuilding
+removes its bundled source and marketplace entry. If the plugin was already
+copied into a user plugin cache, uninstall that cached plugin separately.
+
+For source-only plugin testing, `plugin-marketplace/` is an explicit local
+marketplace. Add that non-default marketplace before installing from it; use a
+disposable `CODEX_HOME` during development so tests do not modify the user's
+normal plugin inventory. Run the plugin-creator validator against
+`plugin-marketplace/plugins/collaborative-markdown-editor` before testing.
+
 ## Current risks and gates
 
-- The production MCP schemas and user-only workspace authorization flow need
-  their final CodeMirror application and exact-app acceptance run.
+- The production plugin and CodeMirror application still need their final
+  exact-app acceptance run after the owning feature branch is built.
 - Linux filesystem behavior is verified; macOS and Windows remain candidates
   until their atomic-replace, watcher, and host-runtime matrices pass.
 

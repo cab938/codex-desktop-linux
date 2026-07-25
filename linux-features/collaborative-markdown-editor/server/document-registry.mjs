@@ -357,7 +357,7 @@ export class DocumentRegistry {
   }
 
   createUiSession(documentId, adapterId) {
-    return this.require(documentId, adapterId).createUiSession()
+    return this.require(documentId, adapterId).createUiSession(adapterId)
   }
 
   async applyUiUpdate(input, adapterId) {
@@ -398,9 +398,32 @@ export class DocumentRegistry {
       input?.generation !== session.generation ||
       input?.documentEpoch !== session.documentEpoch
     ) {
-      return session.createUiSession()
+      return session.createUiSession(adapterId)
     }
-    return session.refreshUiSession(input)
+    return session.refreshUiSession(input, adapterId)
+  }
+
+  async releaseAdapterEverywhere(adapterId) {
+    validateAdapterId(adapterId)
+    let releasedDocuments = 0
+    let releasedUiSessions = 0
+    for (const session of [...this.documents.values()]) {
+      const result = await session.releaseAdapter(adapterId)
+      if (result.released) releasedDocuments += 1
+      releasedUiSessions += result.releasedUiSessions
+      if (
+        result.remainingAdapterLeases === 0 &&
+        result.remainingUiSessions === 0
+      ) {
+        await session.destroy('adapter-released')
+      }
+    }
+    return {
+      adapterId,
+      releasedDocuments,
+      releasedUiSessions,
+      remainingDocuments: this.documents.size,
+    }
   }
 
   async revokeWorkspace(inputRoot) {
@@ -958,7 +981,8 @@ export class DocumentSession {
     }
   }
 
-  createUiSession() {
+  createUiSession(adapterId) {
+    validateAdapterId(adapterId)
     this.pruneUiSessions()
     assertBroker(
       this.uiSessions.size < MAX_UI_SESSIONS_PER_DOCUMENT,
@@ -970,6 +994,7 @@ export class DocumentSession {
     const sessionCapability = crypto.randomBytes(32).toString('base64url')
     this.uiSessions.set(uiSessionId, {
       capability: sessionCapability,
+      adapterId,
       expiresAt: this.clock() + UI_SESSION_TTL_MS,
       awarenessClock: 0,
       awareness: null,
@@ -980,16 +1005,19 @@ export class DocumentSession {
     return this.uiBootstrap(uiSessionId, sessionCapability)
   }
 
-  refreshUiSession(input) {
+  refreshUiSession(input, adapterId) {
     let record
     try {
       record = this.requireUiSession(input)
     } catch (error) {
-      if (error?.code === 'PERMISSION_DENIED') return this.createUiSession()
+      if (error?.code === 'PERMISSION_DENIED') {
+        return this.createUiSession(adapterId)
+      }
       throw error
     }
     const capability = crypto.randomBytes(32).toString('base64url')
     record.capability = capability
+    record.adapterId = adapterId
     record.expiresAt = this.clock() + UI_SESSION_TTL_MS
     record.sequences.clear()
     return this.uiBootstrap(input.uiSessionId, capability)
@@ -1252,11 +1280,19 @@ export class DocumentSession {
 
   async releaseAdapter(adapterId) {
     const released = this.adapters.delete(adapterId)
+    let releasedUiSessions = 0
+    for (const [uiSessionId, record] of this.uiSessions) {
+      if (record.adapterId === adapterId) {
+        this.uiSessions.delete(uiSessionId)
+        releasedUiSessions += 1
+      }
+    }
     this.touch()
     return {
       documentId: this.documentId,
       revision: this.revision.toString(),
       released,
+      releasedUiSessions,
       remainingAdapterLeases: this.adapters.size,
       remainingUiSessions: this.uiSessions.size,
       evictionScheduled:

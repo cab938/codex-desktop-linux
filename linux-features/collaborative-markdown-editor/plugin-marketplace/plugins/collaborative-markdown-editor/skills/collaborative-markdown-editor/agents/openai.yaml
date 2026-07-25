@@ -1,0 +1,4 @@
+interface:
+  display_name: "Collaborative Markdown Editor"
+  short_description: "Open and edit project Markdown with Codex"
+  default_prompt: "Use $collaborative-markdown-editor to open README.md in the right-panel editor."

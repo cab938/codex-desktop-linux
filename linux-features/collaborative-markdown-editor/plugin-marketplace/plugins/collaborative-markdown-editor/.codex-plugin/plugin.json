@@ -1,0 +1,43 @@
+{
+  "name": "collaborative-markdown-editor",
+  "version": "0.1.0",
+  "description": "Edit project Markdown with Codex and a shared live-preview editor.",
+  "author": {
+    "name": "Codex Desktop Linux contributors",
+    "url": "https://github.com/cab938/codex-desktop-linux"
+  },
+  "homepage": "https://github.com/cab938/codex-desktop-linux",
+  "repository": "https://github.com/cab938/codex-desktop-linux",
+  "license": "MIT",
+  "keywords": [
+    "markdown",
+    "codemirror",
+    "yjs",
+    "collaboration",
+    "local-files"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Collaborative Markdown Editor",
+    "shortDescription": "Edit project Markdown with Codex",
+    "longDescription": "Open an authorized project Markdown file in a live-preview right-panel editor. Human edits, Codex edits, and ordinary workspace file changes converge through one local Yjs document while the Markdown file remains the durable source of truth.",
+    "developerName": "Codex Desktop Linux contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write",
+      "Local files"
+    ],
+    "websiteURL": "https://github.com/cab938/codex-desktop-linux",
+    "defaultPrompt": [
+      "Open README.md in the collaborative editor",
+      "Edit this project note with me",
+      "Show this Markdown file in the right panel"
+    ],
+    "brandColor": "#2563EB",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}

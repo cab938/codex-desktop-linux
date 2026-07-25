@@ -4,5 +4,15 @@
   "description": "Optional Codex Desktop plugin for human and agent collaboration on workspace Markdown through a shared Yjs document.",
   "defaultEnabled": false,
   "requires": [],
-  "conflicts": []
+  "conflicts": [],
+  "entrypoints": {
+    "stageHook": "./stage.sh",
+    "cleanupHook": "./cleanup.sh"
+  },
+  "resources": [
+    {
+      "source": "plugin-marketplace/plugins/collaborative-markdown-editor",
+      "target": "resources/plugins/openai-bundled/plugins/collaborative-markdown-editor"
+    }
+  ]
 }

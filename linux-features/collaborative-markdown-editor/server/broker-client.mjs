@@ -10,7 +10,12 @@ import {
 } from './config.mjs'
 import { BrokerError, assertBroker } from './errors.mjs'
 
-const MAIN_PATH = fileURLToPath(new URL('./broker-main.mjs', import.meta.url))
+const MODULE_PATH = fileURLToPath(import.meta.url)
+const MAIN_PATH = fileURLToPath(
+  path.basename(MODULE_PATH) === 'server.mjs'
+    ? new URL('./broker.mjs', import.meta.url)
+    : new URL('./broker-main.mjs', import.meta.url),
+)
 
 export class BrokerClient {
   constructor(options = {}) {
@@ -139,6 +144,20 @@ export class BrokerClient {
       )
     }
     return response.result
+  }
+
+  async releaseAdapter() {
+    const descriptor = this.descriptor ?? await this.tryAttach()
+    if (!descriptor) {
+      return {
+        releasedDocuments: 0,
+        releasedUiSessions: 0,
+        remainingDocuments: 0,
+        stopping: false,
+        remainingAdapters: 0,
+      }
+    }
+    return this.rpc('admin', 'adapter.release')
   }
 }
 

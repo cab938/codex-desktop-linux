@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "collaborative-markdown-editor": {
+      "command": "node",
+      "args": [
+        "./runtime/server.mjs"
+      ],
+      "cwd": "."
+    }
+  }
+}

@@ -82,7 +82,16 @@ test('independent clients attach to one broker and one document authority', asyn
     )
     assert.equal(descriptorStat.mode & 0o777, 0o600)
   }
-  await first.rpc('admin', 'broker.shutdown')
+  const firstReleased = await first.rpc('admin', 'adapter.release')
+  assert.equal(firstReleased.stopping, false)
+  assert.equal(firstReleased.remainingAdapters, 1)
+  const statusAfterRelease = await second.rpc('public', 'document.status', {
+    documentId: openedFirst.documentId,
+  })
+  assert.equal(statusAfterRelease.adapterLeases, 1)
+  const secondReleased = await second.rpc('admin', 'adapter.release')
+  assert.equal(secondReleased.stopping, true)
+  assert.equal(secondReleased.remainingAdapters, 0)
   await waitFor(async () => {
     try {
       await fs.access(path.join(stateRoot, 'broker-v1', 'descriptor.json'))
