@@ -98,6 +98,9 @@ describe('MCP App state helpers', () => {
       'mailto:editor@example.com',
     )
     expect(safeExternalUrl('javascript:alert(1)')).toBeNull()
+    expect(safeExternalUrl('java\u0000script:alert(1)')).toBeNull()
+    expect(safeExternalUrl('data:text/html,<script>alert(1)</script>')).toBeNull()
+    expect(safeExternalUrl('vbscript:msgbox(1)')).toBeNull()
     expect(safeExternalUrl('file:///etc/passwd')).toBeNull()
     expect(safeExternalUrl('../relative.md')).toBeNull()
   })

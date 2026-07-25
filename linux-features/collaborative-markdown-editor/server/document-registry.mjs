@@ -34,6 +34,8 @@ const IDEMPOTENCY_TTL_MS = 24 * 60 * 60_000
 const MAX_IDEMPOTENCY_RECORDS = 4_096
 const UI_SESSION_TTL_MS = 60_000
 const MAX_UI_SEQUENCE_RECORDS = 256
+const UI_RATE_WINDOW_MS = 10_000
+const MAX_UI_EVENTS_PER_WINDOW = 200
 
 export class DocumentRegistry {
   constructor(options) {
@@ -1016,6 +1018,9 @@ export class DocumentSession {
       expiresAt: this.clock() + UI_SESSION_TTL_MS,
       awarenessClock: 0,
       awareness: null,
+      rateWindowStartedAt: this.clock(),
+      updateEvents: 0,
+      awarenessEvents: 0,
       sequences: new Map(),
       pullPending: false,
     })
@@ -1043,6 +1048,7 @@ export class DocumentSession {
 
   async applyUiUpdate(input) {
     const uiSession = this.requireUiSession(input)
+    this.consumeUiRate(uiSession, 'updateEvents')
     assertBroker(
       typeof input.clientSequence === 'string' &&
         /^(0|[1-9][0-9]{0,19})$/.test(input.clientSequence),
@@ -1163,6 +1169,7 @@ export class DocumentSession {
 
   updateUiAwareness(input) {
     const uiSession = this.requireUiSession(input)
+    this.consumeUiRate(uiSession, 'awarenessEvents')
     assertBroker(
       Number.isSafeInteger(input.awarenessClock) &&
         input.awarenessClock > uiSession.awarenessClock,
@@ -1198,6 +1205,22 @@ export class DocumentSession {
     record.expiresAt = this.clock() + UI_SESSION_TTL_MS
     this.touch()
     return record
+  }
+
+  consumeUiRate(record, field) {
+    const now = this.clock()
+    if (now - record.rateWindowStartedAt >= UI_RATE_WINDOW_MS) {
+      record.rateWindowStartedAt = now
+      record.updateEvents = 0
+      record.awarenessEvents = 0
+    }
+    assertBroker(
+      record[field] < MAX_UI_EVENTS_PER_WINDOW,
+      'RESOURCE_LIMIT',
+      `A UI session may send at most ${MAX_UI_EVENTS_PER_WINDOW} ${field === 'updateEvents' ? 'updates' : 'awareness events'} per ${UI_RATE_WINDOW_MS / 1_000} seconds.`,
+      { retryable: true },
+    )
+    record[field] += 1
   }
 
   pruneUiSessions() {
@@ -1523,7 +1546,7 @@ function hasIsolatedSurrogate(value) {
     const code = value.charCodeAt(index)
     if (code >= 0xd800 && code <= 0xdbff) {
       const next = value.charCodeAt(index + 1)
-      if (next < 0xdc00 || next > 0xdfff) return true
+      if (!Number.isInteger(next) || next < 0xdc00 || next > 0xdfff) return true
       index += 1
     } else if (code >= 0xdc00 && code <= 0xdfff) {
       return true

@@ -219,6 +219,7 @@ test("feature hook stages and removes only its bundled plugin", () => {
       "dist/mcp/mcp-app.html",
       "LICENSE",
       "THIRD_PARTY_NOTICES.md",
+      "SBOM.cdx.json",
     ]) {
       assert.equal(fs.existsSync(path.join(pluginDir, relativePath)), true);
     }

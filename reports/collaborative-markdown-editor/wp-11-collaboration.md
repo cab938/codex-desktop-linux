@@ -106,7 +106,7 @@ The rebuilt production artifacts are:
 | --- | ---: | --- |
 | `dist/mcp/mcp-app.html` | 3,796,652 | `2eb7ae24ce1ace9451e8a76b7d18c9ebe3c784a8b28f8d2e22d6c716bed95819` |
 | `dist/plugin/server.mjs` | 373,073 | `e0cb98957dca49d3d5e321d678b0d82577efe38003dca31320a553ce039dbb52` |
-| `dist/plugin/broker.mjs` | 157,303 | `987f5e7b5ab5cdd7f637ac7811999226dba29895848ac3d17699d9f251abe283` |
+| `dist/plugin/broker.mjs` | 158,174 | `ff28aa91bd194802ef629257ab9d88f9601781c443d7df573865b9824a0c999b` |
 
 ## Remaining acceptance gate
 

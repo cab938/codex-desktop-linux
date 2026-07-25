@@ -17,6 +17,11 @@ export class BrokerService {
   constructor(options) {
     this.stateRoot = options.stateRoot
     this.host = options.host ?? '127.0.0.1'
+    assertBroker(
+      this.host === '127.0.0.1',
+      'INVALID_ARGUMENT',
+      'The collaborative Markdown broker may bind only to IPv4 loopback.',
+    )
     this.port = options.port ?? 0
     this.generation = options.generation ?? crypto.randomUUID()
     this.bearer = options.bearer ?? crypto.randomBytes(32).toString('base64url')
@@ -99,6 +104,13 @@ export class BrokerService {
         'PERMISSION_DENIED',
         'The broker bearer capability is missing or invalid.',
         { httpStatus: 401 },
+      )
+    }
+    if (typeof request.headers.origin === 'string') {
+      throw new BrokerError(
+        'PERMISSION_DENIED',
+        'Browser-origin requests may not access the private broker transport.',
+        { httpStatus: 403 },
       )
     }
     if (request.method === 'GET' && request.url === '/health') {

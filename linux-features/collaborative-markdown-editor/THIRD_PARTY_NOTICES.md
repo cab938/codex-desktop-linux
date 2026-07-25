@@ -1,7 +1,8 @@
 # Third-party notices
 
-This file covers the vendored source seam established in WP-05. WP-12 will
-generate and reconcile the complete production-bundle dependency inventory.
+This file covers the vendored source seam established in WP-05. The complete
+locked production dependency graph and exact staged-bundle hashes are retained
+and shipped as `SBOM.cdx.json` in CycloneDX 1.5 format.
 
 ## Glyphdown
 
@@ -36,9 +37,8 @@ derived from Feather are MIT. The complete combined notice is in
 - `y-codemirror.next`: MIT. Complete text:
   `web/vendor/glyphdown/licenses/Y-CODEMIRROR-NEXT-MIT.txt`.
 - CodeMirror, Lezer, Yjs, y-protocols, lib0, and their selected production
-  closure use permissive licenses recorded by the locked dependency
-  inventory. Their exact installed notices will be emitted with the final
-  plugin SBOM.
+  closure use permissive licenses recorded by the locked dependency inventory
+  in `SBOM.cdx.json`.
 
 No Glyphdown or other upstream name, logo, or product identity is used for the
 feature itself.

@@ -11,6 +11,7 @@
     "build:server": "vite build --config vite.server.config.ts && vite build --config vite.broker.config.ts",
     "build:web": "npm run build:web:preview && npm run build:web:mcp",
     "build:plugin": "npm run build:web:mcp && npm run build:server",
+    "sbom": "node ./scripts/generate-sbom.mjs",
     "build": "npm run build:web && npm run build:server && node ./scripts/lifecycle.mjs build",
     "stage": "npm run build:web && npm run build:server && node ./scripts/lifecycle.mjs stage",
     "typecheck": "tsc -p ./tsconfig.json",
@@ -18,7 +19,8 @@
     "test:feature": "node --test ./test.js",
     "test:server": "node --test ./server/test/*.test.mjs",
     "test:mcp": "npm run build:plugin && node --test ./mcp/test.mjs ./mcp/*.test.mjs",
-    "test": "npm run typecheck && npm run test:unit && npm run test:feature && npm run test:server && npm run test:mcp",
+    "test:sbom": "npm run build:plugin && npm run sbom && node --test ./scripts/sbom.test.mjs",
+    "test": "npm run typecheck && npm run test:unit && npm run test:feature && npm run test:server && npm run test:mcp && npm run test:sbom",
     "clean": "node ./scripts/lifecycle.mjs clean"
   },
   "dependencies": {

@@ -1,0 +1,4200 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "bom-ref": "pkg:npm/%40codex-desktop-linux/collaborative-markdown-editor@0.1.0",
+      "name": "@codex-desktop-linux/collaborative-markdown-editor",
+      "version": "0.1.0"
+    },
+    "properties": [
+      {
+        "name": "codex:inventory-note",
+        "value": "Package components are the locked production dependency graph; the three file components are the complete staged runtime bundles."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/autocomplete@6.20.3",
+      "name": "@codemirror/autocomplete",
+      "version": "6.20.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/autocomplete"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/commands@6.10.3",
+      "name": "@codemirror/commands",
+      "version": "6.10.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/commands"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-angular@0.1.4",
+      "name": "@codemirror/lang-angular",
+      "version": "0.1.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-angular"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-cpp@6.0.3",
+      "name": "@codemirror/lang-cpp",
+      "version": "6.0.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-cpp"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-css@6.3.1",
+      "name": "@codemirror/lang-css",
+      "version": "6.3.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-css"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-go@6.0.1",
+      "name": "@codemirror/lang-go",
+      "version": "6.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-go"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-html@6.4.11",
+      "name": "@codemirror/lang-html",
+      "version": "6.4.11",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-html"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-java@6.0.2",
+      "name": "@codemirror/lang-java",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-java"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-javascript@6.2.5",
+      "name": "@codemirror/lang-javascript",
+      "version": "6.2.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-javascript"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-jinja@6.0.1",
+      "name": "@codemirror/lang-jinja",
+      "version": "6.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-jinja"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-json@6.0.2",
+      "name": "@codemirror/lang-json",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-less@6.0.2",
+      "name": "@codemirror/lang-less",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-less"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-liquid@6.3.2",
+      "name": "@codemirror/lang-liquid",
+      "version": "6.3.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-liquid"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-markdown@6.5.0",
+      "name": "@codemirror/lang-markdown",
+      "version": "6.5.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-markdown"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-php@6.0.2",
+      "name": "@codemirror/lang-php",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-php"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-python@6.2.1",
+      "name": "@codemirror/lang-python",
+      "version": "6.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-python"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-rust@6.0.2",
+      "name": "@codemirror/lang-rust",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-rust"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-sass@6.0.2",
+      "name": "@codemirror/lang-sass",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-sass"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-sql@6.10.0",
+      "name": "@codemirror/lang-sql",
+      "version": "6.10.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-sql"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-vue@0.1.3",
+      "name": "@codemirror/lang-vue",
+      "version": "0.1.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-vue"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-wast@6.0.2",
+      "name": "@codemirror/lang-wast",
+      "version": "6.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-wast"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-xml@6.1.0",
+      "name": "@codemirror/lang-xml",
+      "version": "6.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-xml"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lang-yaml@6.1.3",
+      "name": "@codemirror/lang-yaml",
+      "version": "6.1.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lang-yaml"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/language-data@6.5.2",
+      "name": "@codemirror/language-data",
+      "version": "6.5.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/language-data"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/language@6.12.3",
+      "name": "@codemirror/language",
+      "version": "6.12.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/language"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/legacy-modes@6.5.3",
+      "name": "@codemirror/legacy-modes",
+      "version": "6.5.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/legacy-modes"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/lint@6.9.7",
+      "name": "@codemirror/lint",
+      "version": "6.9.7",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/lint"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/state@6.6.0",
+      "name": "@codemirror/state",
+      "version": "6.6.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/state"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40codemirror/view@6.43.0",
+      "name": "@codemirror/view",
+      "version": "6.43.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@codemirror/view"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40hono/node-server@1.19.15",
+      "name": "@hono/node-server",
+      "version": "1.19.15",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@hono/node-server"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/common@1.5.2",
+      "name": "@lezer/common",
+      "version": "1.5.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/common"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/cpp@1.1.6",
+      "name": "@lezer/cpp",
+      "version": "1.1.6",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/cpp"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/css@1.3.4",
+      "name": "@lezer/css",
+      "version": "1.3.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/css"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/go@1.0.1",
+      "name": "@lezer/go",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/go"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/highlight@1.2.3",
+      "name": "@lezer/highlight",
+      "version": "1.2.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/highlight"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/html@1.3.13",
+      "name": "@lezer/html",
+      "version": "1.3.13",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/html"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/java@1.1.3",
+      "name": "@lezer/java",
+      "version": "1.1.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/java"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/javascript@1.5.4",
+      "name": "@lezer/javascript",
+      "version": "1.5.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/javascript"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/json@1.0.3",
+      "name": "@lezer/json",
+      "version": "1.0.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/json"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/lr@1.4.10",
+      "name": "@lezer/lr",
+      "version": "1.4.10",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/lr"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/markdown@1.6.4",
+      "name": "@lezer/markdown",
+      "version": "1.6.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/markdown"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/php@1.0.5",
+      "name": "@lezer/php",
+      "version": "1.0.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/php"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/python@1.1.19",
+      "name": "@lezer/python",
+      "version": "1.1.19",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/python"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/rust@1.0.2",
+      "name": "@lezer/rust",
+      "version": "1.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/rust"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/sass@1.1.0",
+      "name": "@lezer/sass",
+      "version": "1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/sass"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/xml@1.0.6",
+      "name": "@lezer/xml",
+      "version": "1.0.6",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/xml"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40lezer/yaml@1.0.4",
+      "name": "@lezer/yaml",
+      "version": "1.0.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@lezer/yaml"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40marijn/find-cluster-break@1.0.3",
+      "name": "@marijn/find-cluster-break",
+      "version": "1.0.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@marijn/find-cluster-break"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40modelcontextprotocol/ext-apps@1.7.5",
+      "name": "@modelcontextprotocol/ext-apps",
+      "version": "1.7.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@modelcontextprotocol/ext-apps"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40modelcontextprotocol/sdk@1.29.0",
+      "name": "@modelcontextprotocol/sdk",
+      "version": "1.29.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@modelcontextprotocol/sdk"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40sanity/diff-match-patch@3.2.0",
+      "name": "@sanity/diff-match-patch",
+      "version": "3.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@sanity/diff-match-patch"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/%40standard-schema/spec@1.1.0",
+      "name": "@standard-schema/spec",
+      "version": "1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/@standard-schema/spec"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/accepts@2.0.0",
+      "name": "accepts",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/accepts"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ajv-formats@3.0.1",
+      "name": "ajv-formats",
+      "version": "3.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/ajv-formats"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ajv@8.20.0",
+      "name": "ajv",
+      "version": "8.20.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/ajv"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/body-parser@2.3.0",
+      "name": "body-parser",
+      "version": "2.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/body-parser"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/bytes@3.1.2",
+      "name": "bytes",
+      "version": "3.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/bytes"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/call-bind-apply-helpers@1.0.2",
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/call-bind-apply-helpers"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/call-bound@1.0.4",
+      "name": "call-bound",
+      "version": "1.0.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/call-bound"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/commander@8.3.0",
+      "name": "commander",
+      "version": "8.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/commander"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/content-disposition@1.1.0",
+      "name": "content-disposition",
+      "version": "1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/content-disposition"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/content-type@1.0.5",
+      "name": "content-type",
+      "version": "1.0.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/content-type"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/content-type@2.0.0",
+      "name": "content-type",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/body-parser/node_modules/content-type,node_modules/type-is/node_modules/content-type"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/cookie-signature@1.2.2",
+      "name": "cookie-signature",
+      "version": "1.2.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/cookie-signature"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/cookie@0.7.2",
+      "name": "cookie",
+      "version": "0.7.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/cookie"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/cors@2.8.6",
+      "name": "cors",
+      "version": "2.8.6",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/cors"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/crelt@1.0.7",
+      "name": "crelt",
+      "version": "1.0.7",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/crelt"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/cross-spawn@7.0.6",
+      "name": "cross-spawn",
+      "version": "7.0.6",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/cross-spawn"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/debug@4.4.3",
+      "name": "debug",
+      "version": "4.4.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/debug"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/depd@2.0.0",
+      "name": "depd",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/depd"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/dunder-proto@1.0.1",
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/dunder-proto"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ee-first@1.1.1",
+      "name": "ee-first",
+      "version": "1.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/ee-first"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/encodeurl@2.0.0",
+      "name": "encodeurl",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/encodeurl"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/es-define-property@1.0.1",
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/es-define-property"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/es-errors@1.3.0",
+      "name": "es-errors",
+      "version": "1.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/es-errors"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/es-object-atoms@1.1.2",
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/es-object-atoms"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/escape-html@1.0.3",
+      "name": "escape-html",
+      "version": "1.0.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/escape-html"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/etag@1.8.1",
+      "name": "etag",
+      "version": "1.8.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/etag"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/eventsource-parser@3.1.0",
+      "name": "eventsource-parser",
+      "version": "3.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/eventsource-parser"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/eventsource@3.0.7",
+      "name": "eventsource",
+      "version": "3.0.7",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/eventsource"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/express-rate-limit@8.6.0",
+      "name": "express-rate-limit",
+      "version": "8.6.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/express-rate-limit"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/express@5.2.1",
+      "name": "express",
+      "version": "5.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/express"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/fast-deep-equal@3.1.3",
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/fast-deep-equal"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/fast-uri@3.1.4",
+      "name": "fast-uri",
+      "version": "3.1.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/fast-uri"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/finalhandler@2.1.1",
+      "name": "finalhandler",
+      "version": "2.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/finalhandler"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/forwarded@0.2.0",
+      "name": "forwarded",
+      "version": "0.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/forwarded"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/fresh@2.0.0",
+      "name": "fresh",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/fresh"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/function-bind@1.1.2",
+      "name": "function-bind",
+      "version": "1.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/function-bind"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/get-intrinsic@1.3.0",
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/get-intrinsic"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/get-proto@1.0.1",
+      "name": "get-proto",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/get-proto"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/gopd@1.2.0",
+      "name": "gopd",
+      "version": "1.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/gopd"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/has-symbols@1.1.0",
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/has-symbols"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/hasown@2.0.4",
+      "name": "hasown",
+      "version": "2.0.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/hasown"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/hono@4.12.32",
+      "name": "hono",
+      "version": "4.12.32",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/hono"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/http-errors@2.0.1",
+      "name": "http-errors",
+      "version": "2.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/http-errors"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/iconv-lite@0.7.3",
+      "name": "iconv-lite",
+      "version": "0.7.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/iconv-lite"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/inherits@2.0.4",
+      "name": "inherits",
+      "version": "2.0.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/inherits"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ip-address@10.2.0",
+      "name": "ip-address",
+      "version": "10.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/ip-address"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ipaddr.js@1.9.1",
+      "name": "ipaddr.js",
+      "version": "1.9.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/ipaddr.js"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/is-promise@4.0.0",
+      "name": "is-promise",
+      "version": "4.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/is-promise"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/isexe@2.0.0",
+      "name": "isexe",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/isexe"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/isomorphic.js@0.2.5",
+      "name": "isomorphic.js",
+      "version": "0.2.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/isomorphic.js"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/jose@6.2.4",
+      "name": "jose",
+      "version": "6.2.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/jose"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/json-schema-traverse@1.0.0",
+      "name": "json-schema-traverse",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/json-schema-traverse"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/json-schema-typed@8.0.2",
+      "name": "json-schema-typed",
+      "version": "8.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/json-schema-typed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/katex@0.16.47",
+      "name": "katex",
+      "version": "0.16.47",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/katex"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/lib0@0.2.117",
+      "name": "lib0",
+      "version": "0.2.117",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/lib0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/math-intrinsics@1.1.0",
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/math-intrinsics"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/media-typer@1.1.1",
+      "name": "media-typer",
+      "version": "1.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/media-typer"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/merge-descriptors@2.0.0",
+      "name": "merge-descriptors",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/merge-descriptors"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/mime-db@1.54.0",
+      "name": "mime-db",
+      "version": "1.54.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/mime-db"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/mime-types@3.0.2",
+      "name": "mime-types",
+      "version": "3.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/mime-types"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/ms@2.1.3",
+      "name": "ms",
+      "version": "2.1.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/ms"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/negotiator@1.0.0",
+      "name": "negotiator",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/negotiator"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/object-assign@4.1.1",
+      "name": "object-assign",
+      "version": "4.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/object-assign"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/object-inspect@1.13.4",
+      "name": "object-inspect",
+      "version": "1.13.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/object-inspect"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/on-finished@2.4.1",
+      "name": "on-finished",
+      "version": "2.4.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/on-finished"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/once@1.4.0",
+      "name": "once",
+      "version": "1.4.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/once"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/parseurl@1.3.3",
+      "name": "parseurl",
+      "version": "1.3.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/parseurl"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/path-key@3.1.1",
+      "name": "path-key",
+      "version": "3.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/path-key"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/path-to-regexp@8.4.2",
+      "name": "path-to-regexp",
+      "version": "8.4.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/path-to-regexp"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/pkce-challenge@5.0.1",
+      "name": "pkce-challenge",
+      "version": "5.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/pkce-challenge"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/proxy-addr@2.0.7",
+      "name": "proxy-addr",
+      "version": "2.0.7",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/proxy-addr"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/qs@6.15.3",
+      "name": "qs",
+      "version": "6.15.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/qs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/range-parser@1.3.0",
+      "name": "range-parser",
+      "version": "1.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/range-parser"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/raw-body@3.0.2",
+      "name": "raw-body",
+      "version": "3.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/raw-body"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/require-from-string@2.0.2",
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/require-from-string"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/router@2.2.0",
+      "name": "router",
+      "version": "2.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/router"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/safer-buffer@2.1.2",
+      "name": "safer-buffer",
+      "version": "2.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/safer-buffer"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/send@1.2.1",
+      "name": "send",
+      "version": "1.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/send"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/serve-static@2.2.1",
+      "name": "serve-static",
+      "version": "2.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/serve-static"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/setprototypeof@1.2.0",
+      "name": "setprototypeof",
+      "version": "1.2.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/setprototypeof"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/shebang-command@2.0.0",
+      "name": "shebang-command",
+      "version": "2.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/shebang-command"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/shebang-regex@3.0.0",
+      "name": "shebang-regex",
+      "version": "3.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/shebang-regex"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/side-channel-list@1.0.1",
+      "name": "side-channel-list",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/side-channel-list"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/side-channel-map@1.0.1",
+      "name": "side-channel-map",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/side-channel-map"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/side-channel-weakmap@1.0.2",
+      "name": "side-channel-weakmap",
+      "version": "1.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/side-channel-weakmap"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/side-channel@1.1.1",
+      "name": "side-channel",
+      "version": "1.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/side-channel"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/statuses@2.0.2",
+      "name": "statuses",
+      "version": "2.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/statuses"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/style-mod@4.1.3",
+      "name": "style-mod",
+      "version": "4.1.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/style-mod"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/toidentifier@1.0.1",
+      "name": "toidentifier",
+      "version": "1.0.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/toidentifier"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/type-is@2.1.0",
+      "name": "type-is",
+      "version": "2.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/type-is"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/unpipe@1.0.0",
+      "name": "unpipe",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/unpipe"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/vary@1.1.2",
+      "name": "vary",
+      "version": "1.1.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/vary"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/w3c-keyname@2.2.8",
+      "name": "w3c-keyname",
+      "version": "2.2.8",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/w3c-keyname"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/which@2.0.2",
+      "name": "which",
+      "version": "2.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/which"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/wrappy@1.0.2",
+      "name": "wrappy",
+      "version": "1.0.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/wrappy"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/y-codemirror.next@0.3.5",
+      "name": "y-codemirror.next",
+      "version": "0.3.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/y-codemirror.next"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/y-protocols@1.0.7",
+      "name": "y-protocols",
+      "version": "1.0.7",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/y-protocols"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/yjs@13.6.31",
+      "name": "yjs",
+      "version": "13.6.31",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/yjs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/zod-to-json-schema@3.25.2",
+      "name": "zod-to-json-schema",
+      "version": "3.25.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "false"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/zod-to-json-schema"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/zod@4.4.3",
+      "name": "zod",
+      "version": "4.4.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:inventory-scope",
+          "value": "locked-production-dependency-graph"
+        },
+        {
+          "name": "codex:direct-dependency",
+          "value": "true"
+        },
+        {
+          "name": "codex:package-lock-paths",
+          "value": "node_modules/zod"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "file:dist/mcp/mcp-app.html",
+      "name": "mcp-app.html",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2eb7ae24ce1ace9451e8a76b7d18c9ebe3c784a8b28f8d2e22d6c716bed95819"
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:staged-path",
+          "value": "dist/mcp/mcp-app.html"
+        },
+        {
+          "name": "codex:bytes",
+          "value": "3796652"
+        },
+        {
+          "name": "codex:self-contained-bundle",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "file:dist/plugin/server.mjs",
+      "name": "server.mjs",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e0cb98957dca49d3d5e321d678b0d82577efe38003dca31320a553ce039dbb52"
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:staged-path",
+          "value": "dist/plugin/server.mjs"
+        },
+        {
+          "name": "codex:bytes",
+          "value": "373073"
+        },
+        {
+          "name": "codex:self-contained-bundle",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "bom-ref": "file:dist/plugin/broker.mjs",
+      "name": "broker.mjs",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ff28aa91bd194802ef629257ab9d88f9601781c443d7df573865b9824a0c999b"
+        }
+      ],
+      "properties": [
+        {
+          "name": "codex:staged-path",
+          "value": "dist/plugin/broker.mjs"
+        },
+        {
+          "name": "codex:bytes",
+          "value": "158174"
+        },
+        {
+          "name": "codex:self-contained-bundle",
+          "value": "true"
+        }
+      ]
+    }
+  ]
+}

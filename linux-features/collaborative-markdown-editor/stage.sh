@@ -17,6 +17,7 @@ if [ ! -x "$feature_dir/node_modules/.bin/vite" ]; then
 fi
 
 npm run --prefix "$feature_dir" build:plugin
+npm run --prefix "$feature_dir" sbom
 
 mkdir -p \
     "$target_plugin/runtime" \
@@ -34,6 +35,9 @@ install -m 0644 "$SCRIPT_DIR/LICENSE" "$target_plugin/LICENSE"
 install -m 0644 \
     "$feature_dir/THIRD_PARTY_NOTICES.md" \
     "$target_plugin/THIRD_PARTY_NOTICES.md"
+install -m 0644 \
+    "$feature_dir/SBOM.cdx.json" \
+    "$target_plugin/SBOM.cdx.json"
 
 node - "$target_marketplace" <<'NODE'
 const fs = require("node:fs");

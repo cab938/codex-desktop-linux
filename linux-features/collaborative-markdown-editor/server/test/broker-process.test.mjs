@@ -75,6 +75,13 @@ test('independent clients attach to one broker and one document authority', asyn
   })
   assert.equal(status.adapterLeases, 2)
   assert.equal(JSON.stringify(status).includes(firstDescriptor.bearer), false)
+  if (process.platform === 'linux') {
+    const processText = Buffer.concat([
+      await fs.readFile(`/proc/${firstDescriptor.pid}/cmdline`),
+      await fs.readFile(`/proc/${firstDescriptor.pid}/environ`),
+    ]).toString('utf8')
+    assert.equal(processText.includes(firstDescriptor.bearer), false)
+  }
 
   if (process.platform !== 'win32') {
     const descriptorStat = await fs.stat(

@@ -103,6 +103,11 @@ export async function resolveMarkdownFile(workspaceRoot, relativePath) {
     'FILE_TYPE_UNSUPPORTED',
     'The requested Markdown path is not a regular file.',
   )
+  assertBroker(
+    stat.nlink === 1,
+    'HARDLINK_UNSUPPORTED',
+    'Markdown files with multiple hard links are not supported in v1.',
+  )
   const canonicalPath = await fs.realpath(candidate)
   assertContained(canonicalRoot, canonicalPath)
   assertBroker(
@@ -334,7 +339,7 @@ function hasIsolatedSurrogate(value) {
     const code = value.charCodeAt(index)
     if (code >= 0xd800 && code <= 0xdbff) {
       const next = value.charCodeAt(index + 1)
-      if (next < 0xdc00 || next > 0xdfff) return true
+      if (!Number.isInteger(next) || next < 0xdc00 || next > 0xdfff) return true
       index += 1
     } else if (code >= 0xdc00 && code <= 0xdfff) {
       return true
