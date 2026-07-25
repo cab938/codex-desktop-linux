@@ -151,6 +151,13 @@ export class BrokerService {
           return this.documentRegistry.applyTextEdits(params, body.adapterId)
         case 'document.status':
           return this.documentRegistry.status(params.documentId, body.adapterId)
+        case 'document.flush':
+          return this.documentRegistry.flush(params, body.adapterId)
+        case 'document.reconcile':
+          return this.documentRegistry.reconcile(
+            params.documentId,
+            body.adapterId,
+          )
         case 'document.close':
           return this.documentRegistry.close(params, body.adapterId)
         default:

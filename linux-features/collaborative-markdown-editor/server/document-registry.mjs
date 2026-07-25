@@ -10,7 +10,13 @@ import {
   MAX_OPEN_DOCUMENTS,
 } from './config.mjs'
 import { BrokerError, assertBroker } from './errors.mjs'
+import { FilePersistence } from './file-persistence.mjs'
 import { acquireDirectoryLock } from './lock.mjs'
+import {
+  DEGENERATE_DELETE_RATIO,
+  applyTextTarget,
+  computeMergedTarget,
+} from './merge.mjs'
 import { DocumentStateStore } from './state-store.mjs'
 import {
   documentIdentity,
@@ -32,6 +38,7 @@ export class DocumentRegistry {
     this.generation = options.generation ?? crypto.randomUUID()
     this.maxDocuments = options.maxDocuments ?? MAX_OPEN_DOCUMENTS
     this.idleMs = options.idleMs ?? DOCUMENT_IDLE_MS
+    this.filePersistenceOptions = options.filePersistenceOptions ?? {}
     this.documents = new Map()
     this.closed = false
   }
@@ -73,6 +80,7 @@ export class DocumentRegistry {
       kind: 'document',
       label: `document ${documentId}`,
     })
+    let session
     try {
       const state = await this.stateStore.open(
         {
@@ -83,7 +91,7 @@ export class DocumentRegistry {
         },
         snapshot,
       )
-      const session = new DocumentSession({
+      session = new DocumentSession({
         registry: this,
         stateStore: this.stateStore,
         state,
@@ -91,12 +99,19 @@ export class DocumentRegistry {
         generation: this.generation,
         clock: this.clock,
         idleMs: this.idleMs,
+        fileSnapshot: snapshot,
+        filePersistenceOptions: this.filePersistenceOptions,
       })
+      await session.initialize()
       session.acquireAdapter(adapterId)
       this.documents.set(documentId, session)
       return session.describe()
     } catch (error) {
-      await lock.release()
+      if (session) {
+        await session.abortInitialization()
+      } else {
+        await lock.release()
+      }
       throw error
     }
   }
@@ -136,6 +151,15 @@ export class DocumentRegistry {
       session.assertExpectedRevision(input.expectedRevision)
     }
     return session.releaseAdapter(adapterId)
+  }
+
+  async flush(input, adapterId) {
+    return this.require(input?.documentId, adapterId)
+      .flush(input?.expectedRevision)
+  }
+
+  async reconcile(documentId, adapterId) {
+    return this.require(documentId, adapterId).reconcileExternal()
   }
 
   async revokeWorkspace(inputRoot) {
@@ -213,6 +237,27 @@ export class DocumentSession {
     this.lastActiveAt = this.clock()
     this.serial = Promise.resolve()
     this.destroyed = false
+    this.conflictId = options.state.metadata.conflictId ?? null
+    this.filePersistence = new FilePersistence({
+      session: this,
+      stateStore: this.stateStore,
+      state: this.state,
+      generation: this.generation,
+      fileSnapshot: options.fileSnapshot,
+      ...options.filePersistenceOptions,
+    })
+  }
+
+  async initialize() {
+    await this.filePersistence.initialize()
+  }
+
+  async abortInitialization() {
+    this.destroyed = true
+    await this.filePersistence.close()
+    this.awareness.destroy()
+    this.doc.destroy()
+    await this.lock.release()
   }
 
   assertIdentity(resolved) {
@@ -295,65 +340,78 @@ export class DocumentSession {
   }
 
   async enqueueMutation(originClass, mutate, resultFields = {}) {
-    const operation = this.serial.then(async () => {
-      this.assertWritable()
+    return this.enqueueFileOperation(() =>
+      this.performMutation(originClass, mutate, resultFields))
+  }
+
+  async performMutation(originClass, mutate, resultFields = {}) {
+    this.assertWritable()
+    if (resultFields.expectedRevision !== undefined) {
       this.assertExpectedRevision(resultFields.expectedRevision)
-      const { expectedRevision: _expectedRevision, ...publicResultFields } =
-        resultFields
-      const beforeVector = Buffer.from(Y.encodeStateVector(this.doc))
-      const previousRevision = this.revision
-      this.doc.transact(mutate, originClass)
-      const afterVector = Buffer.from(Y.encodeStateVector(this.doc))
-      if (beforeVector.equals(afterVector)) {
-        return {
-          documentId: this.documentId,
-          previousRevision: previousRevision.toString(),
-          revision: previousRevision.toString(),
-          changed: false,
-          flushState: this.flushState(),
-          fileDurableRevision: this.fileDurableRevision.toString(),
-          ...publicResultFields,
-        }
-      }
-      assertBroker(
-        previousRevision < UINT64_MAX,
-        'REVISION_EXHAUSTED',
-        'The document revision counter is exhausted.',
-      )
-      const update = Y.encodeStateAsUpdate(this.doc, beforeVector)
-      const nextRevision = previousRevision + 1n
-      try {
-        await this.stateStore.appendUpdate(
-          this.state,
-          update,
-          nextRevision,
-          originClass,
-        )
-      } catch (error) {
-        this.readOnly = true
-        this.recoveryRequired = true
-        throw error
-      }
-      this.revision = nextRevision
-      this.state.revision = nextRevision
-      this.state.metadata.revision = nextRevision.toString()
-      this.touch()
-      if (this.stateStore.shouldCompact(this.state)) {
-        await this.stateStore.compact(this.state)
-      }
+    }
+    const { expectedRevision: _expectedRevision, ...publicResultFields } =
+      resultFields
+    const beforeVector = Buffer.from(Y.encodeStateVector(this.doc))
+    const previousRevision = this.revision
+    this.doc.transact(mutate, originClass)
+    const afterVector = Buffer.from(Y.encodeStateVector(this.doc))
+    if (beforeVector.equals(afterVector)) {
       return {
         documentId: this.documentId,
         previousRevision: previousRevision.toString(),
-        revision: nextRevision.toString(),
-        changed: true,
-        durability: 'recovery_log',
+        revision: previousRevision.toString(),
+        changed: false,
         flushState: this.flushState(),
         fileDurableRevision: this.fileDurableRevision.toString(),
         ...publicResultFields,
       }
-    })
-    this.serial = operation.catch(() => {})
-    return operation
+    }
+    assertBroker(
+      previousRevision < UINT64_MAX,
+      'REVISION_EXHAUSTED',
+      'The document revision counter is exhausted.',
+    )
+    const update = Y.encodeStateAsUpdate(this.doc, beforeVector)
+    const nextRevision = previousRevision + 1n
+    try {
+      await this.stateStore.appendUpdate(
+        this.state,
+        update,
+        nextRevision,
+        originClass,
+      )
+    } catch (error) {
+      this.readOnly = true
+      this.recoveryRequired = true
+      throw error
+    }
+    this.revision = nextRevision
+    this.state.revision = nextRevision
+    this.state.metadata.revision = nextRevision.toString()
+    this.touch()
+    if (this.stateStore.shouldCompact(this.state)) {
+      try {
+        await this.stateStore.compact(this.state)
+      } catch (error) {
+        this.state.metadata.lastCompactionError = {
+          code: error?.code ?? 'COMPACTION_FAILED',
+          at: new Date(this.clock()).toISOString(),
+        }
+      }
+    }
+    if (originClass !== 'external-file') {
+      this.filePersistence.scheduleFlush()
+    }
+    return {
+      documentId: this.documentId,
+      previousRevision: previousRevision.toString(),
+      revision: nextRevision.toString(),
+      changed: true,
+      durability: 'recovery_log',
+      flushState: this.flushState(),
+      fileDurableRevision: this.fileDurableRevision.toString(),
+      ...publicResultFields,
+    }
   }
 
   read(input = {}) {
@@ -404,7 +462,7 @@ export class DocumentSession {
       adapterLeases: this.adapters.size,
       readOnly: this.readOnly,
       externalState: this.externalState,
-      conflictId: null,
+      conflictId: this.conflictId,
     }
   }
 
@@ -461,11 +519,131 @@ export class DocumentSession {
 
   flushState() {
     if (this.recoveryRequired) return 'recovery_required'
-    if (this.readOnly) return 'read_only'
     if (this.externalState === 'conflict') return 'conflict'
+    if (this.readOnly) return 'read_only'
     return this.revision === this.fileDurableRevision
       ? 'file_durable'
       : 'recovery_log_durable'
+  }
+
+  async flush(expectedRevision) {
+    return this.filePersistence.flushBarrier(expectedRevision)
+  }
+
+  async reconcileExternal() {
+    return this.enqueueFileOperation(() =>
+      this.filePersistence.reconcileExternal())
+  }
+
+  enqueueFileOperation(operation) {
+    const pending = this.serial.then(operation)
+    this.serial = pending.catch(() => {})
+    return pending
+  }
+
+  async importExternalSnapshot(snapshot) {
+    this.assertWritable()
+    const current = this.ytext.toString()
+    const baseline = this.filePersistence.baselineText
+    if (snapshot.text === current) {
+      this.externalState = 'clean'
+      this.filePersistence.fileSnapshot = snapshot
+      this.filePersistence.baselineText = snapshot.text
+      await this.stateStore.markFileDurable(
+        this.state,
+        snapshot,
+        this.revision,
+      )
+      this.fileDurableRevision = this.revision
+      return {
+        state: 'imported',
+        revision: this.revision.toString(),
+        merged: false,
+      }
+    }
+    const computation = computeMergedTarget(current, baseline, snapshot.text)
+    if (
+      computation.failedHunks.length > 0 ||
+      (computation.drifted &&
+        computation.deletedRatio > DEGENERATE_DELETE_RATIO)
+    ) {
+      await this.enterConflict({
+        externalState: 'conflict',
+        externalText: snapshot.text,
+        baselineText: baseline,
+        failedHunks: computation.failedHunks,
+      })
+      return { state: 'conflict', conflictId: this.conflictId }
+    }
+
+    if (computation.target !== current) {
+      await this.performMutation(
+        'external-file',
+        () => applyTextTarget(
+          this.ytext,
+          computation.target,
+          'external-file',
+        ),
+        {},
+      )
+    }
+    this.externalState = 'clean'
+    this.filePersistence.fileSnapshot = snapshot
+    this.filePersistence.baselineText = snapshot.text
+    if (computation.target === snapshot.text) {
+      await this.stateStore.markFileDurable(
+        this.state,
+        snapshot,
+        this.revision,
+      )
+      this.fileDurableRevision = this.revision
+    } else {
+      await this.stateStore.updateFileMetadata(this.state, snapshot)
+      this.filePersistence.scheduleFlush()
+    }
+    return {
+      state: 'imported',
+      revision: this.revision.toString(),
+      merged: computation.drifted,
+    }
+  }
+
+  async enterConflict(input) {
+    if (this.conflictId) return this.conflictId
+    const conflictId = crypto.randomUUID()
+    this.conflictId = conflictId
+    this.externalState = input.externalState ?? 'conflict'
+    this.readOnly = true
+    try {
+      await this.stateStore.recordConflict(this.state, {
+        id: conflictId,
+        currentText: this.ytext.toString(),
+        baselineText: input.baselineText ?? this.filePersistence.baselineText,
+        externalText: input.externalText,
+        externalState: input.externalState ?? 'conflict',
+        externalError: input.externalError,
+        failedHunks: input.failedHunks,
+        renamedPath: input.renamedPath,
+      })
+    } catch (error) {
+      this.recoveryRequired = true
+      throw new BrokerError(
+        'RECOVERY_REQUIRED',
+        'The external conflict could not be checkpointed safely.',
+        { cause: error },
+      )
+    }
+    return conflictId
+  }
+
+  async enterFileError(error) {
+    this.readOnly = true
+    this.externalState = 'changed'
+    this.state.metadata.lastFileError = {
+      code: error?.code ?? 'FILE_WATCH_FAILED',
+      at: new Date(this.clock()).toISOString(),
+    }
+    await this.stateStore.compact(this.state)
   }
 
   async releaseAdapter(adapterId) {
@@ -500,10 +678,21 @@ export class DocumentSession {
 
   async destroy() {
     if (this.destroyed) return
-    this.destroyed = true
     try {
+      await this.serial
+      await this.filePersistence.close()
+      if (
+        !this.readOnly &&
+        !this.recoveryRequired &&
+        this.externalState === 'clean' &&
+        this.revision > this.fileDurableRevision
+      ) {
+        await this.filePersistence.flushNow()
+      }
       await this.checkpoint()
     } finally {
+      this.destroyed = true
+      await this.filePersistence.close()
       this.registry.remove(this.documentId, this)
       this.awareness.destroy()
       this.doc.destroy()
@@ -535,6 +724,7 @@ function validateEdits(edits, documentLength) {
         edit.end >= edit.start &&
         edit.end <= documentLength &&
         typeof edit.replacement === 'string' &&
+        !edit.replacement.includes('\r') &&
         !hasIsolatedSurrogate(edit.replacement),
       'INVALID_ARGUMENT',
       'Every edit must contain a valid UTF-16 range and Unicode replacement.',
@@ -601,6 +791,11 @@ function validateYUpdateResult(currentDoc, update) {
         MAX_FILE_BYTES,
       'FILE_TOO_LARGE',
       `Markdown content may not exceed ${MAX_FILE_BYTES} UTF-8 bytes.`,
+    )
+    assertBroker(
+      !probe.getText('content').toString().includes('\r'),
+      'INVALID_ARGUMENT',
+      'A UI update must use normalized LF line endings.',
     )
   } catch (error) {
     if (error instanceof BrokerError) throw error

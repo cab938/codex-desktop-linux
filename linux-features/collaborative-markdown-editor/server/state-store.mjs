@@ -50,6 +50,11 @@ export class DocumentStateStore {
       metadata.fileContentHash === fileSnapshot.contentHash ? 'clean' : 'changed'
     const fileDurableRevision = BigInt(metadata.fileDurableRevision)
     const dirty = revision > fileDurableRevision
+    const fileBaselineText = await this.readFileBaseline(
+      paths,
+      metadata,
+      fileSnapshot,
+    )
 
     return {
       doc,
@@ -65,6 +70,7 @@ export class DocumentStateStore {
       updateLogBytes: replay.bytes,
       externalState,
       dirty,
+      fileBaselineText,
       paths,
     }
   }
@@ -103,6 +109,10 @@ export class DocumentStateStore {
       Buffer.from(`${JSON.stringify(metadata, null, 2)}\n`),
     )
     await writePrivateAtomic(paths.log, Buffer.alloc(0))
+    await writePrivateAtomic(
+      paths.fileBaseline,
+      Buffer.from(fileSnapshot.text, 'utf8'),
+    )
     return {
       doc,
       ytext,
@@ -113,6 +123,7 @@ export class DocumentStateStore {
       updateLogBytes: 0,
       externalState: 'clean',
       dirty: false,
+      fileBaselineText: fileSnapshot.text,
       paths,
     }
   }
@@ -162,6 +173,89 @@ export class DocumentStateStore {
       state.updateLogBytes >= UPDATE_LOG_BYTE_LIMIT
   }
 
+  async markFileDurable(state, fileSnapshot, revision) {
+    state.fileDurableRevision = revision
+    state.dirty = state.revision > revision
+    state.metadata = {
+      ...state.metadata,
+      fileDurableRevision: revision.toString(),
+      fileContentHash: fileSnapshot.contentHash,
+      encoding: 'utf-8',
+      bom: fileSnapshot.bom,
+      lineEndings: fileSnapshot.lineEndings,
+      finalNewline: fileSnapshot.finalNewline,
+      mode: fileSnapshot.mode,
+      conflictId: null,
+      externalState: 'clean',
+    }
+    state.fileBaselineText = fileSnapshot.text
+    await writePrivateAtomic(
+      state.paths.fileBaseline,
+      Buffer.from(fileSnapshot.text, 'utf8'),
+    )
+    await this.compact(state)
+  }
+
+  async updateFileMetadata(state, fileSnapshot) {
+    state.metadata = {
+      ...state.metadata,
+      fileContentHash: fileSnapshot.contentHash,
+      bom: fileSnapshot.bom,
+      lineEndings: fileSnapshot.lineEndings,
+      finalNewline: fileSnapshot.finalNewline,
+      mode: fileSnapshot.mode,
+      lastObservedFileAt: new Date(this.clock()).toISOString(),
+    }
+    state.fileBaselineText = fileSnapshot.text
+    await writePrivateAtomic(
+      state.paths.fileBaseline,
+      Buffer.from(fileSnapshot.text, 'utf8'),
+    )
+    await writePrivateAtomic(
+      state.paths.metadata,
+      Buffer.from(`${JSON.stringify(state.metadata, null, 2)}\n`),
+    )
+  }
+
+  async recordConflict(state, conflict) {
+    const directory = path.join(state.paths.directory, 'conflict', conflict.id)
+    await fs.mkdir(directory, { recursive: true, mode: 0o700 })
+    await writePrivateAtomic(
+      path.join(directory, 'current.md'),
+      Buffer.from(conflict.currentText, 'utf8'),
+    )
+    await writePrivateAtomic(
+      path.join(directory, 'baseline.md'),
+      Buffer.from(conflict.baselineText, 'utf8'),
+    )
+    if (typeof conflict.externalText === 'string') {
+      await writePrivateAtomic(
+        path.join(directory, 'external.md'),
+        Buffer.from(conflict.externalText, 'utf8'),
+      )
+    }
+    await writePrivateAtomic(
+      path.join(directory, 'conflict.json'),
+      Buffer.from(`${JSON.stringify({
+        schemaVersion: 1,
+        conflictId: conflict.id,
+        externalState: conflict.externalState,
+        failedHunks: conflict.failedHunks ?? [],
+        errorCode: conflict.externalError?.code ?? null,
+        renamedPath: conflict.renamedPath ?? null,
+        revision: state.revision.toString(),
+        recordedAt: new Date(this.clock()).toISOString(),
+      }, null, 2)}\n`),
+    )
+    state.metadata = {
+      ...state.metadata,
+      conflictId: conflict.id,
+      externalState: conflict.externalState,
+    }
+    await this.compact(state)
+    return directory
+  }
+
   async compact(state) {
     const nextMetadata = {
       ...state.metadata,
@@ -193,7 +287,26 @@ export class DocumentStateStore {
       metadata: path.join(directory, 'metadata.json'),
       snapshot: path.join(directory, 'snapshot.yjs'),
       log: path.join(directory, 'updates.log'),
+      fileBaseline: path.join(directory, 'file-baseline.utf8'),
       recovery: path.join(directory, 'recovery'),
+    }
+  }
+
+  async readFileBaseline(paths, metadata, fileSnapshot) {
+    try {
+      return await fs.readFile(paths.fileBaseline, 'utf8')
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error
+      assertBroker(
+        metadata.fileContentHash === fileSnapshot.contentHash,
+        'RECOVERY_REQUIRED',
+        'The prior file baseline is missing while the Markdown file has changed.',
+      )
+      await writePrivateAtomic(
+        paths.fileBaseline,
+        Buffer.from(fileSnapshot.text, 'utf8'),
+      )
+      return fileSnapshot.text
     }
   }
 

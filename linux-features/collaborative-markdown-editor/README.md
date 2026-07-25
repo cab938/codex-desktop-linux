@@ -10,7 +10,7 @@ independently buildable one-Y.Text editor preview. It also contains the
 workspace authorization, document registry, recovery state, and attachable
 per-user broker core. It deliberately has no ASAR patch, install resource,
 runtime hook, package hook, or production MCP adapter yet; those arrive after
-file persistence and the MCP/App surfaces pass their work packages.
+the MCP/App surfaces pass their work packages.
 
 ## Scope
 
@@ -54,9 +54,18 @@ symlinks, regular-file type, UTF-8 encoding, line endings, and the v1 size
 bound. Separate canonical worktrees produce separate document identities.
 
 Accepted Yjs changes are synchronized to a checksum-bearing recovery log before
-acknowledgement. Snapshot compaction, crash-safe Markdown replacement, watcher
-reconciliation, conflicts, and public/app-only MCP schemas are separate
-layers completed by later work packages.
+acknowledgement. A 150 ms debounce and explicit barrier then use a
+same-directory exclusive temporary file, file synchronization, atomic rename,
+and directory synchronization to make the ordinary Markdown file durable.
+UTF-8 BOM, LF/CRLF style, final-newline content, and POSIX mode are retained.
+
+A directory watcher handles editor safe-writes and Git-style replacement.
+Exact external edits become one attributed Yjs revision; disjoint in-memory
+and external edits merge through the pinned Glyphdown diff primitive.
+Ambiguous rewrites, invalid files, delete, rename-away, and unsupported target
+changes become read-only conflicts with current, baseline, and external
+candidates retained under private state. A deleted or renamed project file is
+never silently recreated.
 
 ## Lifecycle commands
 
@@ -76,7 +85,8 @@ the ignored `dist/` directory. `stage` copies those artifacts into an isolated
 typechecks the source, runs retained donor/local component tests, and validates
 the disabled-default feature, deterministic lifecycle, broker security,
 multi-process convergence, locking, and restart recovery. `clean` removes only
-this feature's `dist/`.
+this feature's `dist/`. The server suite also fault-tests atomic persistence
+with real child-process exits before and after replacement.
 
 The eventual production build and declarative staging contract will replace
 the preview artifact after the broker and MCP App are implemented.
@@ -98,11 +108,10 @@ The committed `linux-features/features.example.json` must remain empty.
 
 ## Current risks and gates
 
-- Recovery-log-durable transactions still need atomic Markdown-file durability,
-  external-change import, and conflict handling.
 - The production MCP schemas and user-only workspace authorization flow need
   wiring into the host-facing adapter and MCP App.
-- Linux, macOS, and Windows support claims require platform-specific evidence.
+- Linux filesystem behavior is verified; macOS and Windows remain candidates
+  until their atomic-replace, watcher, and host-runtime matrices pass.
 
 The durable requirements and acceptance matrix live in
 `.codex/work-packages.md`.
