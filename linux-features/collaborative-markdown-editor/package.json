@@ -12,7 +12,8 @@
     "typecheck": "tsc -p ./tsconfig.json",
     "test:unit": "vitest run",
     "test:feature": "node --test ./test.js",
-    "test": "npm run typecheck && npm run test:unit && npm run test:feature",
+    "test:server": "node --test ./server/test/*.test.mjs",
+    "test": "npm run typecheck && npm run test:unit && npm run test:feature && npm run test:server",
     "clean": "node ./scripts/lifecycle.mjs clean"
   },
   "dependencies": {
