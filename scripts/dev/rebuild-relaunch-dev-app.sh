@@ -5,9 +5,28 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 APP_ID="codex-desktop-linux-dev"
 APP_NAME="Codex Desktop Linux Dev"
-APP_DIR="$REPO_ROOT/${APP_ID}-app"
+APP_ROOT="${CODEX_COMBINED_DEV_ROOT:-$REPO_ROOT}"
+case "$APP_ROOT" in
+  /*) ;;
+  *)
+    printf 'CODEX_COMBINED_DEV_ROOT must be an absolute path: %s\n' "$APP_ROOT" >&2
+    exit 2
+    ;;
+esac
+if [[ ! -d "$APP_ROOT" ]]; then
+  printf 'CODEX_COMBINED_DEV_ROOT does not exist: %s\n' "$APP_ROOT" >&2
+  exit 2
+fi
+APP_ROOT="$(cd -P "$APP_ROOT" && pwd)"
+if [[ "$APP_ROOT" == "/" || "$APP_ROOT" == "${HOME:-}" ]]; then
+  printf 'Refusing unsafe CODEX_COMBINED_DEV_ROOT: %s\n' "$APP_ROOT" >&2
+  exit 2
+fi
+CODEX_COMBINED_DEV_ROOT="$APP_ROOT"
+export CODEX_COMBINED_DEV_ROOT
+APP_DIR="$APP_ROOT/${APP_ID}-app"
 APP_ELECTRON="$APP_DIR/electron"
-APP_LAUNCHER="$REPO_ROOT/bin/$APP_ID"
+APP_LAUNCHER="$APP_ROOT/bin/$APP_ID"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/$APP_ID"
 LOG_FILE="$STATE_DIR/rebuild-relaunch.log"
 LOCK_FILE="$STATE_DIR/rebuild-relaunch.lock"
@@ -33,6 +52,9 @@ Options:
 
 The durable worker log is:
   ~/.local/state/codex-desktop-linux-dev/rebuild-relaunch.log
+
+Set CODEX_COMBINED_DEV_ROOT to promote into a durable output checkout when
+dev/combined is running from a linked integration worktree.
 USAGE
 }
 
@@ -76,6 +98,9 @@ append_service_environment() {
     DBUS_SESSION_BUS_ADDRESS \
     CODEX_CLI_PATH \
     CODEX_CA_CERTIFICATE \
+    CODEX_COMBINED_DEV_ROOT \
+    CODEX_DEV_REBUILD_GRACE_SECONDS \
+    CODEX_DEV_REBUILD_STOP_TIMEOUT_SECONDS \
     ELECTRON_HEADERS_URL \
     ELECTRON_MIRROR \
     HTTP_PROXY \
@@ -239,9 +264,8 @@ run_worker() {
   stop_running_dev_app
 
   log "Building and promoting $APP_NAME from dev/combined"
-  make -C "$REPO_ROOT" build-dev-app \
-    DEV_APP_ID="$APP_ID" \
-    DEV_APP_NAME="$APP_NAME"
+  make -C "$REPO_ROOT" build-combined-dev-app \
+    COMBINED_DEV_ROOT="$APP_ROOT"
   verify_promoted_build
   notify_user "Dev rebuild complete" "Relaunching $APP_NAME"
   launch_promoted_app
@@ -259,6 +283,7 @@ run_dry_run() {
   branch="$(git -C "$REPO_ROOT" branch --show-current)"
   printf 'repository: %s\n' "$REPO_ROOT"
   printf 'branch: %s\n' "${branch:-detached}"
+  printf 'durable output root: %s\n' "$APP_ROOT"
   printf 'target app: %s\n' "$APP_DIR"
   printf 'target executable: %s\n' "$APP_ELECTRON"
   if running_pid="$(running_dev_pid)"; then
@@ -266,7 +291,7 @@ run_dry_run() {
   else
     printf 'running exact dev pid: none\n'
   fi
-  printf 'build: make build-dev-app DEV_APP_ID=%s DEV_APP_NAME=%q\n' "$APP_ID" "$APP_NAME"
+  printf 'build: make build-combined-dev-app COMBINED_DEV_ROOT=%q\n' "$APP_ROOT"
   printf 'launcher: %s\n' "$APP_LAUNCHER"
   printf 'log: %s\n' "$LOG_FILE"
   if [[ "$branch" != "dev/combined" ]]; then

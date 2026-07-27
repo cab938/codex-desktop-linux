@@ -26,11 +26,21 @@ fi
 grep -Fq 'source "$REPO_ROOT/scripts/lib/process-detection.sh"' "$TARGET"
 grep -Fq 'kill -TERM "$running_pid"' "$TARGET"
 grep -Fq 'systemd-run \' "$TARGET"
-grep -Fq 'make -C "$REPO_ROOT" build-dev-app \' "$TARGET"
+grep -Fq 'make -C "$REPO_ROOT" build-combined-dev-app \' "$TARGET"
 grep -Fq 'verify_promoted_build' "$TARGET"
 grep -Fq 'launch_promoted_app' "$TARGET"
 
-mkdir -p "$TEST_ROOT/dev-app" "$TEST_ROOT/prod-app"
+mkdir -p "$TEST_ROOT/dev-app" "$TEST_ROOT/prod-app" "$TEST_ROOT/durable-root"
+dry_run_output="$(
+  CODEX_COMBINED_DEV_ROOT="$TEST_ROOT/durable-root" "$TARGET" --dry-run
+)"
+[[ "$dry_run_output" == *"durable output root: $TEST_ROOT/durable-root"* ]]
+[[ "$dry_run_output" == *"target app: $TEST_ROOT/durable-root/codex-desktop-linux-dev-app"* ]]
+if CODEX_COMBINED_DEV_ROOT=/ "$TARGET" --dry-run >/dev/null 2>&1; then
+  echo "rebuild workflow accepted the filesystem root as its output root" >&2
+  exit 1
+fi
+
 cp /bin/sleep "$TEST_ROOT/dev-app/electron"
 cp /bin/sleep "$TEST_ROOT/prod-app/electron"
 "$TEST_ROOT/dev-app/electron" 60 &

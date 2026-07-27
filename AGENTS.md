@@ -52,16 +52,23 @@ update-builder bundle.
   `make build-app`, `make build-app-fresh`, `make rebuild-install`,
   `make install`, `make install-native`, and `make update-native`—require an
   explicit user request for that exact action in the current turn.
-- Build the regular combined development app only as the side-by-side identity:
+- Reserve the regular combined development identity for `dev/combined`:
 
   ```bash
-  make build-dev-app \
-    DEV_APP_ID=codex-desktop-linux-dev \
-    DEV_APP_NAME='Codex Desktop Linux Dev'
+  make build-combined-dev-app
   ```
 
   Its supported launcher is `./bin/codex-desktop-linux-dev`, which resolves to
   `codex-desktop-linux-dev-app/start.sh`.
+- Never use `DEV_APP_ID=codex-desktop-linux-dev` from a feature branch.
+  Feature-branch verification must use a feature-specific ID such as
+  `codex-quick-launcher-lab`. The Makefile rejects the canonical identity unless
+  the source branch is exactly `dev/combined`.
+- When `dev/combined` is checked out in a linked integration worktree, set
+  `COMBINED_DEV_ROOT=/absolute/path/to/the/durable/dev/checkout` so the accepted
+  build and launcher are promoted into durable storage instead of being left
+  under `/tmp`. The guarded detached rebuild supports the same destination as
+  `CODEX_COMBINED_DEV_ROOT`.
 - Before reporting a development rebuild complete, resolve the requested
   launcher, verify that its `.codex-linux/build-info.json` records the intended
   source commit and app identity, and test that exact launcher on the private

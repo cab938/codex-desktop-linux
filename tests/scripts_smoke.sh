@@ -1711,6 +1711,54 @@ SCRIPT
     assert_contains "$install_log" "$workspace/codex-cua-lab-app"
 }
 
+test_make_canonical_dev_identity_requires_combined_branch() {
+    info "Checking canonical dev app builds are reserved for dev/combined"
+    local workspace="$TMP_DIR/make-combined-dev-app"
+    local durable_root="$TMP_DIR/durable-combined-dev-app"
+    local install_log="$workspace/install-env.log"
+    local launcher="$durable_root/bin/codex-desktop-linux-dev"
+    local target
+
+    mkdir -p "$workspace" "$durable_root"
+    cp "$REPO_DIR/Makefile" "$workspace/Makefile"
+
+    cat > "$workspace/install.sh" <<'SCRIPT'
+#!/usr/bin/env bash
+set -eu
+printf '%s\n' "$CODEX_APP_ID" > "$TEST_INSTALL_LOG"
+printf '%s\n' "$CODEX_APP_DISPLAY_NAME" >> "$TEST_INSTALL_LOG"
+printf '%s\n' "$CODEX_INSTALL_DIR" >> "$TEST_INSTALL_LOG"
+mkdir -p "$CODEX_INSTALL_DIR"
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$CODEX_INSTALL_DIR/start.sh"
+chmod +x "$CODEX_INSTALL_DIR/start.sh"
+SCRIPT
+    chmod +x "$workspace/install.sh"
+
+    git -C "$workspace" init -q -b feature/example
+    git -C "$workspace" -c user.name=Test -c user.email=test@example.invalid \
+        commit --allow-empty -q -m baseline
+
+    if TEST_INSTALL_LOG="$install_log" make -C "$workspace" build-dev-app \
+        DEV_APP_ID=codex-desktop-linux-dev \
+        DEV_APP_NAME='Codex Desktop Linux Dev' >/dev/null 2>&1; then
+        fail "Expected a feature branch to be refused the canonical dev app identity"
+    fi
+    assert_file_not_exists "$install_log"
+
+    git -C "$workspace" switch -q -c dev/combined
+    TEST_INSTALL_LOG="$install_log" make -C "$workspace" build-combined-dev-app \
+        COMBINED_DEV_ROOT="$durable_root" >/dev/null
+
+    assert_file_exists "$launcher"
+    target="$(readlink "$launcher")"
+    [ "$target" = "../codex-desktop-linux-dev-app/start.sh" ] \
+        || fail "Expected durable combined launcher to use a relative symlink, got: $target"
+    [ -x "$launcher" ] || fail "Expected durable combined launcher symlink to resolve"
+    assert_contains "$install_log" "codex-desktop-linux-dev"
+    assert_contains "$install_log" "Codex Desktop Linux Dev"
+    assert_contains "$install_log" "$durable_root/codex-desktop-linux-dev-app"
+}
+
 test_installer_refreshes_stale_cached_dmg_metadata() {
     info "Checking installer DMG cache freshness metadata branches"
     local workspace="$TMP_DIR/dmg-cache-refresh"
@@ -10624,6 +10672,7 @@ main() {
     test_make_build_app_uses_installer_download_flow_by_default
     test_make_build_app_fresh_uses_installer_fresh_flow
     test_make_build_dev_app_writes_host_portable_launcher_symlink
+    test_make_canonical_dev_identity_requires_combined_branch
     test_installer_refreshes_stale_cached_dmg_metadata
     test_extract_dmg_repairs_safe_7z_link_warnings
     test_fresh_install_removes_cached_dmg_metadata

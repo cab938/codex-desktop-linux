@@ -25,6 +25,11 @@ DEV_APP_ID ?= codex-cua-lab
 DEV_APP_NAME ?= Codex CUA Lab
 DEV_APP_DIR ?= $(CURDIR)/$(DEV_APP_ID)-app
 DEV_APP_BIN ?= $(CURDIR)/bin/$(DEV_APP_ID)
+COMBINED_DEV_APP_ID := codex-desktop-linux-dev
+COMBINED_DEV_APP_NAME := Codex Desktop Linux Dev
+COMBINED_DEV_ROOT ?= $(CURDIR)
+COMBINED_DEV_APP_DIR ?= $(COMBINED_DEV_ROOT)/$(COMBINED_DEV_APP_ID)-app
+COMBINED_DEV_APP_BIN ?= $(COMBINED_DEV_ROOT)/bin/$(COMBINED_DEV_APP_ID)
 HEADLESS_SCREEN ?= 1600x1000
 HEADLESS_TIMEOUT ?= 90
 HEADLESS_SETTLE ?= 5
@@ -70,7 +75,7 @@ if [ -z "$$format" ]; then \
 fi; \
 printf '%s\n' "$$format"
 
-.PHONY: help check test build-updater maybe-build-updater update rebuild rebuild-install inspect-upstream inspect-upstream-intel inspect-upstream-intel-devcontainer build-app build-app-fresh setup-native bootstrap-native install-native update-native rebuild-next run-app build-dev-app run-dev-app rebuild-relaunch-dev-app test-dev-app-headless run-dev-app-headless deb rpm pacman appimage package install service-enable service-status clean-dist clean-state
+.PHONY: help check test build-updater maybe-build-updater update rebuild rebuild-install inspect-upstream inspect-upstream-intel inspect-upstream-intel-devcontainer build-app build-app-fresh setup-native bootstrap-native install-native update-native rebuild-next run-app build-dev-app build-combined-dev-app run-dev-app rebuild-relaunch-dev-app test-dev-app-headless run-dev-app-headless deb rpm pacman appimage package install service-enable service-status clean-dist clean-state
 
 help:
 	@printf '\nChatGPT Desktop for Linux Make Targets\n\n'
@@ -92,6 +97,7 @@ help:
 	@printf '  %-18s %s\n' "make rebuild-next" "Build a side-by-side candidate in codex-app-next/"
 	@printf '  %-18s %s\n' "make run-app" "Launch the local generated Electron app from codex-app/"
 	@printf '  %-18s %s\n' "make build-dev-app" "Build a side-by-side test app with a distinct app id/bin"
+	@printf '  %-18s %s\n' "make build-combined-dev-app" "Build the canonical dev/combined app into COMBINED_DEV_ROOT"
 	@printf '  %-18s %s\n' "make run-dev-app" "Launch the side-by-side test app"
 	@printf '  %-18s %s\n' "make rebuild-relaunch-dev-app" "Detach, stop, rebuild, and relaunch Codex Desktop Linux Dev"
 	@printf '  %-18s %s\n' "make test-dev-app-headless" "Smoke-test the dev app on a host-invisible desktop"
@@ -116,6 +122,7 @@ help:
 	@printf '  %-18s %s\n' "REBUILD_REPORT_DIR=..." "Override inspect/rebuild report output directory"
 	@printf '  %-18s %s\n' "DEV_APP_ID=..." "Override side-by-side test app id/bin (default: codex-cua-lab)"
 	@printf '  %-18s %s\n' "DEV_APP_NAME=..." "Override side-by-side test app display name"
+	@printf '  %-18s %s\n' "COMBINED_DEV_ROOT=..." "Durable output root for the canonical dev/combined app"
 	@printf '  %-18s %s\n' "HEADLESS_SCREEN=..." "Headless test screen size (default: 1600x1000)"
 	@printf '  %-18s %s\n' "HEADLESS_TIMEOUT=..." "Headless app-window startup timeout (default: 90)"
 	@printf '  %-18s %s\n' "HEADLESS_SETTLE=..." "Delay before headless screenshot capture (default: 5)"
@@ -149,6 +156,7 @@ help:
 	@printf '  %s\n' "make rebuild-next DMG=/tmp/Codex.dmg"
 	@printf '  %s\n' "make run-app"
 	@printf '  %s\n' "make build-dev-app"
+	@printf '  %s\n' "make build-combined-dev-app COMBINED_DEV_ROOT=/path/to/durable/checkout"
 	@printf '  %s\n' "./bin/codex-cua-lab"
 	@printf '  %s\n' "make test-dev-app-headless DEV_APP_ID=codex-cua-lab"
 	@printf '  %s\n' "make run-dev-app-headless DEV_APP_ID=codex-cua-lab"
@@ -272,15 +280,30 @@ run-app:
 	"$(APP_DIR)/start.sh"
 
 build-dev-app:
+	@if [ "$(DEV_APP_ID)" = "$(COMBINED_DEV_APP_ID)" ]; then \
+		branch="$$(git -C "$(CURDIR)" branch --show-current 2>/dev/null || true)"; \
+		if [ "$$branch" != "dev/combined" ]; then \
+			echo "[make] Refusing canonical dev identity $(COMBINED_DEV_APP_ID) from branch $${branch:-detached}." >&2; \
+			echo "[make] Use a feature-specific DEV_APP_ID, or run make build-combined-dev-app from dev/combined." >&2; \
+			exit 1; \
+		fi; \
+	fi
 	@echo "[make] Building side-by-side Electron app as $(DEV_APP_ID)"
 	MAX_BUILD_THREADS="$(MAX_BUILD_THREADS)" \
 	CODEX_APP_ID="$(DEV_APP_ID)" \
 	CODEX_APP_DISPLAY_NAME="$(DEV_APP_NAME)" \
 	CODEX_INSTALL_DIR="$(DEV_APP_DIR)" \
 		./install.sh "$(DMG)"
-	@mkdir -p "$(CURDIR)/bin"
+	@mkdir -p "$$(dirname "$(DEV_APP_BIN)")"
 	@ln -sfn "$$(realpath --relative-to="$$(dirname "$(DEV_APP_BIN)")" "$(DEV_APP_DIR)/start.sh")" "$(DEV_APP_BIN)"
 	@echo "[make] Side-by-side launcher: $(DEV_APP_BIN)"
+
+build-combined-dev-app:
+	@$(MAKE) build-dev-app \
+		DEV_APP_ID="$(COMBINED_DEV_APP_ID)" \
+		DEV_APP_NAME="$(COMBINED_DEV_APP_NAME)" \
+		DEV_APP_DIR="$(COMBINED_DEV_APP_DIR)" \
+		DEV_APP_BIN="$(COMBINED_DEV_APP_BIN)"
 
 run-dev-app:
 	@echo "[make] Launching side-by-side Electron app"

@@ -252,6 +252,7 @@ make install-native
 make update-native
 make run-app
 make build-dev-app
+make build-combined-dev-app
 make run-dev-app
 make deb
 make rpm
@@ -264,3 +265,24 @@ make service-status
 make clean-dist
 make clean-state
 ```
+
+`build-dev-app` is for disposable or feature-specific identities. The
+canonical `codex-desktop-linux-dev` identity is reserved for the
+`dev/combined` branch and must be built with:
+
+```bash
+make build-combined-dev-app
+```
+
+If `dev/combined` lives in a linked integration worktree, promote its accepted
+build into a durable checkout rather than leaving it under `/tmp`:
+
+```bash
+make build-combined-dev-app \
+  COMBINED_DEV_ROOT=/absolute/path/to/durable/codex-desktop-linux-dev
+```
+
+The resulting durable launcher is
+`$COMBINED_DEV_ROOT/bin/codex-desktop-linux-dev`. Feature branches must choose
+another `DEV_APP_ID`; the Makefile rejects the canonical identity outside
+`dev/combined`.

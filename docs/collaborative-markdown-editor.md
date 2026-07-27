@@ -7,21 +7,28 @@ Codex tool edits, and safe external file changes converge through one
 broker-owned Yjs document while the ordinary `.md` file remains the durable
 source of truth.
 
-## Install in the side-by-side development app
+## Verify the owning feature branch
 
 Enable only `collaborative-markdown-editor` in the ignored
-`linux-features/features.json`, then build the supported development identity:
+`linux-features/features.json`, then build a feature-specific development
+identity:
 
 ```bash
 make build-dev-app \
-  DEV_APP_ID=codex-desktop-linux-dev \
-  DEV_APP_NAME='Codex Desktop Linux Dev'
+  DEV_APP_ID=codex-collaborative-markdown-editor-lab \
+  DEV_APP_NAME='Codex Collaborative Markdown Editor Lab'
 ```
 
-Launch `./bin/codex-desktop-linux-dev`, open **Plugins**, search for
+Launch `./bin/codex-collaborative-markdown-editor-lab`, open **Plugins**, search for
 **Collaborative Markdown Editor**, and install it. The committed example
 feature configuration remains empty, and none of these steps modifies the
 stock or package-managed Codex application.
+
+After merging the owning branch, enable the complete integration feature set
+in the ignored config on `dev/combined` and run
+`make build-combined-dev-app`. Only `dev/combined` may produce
+`./bin/codex-desktop-linux-dev`. When integration is performed in a temporary
+linked worktree, set `COMBINED_DEV_ROOT` to the durable development checkout.
 
 For isolated source testing, the feature's `plugin-marketplace/` directory is
 a local marketplace. Use a disposable `CODEX_HOME`; do not add development
